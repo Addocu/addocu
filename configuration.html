@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Addocu Brand Colors */
+      --addocu-blue-primary: #1A5DBB;
+      --addocu-blue-light: #00AEEF;
+      --addocu-green: #4CAF50;
+      --addocu-green-light: #8BC34A;
+      --addocu-bg: #FAFAFA;
+      --addocu-text-primary: #1A1A1A;
+      --addocu-text-secondary: #666666;
+      --addocu-text-muted: #999999;
+      --addocu-border: #E1E1E1;
+      --addocu-border-light: #F0F0F0;
+      --addocu-white: #FFFFFF;
+      --addocu-gradient: linear-gradient(135deg, var(--addocu-blue-primary), var(--addocu-blue-light));
+      --addocu-future: linear-gradient(135deg, #8B5CF6, #A78BFA);
+      --addocu-error: #DC2626;
+      --addocu-warning: #F59E0B;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body { 
+      padding: 0; 
+      margin: 0; 
+      font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--addocu-bg);
+      color: var(--addocu-text-primary);
+      line-height: 1.5;
+      overflow: hidden;
+    }
+    
+    .sidebar-container {
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--addocu-white);
+      width: 100%;
+      max-width: 380px;
+    }
+    
+    /* Header */
+    .header {
+      padding: 36px 24px 28px;
+      border-bottom: 1px solid var(--addocu-border-light);
+      text-align: center;
+    }
+    
+    .logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .logo-image {
+      max-width: 120px;
+      height: auto;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Legacy logo-icon support for backwards compatibility */
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--addocu-gradient);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--addocu-text-primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    
+    .tagline {
+      font-size: 14px;
+      color: var(--addocu-text-secondary);
+      font-weight: 400;
+      margin: 0;
+    }
+
+    /* Content */
+    .content {
+      padding: 24px;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section:last-child {
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--addocu-text-primary);
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .section-title .required {
+      color: var(--addocu-error);
+      margin-left: 4px;
+      font-size: 14px;
+    }
+
+    .section-description {
+      font-size: 14px;
+      color: var(--addocu-text-secondary);
+      margin: 0 0 20px 0;
+      line-height: 1.4;
+    }
+
+    .section-description.highlight {
+      background: #FFF9E6;
+      border: 1px solid var(--addocu-warning);
+      border-radius: 6px;
+      padding: 12px;
+      color: #92400E;
+      font-weight: 500;
+    }
+
+    .section-description a {
+      color: var(--addocu-blue-primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .section-description a:hover {
+      text-decoration: underline;
+    }
+
+    /* Status Steps */
+    .status-steps {
+      margin-bottom: 24px;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+    }
+
+    .step-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--addocu-border);
+      border: 2px solid var(--addocu-border);
+      margin-right: 12px;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .step.completed .step-indicator {
+      background: var(--addocu-green);
+      border-color: var(--addocu-green);
+    }
+
+    .step.completed .step-indicator::after {
+      content: '✓';
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .step-text {
+      font-size: 14px;
+      color: var(--addocu-text-primary);
+      font-weight: 400;
+    }
+
+    .step.completed .step-text {
+      color: var(--addocu-text-secondary);
+    }
+
+    /* Input Groups */
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--addocu-text-primary);
+      margin-bottom: 8px;
+    }
+
+    .input-label .required {
+      color: var(--addocu-error);
+      margin-left: 4px;
+    }
+
+    .input-field {
+      position: relative;
+    }
+
+    .input-field input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--addocu-border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      background: var(--addocu-white);
+      transition: all 0.2s ease;
+    }
+
+    .input-field input:focus {
+      outline: none;
+      border-color: var(--addocu-blue-primary);
+      box-shadow: 0 0 0 3px rgba(26, 93, 187, 0.08);
+    }
+
+    .input-field input::placeholder {
+      color: var(--addocu-text-muted);
+      font-family: 'Google Sans', sans-serif;
+    }
+
+    .input-help {
+      font-size: 13px;
+      color: var(--addocu-text-secondary);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .input-help a {
+      color: var(--addocu-blue-primary);
+      text-decoration: none;
+    }
+
+    .input-help a:hover {
+      text-decoration: underline;
+    }
+
+    .input-help strong {
+      color: var(--addocu-text-primary);
+    }
+
+    /* Connection Status */
+    .connection-status {
+      background: var(--addocu-bg);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+
+    .connection-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+    }
+
+    .connection-item:first-child {
+      padding-top: 0;
+    }
+
+    .connection-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .connection-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .indicator-pending { background: var(--addocu-text-muted); }
+    .indicator-success { background: var(--addocu-green); }
+    .indicator-error { background: var(--addocu-error); }
+
+    .connection-name {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--addocu-text-primary);
+    }
+
+    .connection-details {
+      font-size: 13px;
+      color: var(--addocu-text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Service Selection */
+    .service-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .service-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: var(--addocu-bg);
+      border: 1px solid var(--addocu-border-light);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .service-item:hover {
+      border-color: var(--addocu-border);
+    }
+
+    .service-info {
+      flex: 1;
+    }
+
+    .service-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--addocu-text-primary);
+      margin-bottom: 2px;
+    }
+
+    .service-description {
+      font-size: 13px;
+      color: var(--addocu-text-secondary);
+    }
+
+    /* Advanced Filters */
+    .filters-container {
+      background: var(--addocu-bg);
+      border: 1px solid var(--addocu-border-light);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .filters-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .filters-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--addocu-text-primary);
+    }
+
+    .filters-toggle {
+      background: none;
+      border: none;
+      color: var(--addocu-blue-primary);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .filters-content {
+      display: none;
+    }
+
+    .filters-content.expanded {
+      display: block;
+    }
+
+    .filter-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .filter-example {
+      background: var(--addocu-white);
+      border: 1px solid var(--addocu-border-light);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--addocu-text-muted);
+      margin-top: 4px;
+    }
+
+    /* Toggle Switch */
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--addocu-border);
+      transition: 0.2s ease;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background: white;
+      transition: 0.2s ease;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background: var(--addocu-blue-primary);
+    }
+
+    .toggle input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Buttons */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: none;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: var(--addocu-gradient);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26, 93, 187, 0.25);
+    }
+
+    .btn-secondary {
+      background: var(--addocu-white);
+      border: 1px solid var(--addocu-border);
+      color: var(--addocu-text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--addocu-bg);
+      border-color: var(--addocu-blue-primary);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .btn-full {
+      grid-column: 1 / -1;
+    }
+
+    /* Future Features */
+    .future-section {
+      background: linear-gradient(135deg, #F8F4FF, #F3F1FF);
+      border: 1px solid #E5E2FF;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+
+    .future-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .future-icon {
+      width: 20px;
+      height: 20px;
+      background: var(--addocu-future);
+      border-radius: 4px;
+      margin-right: 8px;
+      font-size: 12px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .future-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #6B46C1;
+      margin: 0;
+    }
+
+    .future-description {
+      font-size: 13px;
+      color: var(--addocu-text-secondary);
+      margin: 0 0 16px 0;
+      line-height: 1.4;
+    }
+
+    .future-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .future-item {
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      color: var(--addocu-text-primary);
+    }
+
+    .future-bullet {
+      width: 4px;
+      height: 4px;
+      background: #8B5CF6;
+      border-radius: 50%;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Status Messages */
+    .status-message {
+      padding: 16px;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-size: 14px;
+      line-height: 1.4;
+      border-left: 3px solid;
+    }
+
+    .status-success {
+      background: #F0F9F0;
+      border-color: var(--addocu-green);
+      color: #166534;
+    }
+
+    .status-error {
+      background: #FEF2F2;
+      border-color: var(--addocu-error);
+      color: #991B1B;
+    }
+
+    .status-warning {
+      background: #FFFBEB;
+      border-color: var(--addocu-warning);
+      color: #92400E;
+    }
+
+    .status-info {
+      background: #EFF6FF;
+      border-color: var(--addocu-blue-light);
+      color: #1E40AF;
+    }
+
+    /* Loading */
+    .loading {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Fade animation */
+    .fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { 
+        opacity: 0; 
+        transform: translateY(4px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+
+    /* SUCCESS MODAL */
+    .success-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .success-modal.show {
+      display: flex;
+    }
+
+    .success-modal-content {
+      background: var(--addocu-white);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      transform: scale(0.9);
+      animation: modalPopIn 0.3s ease-out forwards;
+    }
+
+    @keyframes modalPopIn {
+      to {
+        transform: scale(1);
+      }
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--addocu-green), var(--addocu-green-light));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 20px;
+      animation: successPulse 0.6s ease-out;
+    }
+
+    @keyframes successPulse {
+      0% { transform: scale(0) rotate(0deg); }
+      50% { transform: scale(1.1) rotate(180deg); }
+      100% { transform: scale(1) rotate(360deg); }
+    }
+
+    .success-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--addocu-text-primary);
+      margin-bottom: 12px;
+    }
+
+    .success-message {
+      font-size: 14px;
+      color: var(--addocu-text-secondary);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .success-stats {
+      background: var(--addocu-bg);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .success-stat {
+      text-align: center;
+    }
+
+    .success-stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--addocu-green);
+      margin-bottom: 4px;
+    }
+
+    .success-stat-label {
+      font-size: 11px;
+      color: var(--addocu-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .success-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .success-btn {
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .success-btn.primary {
+      background: var(--addocu-green);
+      color: white;
+    }
+
+    .success-btn.primary:hover {
+      background: #3d9142;
+      transform: translateY(-1px);
+    }
+
+    .success-btn.secondary {
+      background: var(--addocu-bg);
+      color: var(--addocu-text-primary);
+      border: 1px solid var(--addocu-border);
+    }
+
+    .success-btn.secondary:hover {
+      background: var(--addocu-border-light);
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      .content {
+        padding: 20px;
+      }
+      
+      .btn-group {
+        grid-template-columns: 1fr;
+      }
+      
+      .success-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar-container">
+    <div class="header">
+      <div class="logo">
+        <img 
+          src="https://raw.githubusercontent.com/Addocu/addocu/main/docs/addocu_logo.png" 
+          alt="Addocu Logo" 
+          class="logo-image"
+        >
+      </div>
+      <p class="tagline">Audit and Document Your Google Marketing Stack in Seconds</p>
+    </div>
+
+    <div class="content">
+      <!-- Setup Progress -->
+      <div class="section">
+        <div class="section-title">Setup Progress</div>
+        <div class="status-steps">
+          <div class="step completed" id="step-oauth">
+            <div class="step-indicator"></div>
+            <div class="step-text">OAuth authorization ready</div>
+          </div>
+          <div class="step" id="step-apikey">
+            <div class="step-indicator"></div>
+            <div class="step-text">Configure Google Cloud API Key</div>
+          </div>
+          <div class="step" id="step-connection">
+            <div class="step-indicator"></div>
+            <div class="step-text">Test API connections</div>
+          </div>
+          <div class="step" id="step-audit">
+            <div class="step-indicator"></div>
+            <div class="step-text">Run first audit</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Authentication Hybrid Model -->
+      <div class="section">
+        <div class="section-title">
+          Authentication Setup
+          <span class="required">*</span>
+        </div>
+        
+        <div class="section-description highlight">
+          <strong>Hybrid Model:</strong> Addocu requires both OAuth2 (automatic) for permissions AND your Google Cloud API Key (manual) for API access. Both are mandatory.
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">
+            Google Cloud API Key
+            <span class="required">*</span>
+          </label>
+          <div class="input-field">
+            <input 
+              type="password" 
+              id="api-key" 
+              placeholder="Paste your Google Cloud API Key here..."
+              autocomplete="off"
+            >
+          </div>
+          <div class="input-help">
+            <strong>How to get your API Key:</strong><br>
+            1. Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a><br>
+            2. Create or select a project<br>
+            3. Enable APIs: Analytics Admin, Tag Manager, Looker Studio<br>
+            4. Create API Key in "Credentials" section<br>
+            5. Copy and paste it above
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="saveConfiguration()" id="save-btn">
+            Save API Key
+          </button>
+          <button class="btn btn-secondary" onclick="testConnection()">
+            Test Connections
+          </button>
+        </div>
+      </div>
+
+      <!-- Connection Status -->
+      <div class="section" id="connection-section" style="display: none;">
+        <div class="section-title">Connection Status</div>
+        <div class="connection-status">
+          <div class="connection-item">
+            <div class="connection-indicator indicator-pending" id="ga4-indicator"></div>
+            <div>
+              <div class="connection-name">Google Analytics 4</div>
+              <div class="connection-details" id="ga4-status">Waiting for API key...</div>
+            </div>
+          </div>
+          <div class="connection-item">
+            <div class="connection-indicator indicator-pending" id="gtm-indicator"></div>
+            <div>
+              <div class="connection-name">Google Tag Manager</div>
+              <div class="connection-details" id="gtm-status">Waiting for API key...</div>
+            </div>
+          </div>
+          <div class="connection-item">
+            <div class="connection-indicator indicator-pending" id="looker-indicator"></div>
+            <div>
+              <div class="connection-name">Looker Studio</div>
+              <div class="connection-details" id="looker-status">Waiting for API key...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Run Audit - Moved here for better UX flow -->
+      <div class="section">
+        <div class="section-title">Run Audit</div>
+        <div class="section-description">
+          Ready to audit your Google Marketing Stack? This will extract all configurations and generate a comprehensive report.
+        </div>
+        <button class="btn btn-primary btn-full" onclick="runAudit()" id="audit-button">
+          Audit Marketing Stack
+        </button>
+      </div>
+
+      <!-- Services -->
+      <div class="section">
+        <div class="section-title">Services to Audit</div>
+        <div class="service-grid">
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">Google Analytics 4</div>
+              <div class="service-description">Properties, dimensions, metrics, data streams</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-ga4" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">Google Tag Manager</div>
+              <div class="service-description">Tags, triggers, variables, workspaces</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-gtm" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">Looker Studio</div>
+              <div class="service-description">Reports, data sources, permissions</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-looker" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Advanced Filters -->
+        <div class="filters-container">
+          <div class="filters-header">
+            <span class="filters-title">Advanced Filters</span>
+            <button class="filters-toggle" onclick="toggleFilters()">
+              <span id="filters-toggle-text">Show filters</span>
+            </button>
+          </div>
+          <div class="filters-content" id="filters-content">
+            <div class="filter-grid">
+              <div class="input-group">
+                <label class="input-label">GA4 Properties (Optional)</label>
+                <div class="input-field">
+                  <input 
+                    type="text" 
+                    id="ga4-properties" 
+                    placeholder="properties/123456789, properties/987654321"
+                  >
+                </div>
+                <div class="input-help">
+                  Specific property IDs to audit. Leave empty to audit all accessible properties.
+                </div>
+                <div class="filter-example">
+                  Example: properties/123456789, properties/987654321
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">GTM Workspaces (Optional)</label>
+                <div class="input-field">
+                  <input 
+                    type="text" 
+                    id="gtm-workspaces" 
+                    placeholder="Default Workspace, Marketing Team"
+                  >
+                </div>
+                <div class="input-help">
+                  Specific workspace names to audit. Leave empty to audit all workspaces.
+                </div>
+                <div class="filter-example">
+                  Example: Default Workspace, Marketing Team, Development
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Future Features -->
+      <div class="future-section">
+          <div class="future-header">
+            <div class="future-icon">★</div>
+            <h4 class="future-title">Pro Version Coming Soon</h4>
+          </div>
+          <p class="future-description">
+            We're working on advanced features to make Addocu even more powerful for professional teams.
+          </p>
+          <div class="future-list">
+            <div class="future-item">
+              <div class="future-bullet"></div>
+              <span>BigQuery integration for data warehouse audits</span>
+            </div>
+            <div class="future-item">
+              <div class="future-bullet"></div>
+              <span>Google Ads campaigns and conversion tracking</span>
+            </div>
+            <div class="future-item">
+              <div class="future-bullet"></div>
+              <span>AI-powered analysis and optimization suggestions</span>
+            </div>
+            <div class="future-item">
+              <div class="future-bullet"></div>
+              <span>Scheduled audits and automated monitoring</span>
+            </div>
+            <div class="future-item">
+              <div class="future-bullet"></div>
+              <span>Google Search Console performance insights</span>
+            </div>
+            <div class="future-item">
+              <div class="future-bullet"></div>
+              <span>Multi-team collaboration and permissions</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Messages -->
+      <div id="status-messages"></div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="success-modal" id="success-modal">
+    <div class="success-modal-content">
+      <div class="success-icon">✅</div>
+      <h3 class="success-title">Audit Completed</h3>
+      <p class="success-message">
+        Your Google Marketing Stack has been successfully audited. All data has been extracted and organized into spreadsheets.
+      </p>
+      
+      <div class="success-stats">
+        <div class="success-stat">
+          <div class="success-stat-value" id="modal-assets-count">0</div>
+          <div class="success-stat-label">Assets</div>
+        </div>
+        <div class="success-stat">
+          <div class="success-stat-value" id="modal-sheets-count">0</div>
+          <div class="success-stat-label">Sheets</div>
+        </div>
+        <div class="success-stat">
+          <div class="success-stat-value" id="modal-time">0s</div>
+          <div class="success-stat-label">Time</div>
+        </div>
+      </div>
+      
+      <div class="success-actions">
+        <button class="success-btn secondary" onclick="closeSuccessModal()">
+          Close
+        </button>
+        <button class="success-btn primary" onclick="openDashboard()">
+          View Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========================================
+    // STATE MANAGEMENT
+    // ========================================
+    
+    let appState = {
+      apiKey: '',
+      isConfigured: false,
+      connectionStatus: {
+        ga4: 'pending',
+        gtm: 'pending', 
+        looker: 'pending'
+      },
+      services: {
+        ga4: true,
+        gtm: true,
+        looker: true
+      },
+      filters: {
+        ga4Properties: '',
+        gtmWorkspaces: ''
+      }
+    };
+
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      loadConfiguration();
+      setupEventListeners();
+    });
+
+    function setupEventListeners() {
+      // Service toggles
+      document.getElementById('service-ga4').addEventListener('change', updateServices);
+      document.getElementById('service-gtm').addEventListener('change', updateServices);
+      document.getElementById('service-looker').addEventListener('change', updateServices);
+      
+      // Filter inputs
+      document.getElementById('ga4-properties').addEventListener('input', updateFilters);
+      document.getElementById('gtm-workspaces').addEventListener('input', updateFilters);
+      
+      // API Key input validation
+      const apiKeyInput = document.getElementById('api-key');
+      apiKeyInput.addEventListener('input', function() {
+        const hasValue = this.value.trim().length > 0;
+        updateStepStatus('apikey', hasValue);
+      });
+
+      // Auto-save on Enter key
+      apiKeyInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveConfiguration();
+        }
+      });
+    }
+
+    function loadConfiguration() {
+      showStatus('Loading saved configuration...', 'info');
+      
+      google.script.run
+        .withSuccessHandler(function(config) {
+          // Check for permission errors
+          if (config && config.permissionsError) {
+            handlePermissionError(config.permissionsErrorMessage || 'Permission denied');
+            return;
+          }
+          
+          if (config && config.lookerApiKey) {
+            appState.apiKey = config.lookerApiKey;
+            appState.isConfigured = true;
+            
+            // Update UI
+            document.getElementById('api-key').value = config.lookerApiKey;
+            updateStepStatus('apikey', true);
+          }
+          
+          // Load saved filters
+          if (config && config.ga4Properties) {
+            appState.filters.ga4Properties = config.ga4Properties;
+            document.getElementById('ga4-properties').value = config.ga4Properties;
+          }
+          
+          if (config && config.gtmWorkspaces) {
+            appState.filters.gtmWorkspaces = config.gtmWorkspaces;
+            document.getElementById('gtm-workspaces').value = config.gtmWorkspaces;
+          }
+          
+          hideStatus();
+          
+          // Auto-test connection if API key is configured
+          if (appState.isConfigured) {
+            setTimeout(() => testConnection(), 1000);
+          }
+        })
+        .withFailureHandler(function(error) {
+          handleConfigurationError(error);
+        })
+        .getUserConfig(); // Using the correct function name
+    }
+
+    // ========================================
+    // FILTERS MANAGEMENT
+    // ========================================
+    
+    function toggleFilters() {
+      const content = document.getElementById('filters-content');
+      const toggleText = document.getElementById('filters-toggle-text');
+      
+      if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        toggleText.textContent = 'Show filters';
+      } else {
+        content.classList.add('expanded');
+        toggleText.textContent = 'Hide filters';
+      }
+    }
+
+    function updateFilters() {
+      appState.filters.ga4Properties = document.getElementById('ga4-properties').value.trim();
+      appState.filters.gtmWorkspaces = document.getElementById('gtm-workspaces').value.trim();
+    }
+
+    function parseCommaSeparatedValues(input) {
+      if (!input) return [];
+      return input.split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
+    }
+
+    // ========================================
+    // CONFIGURATION MANAGEMENT
+    // ========================================
+    
+    function saveConfiguration() {
+      const apiKey = document.getElementById('api-key').value.trim();
+      
+      if (!apiKey) {
+        showStatus('Please enter your Google Cloud API Key', 'error');
+        return;
+      }
+
+      if (apiKey.length < 20) {
+        showStatus('API Key seems too short. Please verify it\'s correct.', 'warning');
+        return;
+      }
+
+      showButtonLoading('save-btn', 'Saving...');
+      
+      const configObject = {
+        lookerApiKey: apiKey
+      };
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          appState.apiKey = apiKey;
+          appState.isConfigured = true;
+          
+          updateStepStatus('apikey', true);
+          hideButtonLoading('save-btn', 'Save API Key');
+          
+          showStatus('✅ API Key saved successfully!', 'success');
+          
+          // Auto-test connections
+          setTimeout(() => {
+            testConnection();
+          }, 1000);
+        })
+        .withFailureHandler(function(error) {
+          hideButtonLoading('save-btn', 'Save API Key');
+          showStatus(`Save failed: ${error.message}`, 'error');
+        })
+        .saveUserConfiguration(configObject); // Using the correct function name
+    }
+
+    // ========================================
+    // CONNECTION TESTING
+    // ========================================
+    
+    function testConnection() {
+      if (!appState.isConfigured) {
+        showStatus('Please save your API Key first', 'warning');
+        return;
+      }
+
+      // Show connection status section
+      const connectionSection = document.getElementById('connection-section');
+      connectionSection.style.display = 'block';
+
+      // Reset all indicators to pending
+      resetConnectionStatus();
+      
+      showStatus('Testing API connections with OAuth2 + API Key...', 'info');
+      
+      google.script.run
+        .withSuccessHandler(function(results) {
+          updateConnectionResults(results);
+          updateStepStatus('connection', true);
+          
+          const hasErrors = results.some(r => {
+            const status = Array.isArray(r) ? r[2] : r.estado;
+            return status === 'ERROR';
+          });
+          
+          if (!hasErrors) {
+            showStatus('✅ All connections working correctly', 'success');
+            updateStepStatus('audit', false); // Make audit step active
+          } else {
+            showStatus('Some services need authorization - check API key and OAuth2 permissions', 'warning');
+          }
+        })
+        .withFailureHandler(function(error) {
+          handleConnectionTestError(error);
+        })
+        .simplifiedConnectionDiagnostics(); // Using the correct function name
+    }
+
+    function resetConnectionStatus() {
+      const indicators = ['ga4-indicator', 'gtm-indicator', 'looker-indicator'];
+      const statuses = ['ga4-status', 'gtm-status', 'looker-status'];
+      
+      indicators.forEach(id => {
+        document.getElementById(id).className = 'connection-indicator indicator-pending';
+      });
+      
+      statuses.forEach(id => {
+        const element = document.getElementById(id);
+        element.textContent = 'Testing...';
+      });
+    }
+
+    function updateConnectionResults(results) {
+      const serviceMapping = {
+        'Google Analytics 4 Admin API': 'ga4',
+        'Google Tag Manager API': 'gtm',
+        'Looker Studio API': 'looker'
+      };
+      
+      const formattedResults = results.map(result => {
+        if (Array.isArray(result)) {
+          return {
+            service: result[0],
+            account: result[1],
+            status: result[2],
+            message: result[3]
+          };
+        }
+        return result;
+      });
+      
+      formattedResults.forEach(result => {
+        const serviceKey = serviceMapping[result.service];
+        if (serviceKey) {
+          const indicator = document.getElementById(`${serviceKey}-indicator`);
+          const status = document.getElementById(`${serviceKey}-status`);
+          
+          if (result.status === 'OK') {
+            indicator.className = 'connection-indicator indicator-success';
+            status.textContent = result.account || 'OAuth2 + API Key connected';
+            
+            appState.connectionStatus[serviceKey] = 'success';
+          } else {
+            indicator.className = 'connection-indicator indicator-error';
+            
+            let errorMessage = result.message || 'Connection error';
+            if (errorMessage.includes('account') || errorMessage.includes('same account')) {
+              errorMessage = 'Account mismatch - verify Chrome/Sheets use same account';
+            }
+            
+            status.textContent = errorMessage;
+            appState.connectionStatus[serviceKey] = 'error';
+          }
+        }
+      });
+    }
+
+    // ========================================
+    // SERVICE MANAGEMENT
+    // ========================================
+    
+    function updateServices() {
+      appState.services.ga4 = document.getElementById('service-ga4').checked;
+      appState.services.gtm = document.getElementById('service-gtm').checked;
+      appState.services.looker = document.getElementById('service-looker').checked;
+    }
+
+    // ========================================
+    // AUDIT EXECUTION
+    // ========================================
+    
+    function runAudit() {
+      if (!appState.isConfigured) {
+        showStatus('Please configure your API Key first', 'error');
+        return;
+      }
+      
+      updateServices();
+      updateFilters();
+      
+      const enabledServices = Object.entries(appState.services)
+        .filter(([key, value]) => value)
+        .map(([key]) => key);
+      
+      if (enabledServices.length === 0) {
+        showStatus('Select at least one service to audit', 'error');
+        return;
+      }
+      
+      const startTime = Date.now();
+      showButtonLoading('audit-button', `Auditing ${enabledServices.length} services...`);
+      
+      // Prepare audit configuration with filters
+      const auditConfig = {
+        services: enabledServices,
+        filters: {
+          ga4Properties: parseCommaSeparatedValues(appState.filters.ga4Properties),
+          gtmWorkspaces: parseCommaSeparatedValues(appState.filters.gtmWorkspaces)
+        }
+      };
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response.success) {
+            updateStepStatus('audit', true);
+            
+            // Calculate execution time
+            const executionTime = Math.round((Date.now() - startTime) / 1000);
+            
+            // Show success modal with stats
+            showSuccessModal({
+              assetsCount: response.totalAssets || 'N/A',
+              sheetsCount: response.sheetsCreated || enabledServices.length,
+              executionTime: executionTime
+            });
+            
+            showStatus('Audit completed successfully', 'success');
+          } else {
+            showStatus(`Audit error: ${response.error}`, 'error');
+          }
+          hideButtonLoading('audit-button', 'Audit Marketing Stack');
+        })
+        .withFailureHandler(function(error) {
+          showStatus(`Audit failed: ${error.message}`, 'error');
+          hideButtonLoading('audit-button', 'Audit Marketing Stack');
+        })
+        .executeAuditWithFilters(auditConfig);
+    }
+
+    // ========================================
+    // ERROR HANDLING
+    // ========================================
+    
+    function handlePermissionError(errorMessage) {
+      hideStatus();
+      
+      const statusDiv = document.getElementById('status-messages');
+      const errorCard = document.createElement('div');
+      errorCard.className = 'status-message status-error fade-in';
+      errorCard.innerHTML = `
+        <strong>🔒 Authorization Required</strong><br>
+        Addocu needs permission to access your Google account data.<br><br>
+        <strong>Quick Fix:</strong><br>
+        1. Go to <strong>Extensions > Addocu > 🔄 Reauthorize Permissions</strong><br>
+        2. Follow the authorization prompts<br>
+        3. Return here to continue setup<br><br>
+        <small>Technical details: ${errorMessage}</small>
+      `;
+      
+      statusDiv.innerHTML = '';
+      statusDiv.appendChild(errorCard);
+      
+      console.error('Addocu Permission Error:', errorMessage);
+    }
+    
+    function handleConfigurationError(error) {
+      console.error('Addocu Configuration Error:', error);
+      
+      // Check if it's a permission error
+      if (error.message && error.message.includes('PERMISSION_DENIED')) {
+        handlePermissionError(error.message);
+        return;
+      }
+      
+      // Handle other configuration errors
+      showStatus(`Configuration Error: ${error.message}`, 'error');
+    }
+    
+    function handleConnectionTestError(error) {
+      console.error('Connection test error:', error);
+      
+      showStatus(`Connection test failed: ${error.message}`, 'error');
+      resetConnectionStatus();
+    }
+    
+    // ========================================
+    // UI HELPER FUNCTIONS
+    // ========================================
+    
+    function updateStepStatus(stepId, completed) {
+      const step = document.getElementById(`step-${stepId}`);
+      if (completed) {
+        step.classList.add('completed');
+      } else {
+        step.classList.remove('completed');
+      }
+    }
+
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('status-messages');
+      const statusCard = document.createElement('div');
+      statusCard.className = `status-message status-${type} fade-in`;
+      statusCard.textContent = message;
+      
+      statusDiv.innerHTML = '';
+      statusDiv.appendChild(statusCard);
+      
+      if (type === 'success') {
+        setTimeout(() => {
+          statusCard.style.transition = 'opacity 0.3s ease';
+          statusCard.style.opacity = '0';
+          setTimeout(() => statusCard.remove(), 300);
+        }, 3000);
+      }
+    }
+
+    function hideStatus() {
+      document.getElementById('status-messages').innerHTML = '';
+    }
+
+    function showButtonLoading(buttonId, text) {
+      const button = document.getElementById(buttonId);
+      button.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          ${text}
+        </div>
+      `;
+      button.disabled = true;
+    }
+
+    function hideButtonLoading(buttonId, originalText) {
+      const button = document.getElementById(buttonId);
+      button.innerHTML = originalText;
+      button.disabled = false;
+    }
+
+    // ========================================
+    // SUCCESS MODAL FUNCTIONS
+    // ========================================
+    
+    function showSuccessModal(stats) {
+      // Update modal stats
+      document.getElementById('modal-assets-count').textContent = stats.assetsCount;
+      document.getElementById('modal-sheets-count').textContent = stats.sheetsCount;
+      document.getElementById('modal-time').textContent = stats.executionTime + 's';
+      
+      // Show modal
+      const modal = document.getElementById('success-modal');
+      modal.classList.add('show');
+      
+      // Auto-close after 10 seconds
+      setTimeout(() => {
+        closeSuccessModal();
+      }, 10000);
+    }
+    
+    function closeSuccessModal() {
+      const modal = document.getElementById('success-modal');
+      modal.classList.remove('show');
+    }
+    
+    function openDashboard() {
+      closeSuccessModal();
+      
+      // Try to open dashboard in current tab or new tab
+      try {
+        // For Google Sheets environment, try to create a new dashboard
+        google.script.run
+          .withSuccessHandler(function() {
+            showStatus('Dashboard opened successfully', 'success');
+          })
+          .withFailureHandler(function() {
+            showStatus('Dashboard available in your spreadsheet', 'success');
+          })
+          .openDashboard();
+      } catch (error) {
+        showStatus('Dashboard data is now available in your spreadsheet', 'success');
+      }
+    }
+    
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+      const modal = document.getElementById('success-modal');
+      if (event.target === modal) {
+        closeSuccessModal();
+      }
+    });
+  </script>
+</body>
+</html>

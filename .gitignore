@@ -1,0 +1,214 @@
+# =====================================================
+# .gitignore para Addocu v3.0 (Google Apps Script)
+# =====================================================
+
+# ============= GIT INTERNALS (CRÍTICO) ==============
+# Nunca trackear archivos internos de git
+.git/
+.git/*
+.git/**/*
+.gitattributes
+
+# ============= LOGS Y DEBUGGING =============
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+debug.log
+error.log
+
+# ============= ARCHIVOS TEMPORALES =============
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.backup
+*~
+.cache/
+temp/
+tmp/
+
+# ============= RUNTIME DATA =============
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ============= NODE.JS (SI SE USA) =============
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+package-lock.json
+yarn.lock
+
+# ============= COVERAGE Y TESTS =============
+coverage/
+.nyc_output
+test-results/
+coverage-results/
+.jest/
+
+# ============= ENVIRONMENT VARIABLES =============
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+
+# ============= API KEYS Y SECRETS (CRÍTICO) =============
+*.key
+*.pem
+*.p12
+*.pfx
+config.json
+secrets.json
+credentials.json
+.clasprc.json
+.clasp.json
+apikeys.txt
+.secret
+.credentials
+
+# ============= GOOGLE APPS SCRIPT ESPECÍFICO =============
+# Clasp deployment files
+.clasprc.json
+.clasp.json
+# Google Apps Script bindings (si existen)
+appsscript.json.backup
+
+# ============= IDES Y EDITORES =============
+# VSCode
+.vscode/
+.vscode-test/
+
+# IntelliJ / WebStorm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ============= SISTEMA OPERATIVO =============
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============= BUILDS Y DISTRIBUCIÓN =============
+dist/
+build/
+out/
+public/
+.output/
+.nuxt/
+.next/
+
+# ============= ARCHIVOS DE PROYECTO ESPECÍFICOS =============
+# Backups automáticos
+*.backup
+*.bck
+*.original
+
+# Archivos de configuración local
+config.local.js
+config.local.json
+local.properties
+
+# Documentos de trabajo temporal
+TODO.md
+NOTES.md
+SCRATCH.md
+*.draft.md
+
+# Archivos de desarrollo
+dev/
+development/
+.dev/
+
+# ============= ARCHIVOS COMPRIMIDOS =============
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.tar
+*.gz
+
+# ============= MULTIMEDIA TEMPORAL =============
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mkv
+
+# ============= DATOS SENSIBLES =============
+# CSV con datos reales (solo mantener ejemplos)
+data/
+exports/
+downloads/
+*.xlsx
+*.xls
+user-data/
+
+# ============= VARIOS =============
+# Archivos de lock
+*.lock
+.lock
+
+# Archivos de dependencias
+vendor/
+bower_components/
+
+# Archivos de compilación
+*.o
+*.so
+*.dll
+*.exe
