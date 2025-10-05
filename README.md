@@ -1,10 +1,10 @@
-# Addocu 🚀
+# Addocu
 
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![Google Apps Script](https://img.shields.io/badge/Google%20Apps%20Script-4285F4?logo=google&logoColor=white)](https://script.google.com/)
+[![Google Workspace Add-on](https://img.shields.io/badge/Google%20Workspace-Add--on-34A853)](https://workspace.google.com/marketplace)
 [![Open Source](https://img.shields.io/badge/Open%20Source-Community-brightgreen)](https://opensource.org/)
 [![Building in Public](https://img.shields.io/badge/Building%20in%20Public-🚀-blue)](https://www.addocu.com)
-[![Beta Status](https://img.shields.io/badge/Status-Open%20Beta-orange)](https://github.com/Addocu/addocu)
 
 **Audit and Document Your Google Marketing Stack in Seconds.**
 
@@ -12,18 +12,7 @@ Addocu is a powerful, **free and open-source** Google Sheets™ Add-on designed 
 
 This project was born from countless hours spent on manual documentation and a belief that there had to be a better way. I'm sharing it with the community to give back and to build, together, the best auditing tool possible.
 
----
-
-## 🚧 Current Status: Open Beta
-
-**We're building in public!** Addocu is currently in **open beta** phase. The tool is fully functional but we're actively gathering feedback from the community before the official marketplace launch.
-
-**What this means:**
-- ✅ All features are available and working
-- ✅ Code is open source under CC BY-NC-SA 4.0
-- ✅ Free forever for the community
-- 🔄 Active development and improvements based on feedback
-- 🔄 Preparing for Google Workspace Marketplace submission
+![Addocu Logo](docs/addocu_logo.png)
 
 ---
 
@@ -67,11 +56,6 @@ This tool provides a comprehensive, one-click audit of your setup, completely fr
 
 ## 📋 Prerequisites
 
-### 🔑 **Authentication Requirements**
-- **Google Cloud API Key:** You'll need your own Google Cloud API Key for authentication
-- **"Reader"** (or higher) access to the Google platforms you wish to audit
-- **Same Google Account:** Ensure you're logged into the same Google account across Chrome and Google Sheets
-
 ### 🚨 **CRITICAL: Same Google Account Requirement**
 
 ⚠️ **You MUST be logged into Google Chrome AND Google Sheets with the SAME Google account.** Different accounts cause permission errors.
@@ -81,41 +65,39 @@ This tool provides a comprehensive, one-click audit of your setup, completely fr
 2. Check your Google Sheets account (top-right corner)  
 3. If different → Sign out everywhere and use ONE account
 
+### 🔑 **Other Requirements**
+- **"Reader"** (or higher) access to the Google platforms you wish to audit
+- All authentication is **automatic via OAuth2** - no API keys needed!
+
+### 📚 **Quick Setup**
+- Install from Google Workspace Marketplace
+- Open Google Sheets
+- Extensions > Addocu > Configure
+- Authorize when prompted
+
+**That's it!** No complex setup required.
+
 ---
 
 ## 🚀 Installation & Setup
 
-### Method 1: Manual Installation from GitHub (Current - Beta Phase)
+### Method 1: Google Workspace Marketplace (Recommended)
+1. **Install Addocu** from the [Google Workspace Marketplace](https://workspace.google.com/marketplace)
+2. **Open a Google Sheet** (new or existing)
+3. Go to **Extensions > Addocu > ⚙️ Configure**
+4. **Enter your Google Cloud API Key** in the sidebar
+5. Click **"Save"** and you're ready!
 
-1. **Clone or Download this repository**
-   ```bash
-   git clone https://github.com/Addocu/addocu.git
-   ```
-
+### Method 2: Manual Installation (Advanced Users)
+1. **Clone this repository** or download the source code
 2. **Open Google Apps Script** (script.google.com)
-
-3. **Create a new project** and copy all `.js` and `.html` files from this repository
-
+3. **Create a new project** and copy all `.js` and `.html` files
 4. **Set up the manifest** using the provided `appsscript.json`
-
-5. **Get your Google Cloud API Key:**
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create or select a project
-   - Enable the required APIs (GA4 Admin API, GTM API, etc.)
-   - Create an API key in Credentials
-
-6. **Test the Add-on:**
-   - Open a Google Sheet
-   - Run the Add-on functions
-   - Enter your API key when prompted
-
-### Method 2: Google Workspace Marketplace (Coming Soon)
-
-🔄 **We're preparing for marketplace submission.** This will be the easiest installation method once approved by Google.
+5. **Deploy as Add-on** following Google's guidelines
 
 ---
 
-## 🔒 Authorization & Troubleshooting
+## 🔐 Authorization & Troubleshooting
 
 ### 🚨 **Permission Issues? 95% are Account Mismatches**
 
@@ -135,21 +117,39 @@ This tool provides a comprehensive, one-click audit of your setup, completely fr
 3. **Open Google Sheets** - verify same account (top-right corner)
 4. **Try Addocu again**
 
-#### **🔧 Alternative Solutions:**
-
-**Method 1: Force Re-authorization**
-1. Open your Google Sheet
-2. Go to **Extensions > Apps Script**
-3. In the script editor, run the authorization function
-4. **Authorize ALL permissions** when prompted
-
-**Method 2: Check API Key**
-1. Verify your Google Cloud API Key is valid
-2. Ensure required APIs are enabled in your Google Cloud project
-3. Check API key restrictions aren't blocking requests
+#### **🔧 If That Doesn't Work:**
+1. **Extensions > Addocu > 🆘 Troubleshooting > 🔄 Reauthorize Permissions**
+2. **Authorize ALL permissions** when prompted
 
 #### **📖 Need More Help?**
 See our detailed [Troubleshooting Guide](docs/troubleshooting.md) for advanced solutions.
+
+---
+
+### 🔧 **Alternative Manual Solutions**
+
+#### **Method 1: Quick Re-authorization**
+1. Open your Google Sheet
+2. Go to **Extensions > Addocu > 📊 Audit GA4**
+3. **When permission dialog appears:**
+   - ✅ Click "Authorize"
+   - ✅ Select your Google account
+   - ✅ Click "Allow" for ALL permissions
+   - ❌ **Do NOT** click "Deny" or close the dialog
+4. Done! All features will be available
+
+#### **Method 2: Apps Script Manual Authorization**
+1. Go to **Extensions > Apps Script**
+2. In the script editor, select function: **`forceAllPermissions`**
+3. Click the **"Run" (▶️)** button
+4. Authorize when prompted (**allow ALL permissions**)
+5. Return to Google Sheets - Addocu will work normally
+
+#### **Method 3: Clean Reinstall (Last Resort)**
+1. **Uninstall** Addocu from Google Workspace Marketplace
+2. **Wait 5 minutes** for Google's cache to clear
+3. **Reinstall** Addocu from the Marketplace
+4. **Authorize ALL permissions** during setup
 
 ---
 
@@ -161,8 +161,9 @@ See our detailed [Troubleshooting Guide](docs/troubleshooting.md) for advanced s
 | **Google Analytics** | Read GA4 configuration | ✅ No data modification |
 | **Looker Studio** | List reports and data sources | ✅ View-only access |
 | **Google Tag Manager** | Read tags, triggers, variables | ✅ No changes to containers |
-| **External Service** | Call Google APIs with your API key | ✅ Standard Google auth |
+| **External Service** | Call Google APIs with OAuth2 | ✅ Standard Google auth |
 | **Application Data** | Save your API key securely | ✅ Stored in your account only |
+| **script.external_request** | Required for API calls | ✅ Standard Google Workspace permission |
 
 ### 🛡️ **Security Guarantee**
 - **✅ Read-Only Access:** Addocu never modifies your GA4, GTM, or Looker Studio configurations
@@ -172,11 +173,28 @@ See our detailed [Troubleshooting Guide](docs/troubleshooting.md) for advanced s
 
 ---
 
+### 🎯 **Most Issues = Account Problems**
+
+**Remember:** 95% of Addocu issues are caused by using different Google accounts in Chrome vs Google Sheets.
+
+**✅ Always verify first:**
+- Chrome profile matches Google Sheets account
+- Only one Google account active
+- Account has access to your marketing data
+
+**📖 Full Troubleshooting Guide:** [docs/troubleshooting.md](docs/troubleshooting.md)
+
+**🆘 Get Help:**
+- 🛠 **Bug Reports:** [GitHub Issues](https://github.com/jrodeiro5/addocu/issues)  
+- 📧 **Support:** hola@addocu.com
+
+---
+
 ## 🎯 Quick Start Guide
 
 ### 1. **First Configuration**
 ```
-Extensions > Apps Script > Run Configuration Function
+Extensions > Addocu > ⚙️ Configure
 ```
 - Enter your Google Cloud API Key
 - Test the connection
@@ -184,7 +202,7 @@ Extensions > Apps Script > Run Configuration Function
 
 ### 2. **Run Your First Audit**
 ```
-Run the main coordination function from Apps Script
+Extensions > Addocu > 🚀 Audit Complete Stack
 ```
 This will create dedicated sheets for each platform:
 - `DASHBOARD` - Executive summary
@@ -202,22 +220,27 @@ Navigate through the generated sheets to discover:
 
 ---
 
-## 🏗️ Technical Architecture
+## 🗂️ Technical Architecture
 
 ### **Core Components**
 ```
 📁 Addocu Project Structure
 ├── 📄 appsscript.json        (Add-on manifest and permissions)
 ├── 📄 coordinator.js         (UI orchestration and menu logic)
+├── 📄 dashboard.js           (Dashboard generation logic)
+├── 📄 dashboard_functions.js (Dashboard support functions)
 ├── 📄 utilities.js           (Authentication and API utilities)
 ├── 📄 ga4.js                 (GA4 data extraction engine)
 ├── 📄 gtm.js                 (GTM synchronization logic)
 ├── 📄 looker_studio.js       (Looker Studio API integration)
 ├── 📄 logging.js             (Comprehensive logging system)
-├── 📄 dashboard.js           (Dashboard generation logic)
+├── 📄 sidebar_support.js     (Sidebar support functions)
+├── 📄 account_verification.js (Account verification tools)
+├── 📄 auth_recovery.js       (Authentication recovery)
+├── 📄 permission_recovery.js (Permission recovery systems)
+├── 📄 diagnostics.js         (System diagnostics)
 ├── 📄 configuration.html     (Configuration sidebar UI)
-├── 📄 interactive_dashboard.html (Interactive dashboard interface)
-└── 📁 docs/                  (Documentation and troubleshooting guides)
+└── 📄 interactive_dashboard.html (Interactive dashboard interface)
 ```
 
 ### **Security & Privacy**
@@ -260,25 +283,19 @@ Addocu is distributed under the **Creative Commons Attribution-NonCommercial-Sha
 
 ## 🗺️ Roadmap & Future
 
-### **Current Status: Open Beta (Phase 2)**
+### **Current Status: v2.1.0**
 - ✅ Complete GA4, GTM, and Looker Studio integration
 - ✅ Interactive dashboard and reporting
 - ✅ Open source codebase with CC BY-NC-SA 4.0 license
-- 🔄 Beta testing with community feedback
-- 🔄 Preparing Google Workspace Marketplace submission
-
-### **Next Phase: Public Launch (Phase 3)**
-- 📋 Google Workspace Marketplace approval and launch
-- 📋 Community-driven feature requests
-- 📋 Enhanced documentation and tutorials
-- 📋 Multi-language support
+- ✅ Google Workspace Marketplace distribution
+- ✅ OAuth2 authentication for all services
 
 ### **Coming Soon: Community Features**
-- 🔄 Google Ads integration
-- 🔄 Google Search Console support
-- 🔄 BigQuery data source analysis
-- 🔄 Enhanced error detection and recommendations
-- 🔄 Automated scheduling (Pro version)
+- 📋 Google Ads integration
+- 📋 Google Search Console support
+- 📋 BigQuery data source analysis
+- 📋 Enhanced error detection and recommendations
+- 📋 Multi-language support
 
 ### **The Future: Addocu Pro**
 We're planning a separate, commercial **Addocu Pro** version that will expand on the free tool with:
@@ -289,7 +306,7 @@ We're planning a separate, commercial **Addocu Pro** version that will expand on
 - 🔮 **Smart Monitoring:** Proactive alerts for configuration changes
 - 🔮 **Team Collaboration:** Enhanced sharing and collaboration features
 
-**Important:** Addocu Community Edition will always remain free and fully functional.
+**Important:** Addocu will always remain free and fully functional.
 
 ---
 
@@ -298,12 +315,12 @@ We're planning a separate, commercial **Addocu Pro** version that will expand on
 We welcome contributions from the community! Here's how you can help:
 
 ### **🐛 Report Issues**
-- Found a bug? [Open an issue](https://github.com/Addocu/addocu/issues)
+- Found a bug? [Open an issue](https://github.com/jrodeiro5/addocu/issues)
 - Include detailed steps to reproduce
 - Specify your Google Workspace environment
 
 ### **💡 Suggest Features**
-- Have an idea? [Start a discussion](https://github.com/Addocu/addocu/discussions)
+- Have an idea? [Start a discussion](https://github.com/jrodeiro5/addocu/discussions)
 - Explain the use case and benefit to the community
 - Consider contributing the implementation
 
@@ -319,18 +336,13 @@ We welcome contributions from the community! Here's how you can help:
 - Add examples and use cases
 - Translate documentation to other languages
 
-### **🧪 Beta Testing**
-- Test new features and report feedback
-- Share your use cases and success stories
-- Help us identify edge cases and improvements
-
 ---
 
 ## 🆘 Support & Community
 
 ### **Community Support**
-- 💬 **GitHub Discussions:** [Join the conversation](https://github.com/Addocu/addocu/discussions)
-- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/Addocu/addocu/issues)
+- 💬 **GitHub Discussions:** [Join the conversation](https://github.com/jrodeiro5/addocu/discussions)
+- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/jrodeiro5/addocu/issues)
 - 📧 **General Questions:** hola@addocu.com
 
 ### **Documentation**
@@ -338,7 +350,7 @@ We welcome contributions from the community! Here's how you can help:
 - ⚙️ **Configuration Help:** [docs/configuration.md](docs/configuration.md)
 - 🔧 **Troubleshooting:** [docs/troubleshooting.md](docs/troubleshooting.md)
 
-### **Building in Public**
+### **Stay Updated**
 - 🌐 **Website:** [addocu.com](https://addocu.com)
 - 📱 **LinkedIn:** Follow the building in public journey
 - 📊 **Use Cases:** See real-world examples and success stories
@@ -356,10 +368,10 @@ We welcome contributions from the community! Here's how you can help:
 
 ## 📈 Project Stats
 
-![GitHub stars](https://img.shields.io/github/stars/Addocu/addocu?style=social)
-![GitHub forks](https://img.shields.io/github/forks/Addocu/addocu?style=social)
-![GitHub issues](https://img.shields.io/github/issues/Addocu/addocu)
-![GitHub last commit](https://img.shields.io/github/last-commit/Addocu/addocu)
+![GitHub stars](https://img.shields.io/github/stars/jrodeiro5/addocu?style=social)
+![GitHub forks](https://img.shields.io/github/forks/jrodeiro5/addocu?style=social)
+![GitHub issues](https://img.shields.io/github/issues/jrodeiro5/addocu)
+![GitHub last commit](https://img.shields.io/github/last-commit/jrodeiro5/addocu)
 
 ---
 
