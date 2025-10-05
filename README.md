@@ -185,8 +185,8 @@ See our detailed [Troubleshooting Guide](docs/troubleshooting.md) for advanced s
 **📖 Full Troubleshooting Guide:** [docs/troubleshooting.md](docs/troubleshooting.md)
 
 **🆘 Get Help:**
-- 🛠 **Bug Reports:** [GitHub Issues](https://github.com/jrodeiro5/addocu/issues)  
-- 📧 **Support:** hola@addocu.com
+- 🛠 **Bug Reports:** [GitHub Issues](https://github.com/Addocu/addocu/issues)  
+- 📧 **Support:** hello@addocu.com
 
 ---
 
@@ -315,12 +315,12 @@ We're planning a separate, commercial **Addocu Pro** version that will expand on
 We welcome contributions from the community! Here's how you can help:
 
 ### **🐛 Report Issues**
-- Found a bug? [Open an issue](https://github.com/jrodeiro5/addocu/issues)
+- Found a bug? [Open an issue](https://github.com/Addocu/addocu/issues)
 - Include detailed steps to reproduce
 - Specify your Google Workspace environment
 
 ### **💡 Suggest Features**
-- Have an idea? [Start a discussion](https://github.com/jrodeiro5/addocu/discussions)
+- Have an idea? [Start a discussion](https://github.com/Addocu/addocu/discussions)
 - Explain the use case and benefit to the community
 - Consider contributing the implementation
 
@@ -341,9 +341,9 @@ We welcome contributions from the community! Here's how you can help:
 ## 🆘 Support & Community
 
 ### **Community Support**
-- 💬 **GitHub Discussions:** [Join the conversation](https://github.com/jrodeiro5/addocu/discussions)
-- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/jrodeiro5/addocu/issues)
-- 📧 **General Questions:** hola@addocu.com
+- 💬 **GitHub Discussions:** [Join the conversation](https://github.com/Addocu/addocu/discussions)
+- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/Addocu/addocu/issues)
+- 📧 **General Questions:** hello@addocu.com
 
 ### **Documentation**
 - 📖 **Installation Guide:** [docs/installation.md](docs/installation.md)
@@ -368,10 +368,10 @@ We welcome contributions from the community! Here's how you can help:
 
 ## 📈 Project Stats
 
-![GitHub stars](https://img.shields.io/github/stars/jrodeiro5/addocu?style=social)
-![GitHub forks](https://img.shields.io/github/forks/jrodeiro5/addocu?style=social)
-![GitHub issues](https://img.shields.io/github/issues/jrodeiro5/addocu)
-![GitHub last commit](https://img.shields.io/github/last-commit/jrodeiro5/addocu)
+![GitHub stars](https://img.shields.io/github/stars/Addocu/addocu?style=social)
+![GitHub forks](https://img.shields.io/github/forks/Addocu/addocu?style=social)
+![GitHub issues](https://img.shields.io/github/issues/Addocu/addocu)
+![GitHub last commit](https://img.shields.io/github/last-commit/Addocu/addocu)
 
 ---
 
