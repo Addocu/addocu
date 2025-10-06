@@ -1,0 +1,267 @@
+name: 🤖 Community Management
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome-new-contributors:
+    name: 👋 Welcome New Contributors
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    
+    steps:
+    - name: 🔍 Check if first-time contributor
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const author = context.payload.sender.login;
+          
+          // Check if this is the author's first contribution
+          const { data: contributions } = await github.rest.search.issuesAndPullRequests({
+            q: `repo:${owner}/${repo} author:${author} type:issue`,
+            sort: 'created',
+            order: 'asc',
+            per_page: 1
+          });
+          
+          const { data: prContributions } = await github.rest.search.issuesAndPullRequests({
+            q: `repo:${owner}/${repo} author:${author} type:pr`,
+            sort: 'created', 
+            order: 'asc',
+            per_page: 1
+          });
+          
+          const isFirstIssue = contributions.total_count <= 1;
+          const isFirstPR = prContributions.total_count <= 1;
+          
+          if (context.payload.issue && isFirstIssue) {
+            // Welcome message for first issue
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: context.payload.issue.number,
+              body: `👋 **Welcome to Addocu!** 
+
+Thank you for opening your first issue! We're excited to have you in our community of digital marketing professionals and developers.
+
+Here are some helpful resources:
+- 📖 Check our [Troubleshooting Guide](docs/troubleshooting.md) for common solutions
+- 💬 Join our [Discussions](https://github.com/${owner}/${repo}/discussions) for community support
+- 🤝 Read our [Contributing Guide](CONTRIBUTING.md) if you'd like to help improve Addocu
+
+A maintainer will review your issue as soon as possible. In the meantime, feel free to explore the project and don't hesitate to ask questions!
+
+**🎯 For configuration issues:** 95% of problems are caused by account mismatches (Chrome ≠ Sheets account). Try Extensions > Addocu > Troubleshooting > Reauthorize first!`
+            });
+          }
+          
+          if (context.payload.pull_request && isFirstPR) {
+            // Welcome message for first PR
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: context.payload.pull_request.number,
+              body: `🎉 **Thank you for your first contribution to Addocu!**
+
+This is awesome! Contributing to open source projects like Addocu helps make digital marketing auditing easier for everyone.
+
+**What happens next:**
+1. 🔍 Our automated checks will validate your changes
+2. 👥 A maintainer will review your PR and provide feedback
+3. 🚀 Once approved, your changes will be merged and released
+
+**First-time contributor tips:**
+- Be responsive to feedback - we're here to help make your contribution great!
+- Don't worry if changes are requested - it's normal and helps improve code quality
+- Check out our [Code of Conduct](CODE_OF_CONDUCT.md) and [Contributing Guide](CONTRIBUTING.md)
+
+Thank you for making Addocu better for the digital marketing community! 🚀`
+            });
+          }
+
+  auto-label-issues:
+    name: 🏷️ Auto-Label Issues
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened' && github.event.issue
+    
+    steps:
+    - name: 🏷️ Add labels based on issue content
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const issue = context.payload.issue;
+          const title = issue.title.toLowerCase();
+          const body = issue.body ? issue.body.toLowerCase() : '';
+          const labels = [];
+          
+          // Priority labels based on title keywords
+          if (title.includes('[urgent]') || title.includes('critical') || title.includes('broken')) {
+            labels.push('priority: high');
+          }
+          
+          // Platform-specific labels
+          if (body.includes('google analytics') || body.includes('ga4') || title.includes('ga4')) {
+            labels.push('platform: ga4');
+          }
+          if (body.includes('google tag manager') || body.includes('gtm') || title.includes('gtm')) {
+            labels.push('platform: gtm');
+          }
+          if (body.includes('looker studio') || title.includes('looker')) {
+            labels.push('platform: looker-studio');
+          }
+          if (body.includes('dashboard') || title.includes('dashboard')) {
+            labels.push('component: dashboard');
+          }
+          
+          // Issue type detection
+          if (title.includes('permission') || title.includes('auth') || body.includes('permission denied')) {
+            labels.push('type: permissions');
+          }
+          if (title.includes('config') || body.includes('configuration') || body.includes('setup')) {
+            labels.push('type: configuration');
+          }
+          if (body.includes('api key') || body.includes('google cloud')) {
+            labels.push('type: api-setup');
+          }
+          
+          // Experience level
+          if (body.includes('beginner') || body.includes('new to') || body.includes('first time')) {
+            labels.push('level: beginner');
+          }
+          
+          // Good first issue detection
+          if (title.includes('documentation') || title.includes('typo') || title.includes('readme')) {
+            labels.push('good first issue');
+          }
+          
+          if (labels.length > 0) {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issue.number,
+              labels
+            });
+          }
+
+  auto-assign-reviewers:
+    name: 👥 Auto-Assign PR Reviewers
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened' && github.event.pull_request
+    
+    steps:
+    - name: 👥 Assign reviewers based on changed files
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const pr = context.payload.pull_request;
+          
+          // Get changed files
+          const { data: files } = await github.rest.pulls.listFiles({
+            owner,
+            repo,
+            pull_number: pr.number
+          });
+          
+          const reviewers = [];
+          const teamReviewers = [];
+          
+          // Determine reviewers based on changed files
+          const hasCodeChanges = files.some(file => file.filename.endsWith('.js'));
+          const hasDocsChanges = files.some(file => 
+            file.filename.includes('README.md') || 
+            file.filename.includes('docs/') ||
+            file.filename.includes('.md')
+          );
+          const hasConfigChanges = files.some(file => 
+            file.filename.includes('appsscript.json') ||
+            file.filename.includes('.github/')
+          );
+          
+          // Add appropriate labels
+          const labels = [];
+          if (hasCodeChanges) labels.push('area: code');
+          if (hasDocsChanges) labels.push('area: documentation'); 
+          if (hasConfigChanges) labels.push('area: configuration');
+          
+          if (labels.length > 0) {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: pr.number,
+              labels
+            });
+          }
+
+  community-engagement:
+    name: 🎯 Community Engagement
+    runs-on: ubuntu-latest
+    if: github.event.action == 'created' && github.event.issue.comments > 5
+    
+    steps:
+    - name: 🔥 Add "hot discussion" label to active issues
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const issue = context.payload.issue;
+          
+          // Add "hot discussion" label for issues with many comments
+          if (issue.comments > 10) {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issue.number,
+              labels: ['hot discussion']
+            });
+          }
+
+  thank-contributors:
+    name: 🙏 Thank Contributors
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened' && github.event.pull_request
+    
+    steps:
+    - name: 🙏 Add thank you comment for substantial PRs
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const pr = context.payload.pull_request;
+          
+          // Get PR diff stats
+          const { data: files } = await github.rest.pulls.listFiles({
+            owner,
+            repo,
+            pull_number: pr.number
+          });
+          
+          const totalChanges = files.reduce((sum, file) => sum + file.changes, 0);
+          
+          // Thank contributors for substantial contributions
+          if (totalChanges > 50) {
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pr.number,
+              body: `🙏 **Thank you for this substantial contribution!**
+
+This PR includes ${totalChanges} lines of changes across ${files.length} files. Contributions like this make a real difference in helping the digital marketing community audit their tools more effectively.
+
+We really appreciate the time and effort you've put into improving Addocu! 🚀
+
+---
+*The Addocu community thanks you for making marketing analytics more accessible for everyone!*`
+            });
+          }
