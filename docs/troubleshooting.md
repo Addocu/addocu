@@ -137,7 +137,7 @@ Before reporting issues, verify:
 
 **For complex issues:**
 - 🐛 GitHub Issues: [Report technical bugs](https://github.com/Addocu/addocu/issues)
-- 📧 Email: hola@addocu.com (include account verification status)
+- 📧 Email: hello@addocu.com (include account verification status)
 
 **Include in your report:**
 - Chrome version and OS

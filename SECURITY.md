@@ -27,7 +27,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 
 ### **🚨 For Security Vulnerabilities:**
 1. **DO NOT** create a public GitHub issue
-2. **Email us directly:** security@addocu.com
+2. **Email us directly:** hello@addocu.com
 3. **Include the following information:**
    - Description of the vulnerability
    - Steps to reproduce
@@ -84,7 +84,7 @@ If you're contributing to Addocu, please ensure:
 
 ## 🔐 Security Contact
 
-- **Email:** security@addocu.com
+- **Email:** hello@addocu.com
 - **PGP Key:** [Available on request]
 - **Response Time:** 24 hours maximum
 

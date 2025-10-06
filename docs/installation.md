@@ -114,7 +114,7 @@ Before reporting any issues, verify:
 
 ### Contact Support
 - 🐛 **Technical Issues:** [GitHub Issues](https://github.com/Addocu/addocu/issues)
-- 📧 **General Questions:** hola@addocu.com
+- 📧 **General Questions:** hello@addocu.com
 
 **When contacting support, include:**
 - Screenshot of Chrome profile (top-right corner)

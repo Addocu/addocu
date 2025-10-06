@@ -109,7 +109,7 @@ Outstanding contributor gets special recognition in:
 2. **🍴 Fork the project** to your GitHub account
 3. **📖 Read the [Contributing Guide](CONTRIBUTING.md)**
 4. **🔍 Look for issues labeled** `good first issue` or `help wanted`
-5. **💬 Join our [Discussions](https://github.com/jrodeiro5/addocu/discussions)**
+5. **💬 Join our [Discussions](https://github.com/Addocu/addocu/discussions)**
 
 ### 🎯 Contribution Ideas:
 - **🐛 Fix bugs** reported in issues
@@ -162,9 +162,9 @@ Outstanding contributor gets special recognition in:
 ## 📧 Contact
 
 - **General Questions:** hello@addocu.com
-- **Contributor Support:** contributors@addocu.com
-- **Community Chat:** [GitHub Discussions](https://github.com/jrodeiro5/addocu/discussions)
+- **Contributor Support:** hello@addocu.com
+- **Community Chat:** [GitHub Discussions](https://github.com/Addocu/addocu/discussions)
 
 ---
 
-*This contributors file is updated regularly. If you've contributed and don't see your name, please [open an issue](https://github.com/jrodeiro5/addocu/issues) or contact us!*
+*This contributors file is updated regularly. If you've contributed and don't see your name, please [open an issue](https://github.com/Addocu/addocu/issues) or contact us!*

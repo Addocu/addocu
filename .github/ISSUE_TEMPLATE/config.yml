@@ -7,8 +7,8 @@ contact_links:
     url: https://addocu.com
     about: Visit our website for additional resources and guides
   - name: 💬 Community Discussion
-    url: https://github.com/jrodeiro5/addocu/discussions
+    url: https://github.com/Addocu/addocu/discussions
     about: Join community discussions, share use cases, and connect with other users
   - name: 🛡️ Security Issues
-    url: mailto:security@addocu.com
+    url: mailto:hello@addocu.com
     about: Report security vulnerabilities privately (do not create public issues)

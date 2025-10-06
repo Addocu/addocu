@@ -76,14 +76,14 @@
 ### 🆘 Critical Issues
 For issues that completely break Addocu or affect user data:
 1. **Create issue** with `critical` label
-2. **Email directly:** urgent@addocu.com
+2. **Email directly:** hello@addocu.com
 3. **Expected response:** Within 2-4 hours
 4. **Resolution target:** Within 24 hours
 
 ### 🔒 Security Issues
 For security vulnerabilities:
 1. **DO NOT** create public issue
-2. **Email directly:** security@addocu.com
+2. **Email directly:** hello@addocu.com
 3. **Expected response:** Within 4 hours
 4. **Resolution target:** Within 72 hours
 
@@ -110,9 +110,9 @@ For security vulnerabilities:
 ### 📊 Current Health Status
 *Updated monthly*
 
-- **Open Issues:** Check current count [here](https://github.com/jrodeiro5/addocu/issues)
-- **Open PRs:** Check current count [here](https://github.com/jrodeiro5/addocu/pulls)
-- **Last Release:** Check [releases page](https://github.com/jrodeiro5/addocu/releases)
+- **Open Issues:** Check current count [here](https://github.com/Addocu/addocu/issues)
+- **Open PRs:** Check current count [here](https://github.com/Addocu/addocu/pulls)
+- **Last Release:** Check [releases page](https://github.com/Addocu/addocu/releases)
 - **Community Activity:** Active discussions and contributions
 
 ## 🤝 Contributing to Maintenance
@@ -141,8 +141,7 @@ For security vulnerabilities:
 
 ### 🌐 Online Presence
 - **Website:** [addocu.com](https://addocu.com)
-- **GitHub:** [github.com/jrodeiro5/addocu](https://github.com/jrodeiro5/addocu)
-- **LinkedIn:** [linkedin.com/company/addocu](https://linkedin.com/company/addocu)
+- **GitHub:** [github.com/Addocu/addocu](https://github.com/Addocu/addocu)
 
 ---
 

@@ -84,9 +84,9 @@ If you experience or witness unacceptable behavior, or have any other concerns,
 please report it by contacting the community leaders:
 
 ### **📧 Reporting Channels:**
-- **Primary:** community@addocu.com
-- **Alternative:** [GitHub Discussion - Private Message](https://github.com/jrodeiro5/addocu/discussions)
-- **Urgent:** security@addocu.com (for serious violations)
+- **Primary:** hello@addocu.com
+- **Alternative:** [GitHub Discussion - Private Message](https://github.com/Addocu/addocu/discussions)
+- **Urgent:** hello@addocu.com (for serious violations)
 
 ### **🔒 What We Guarantee:**
 - **Confidentiality:** All reports will be kept confidential
