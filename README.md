@@ -8,12 +8,12 @@
 [![Open Source](https://img.shields.io/badge/Open%20Source-Community-brightgreen)](https://opensource.org/)
 [![Building in Public](https://img.shields.io/badge/Building%20in%20Public-🚀-blue)](https://www.addocu.com)
 
-[![GitHub stars](https://img.shields.io/github/stars/jrodeiro5/addocu?style=social)](https://github.com/jrodeiro5/addocu/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/jrodeiro5/addocu?style=social)](https://github.com/jrodeiro5/addocu/network/members)
-[![GitHub issues](https://img.shields.io/github/issues/jrodeiro5/addocu)](https://github.com/jrodeiro5/addocu/issues)
-[![GitHub last commit](https://img.shields.io/github/last-commit/jrodeiro5/addocu)](https://github.com/jrodeiro5/addocu/commits)
+[![GitHub stars](https://img.shields.io/github/stars/Addocu/addocu?style=social)](https://github.com/Addocu/addocu/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/Addocu/addocu?style=social)](https://github.com/Addocu/addocu/network/members)
+[![GitHub issues](https://img.shields.io/github/issues/Addocu/addocu)](https://github.com/Addocu/addocu/issues)
+[![GitHub last commit](https://img.shields.io/github/last-commit/Addocu/addocu)](https://github.com/Addocu/addocu/commits)
 
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/jrodeiro5/addocu/graphs/commit-activity)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/Addocu/addocu/graphs/commit-activity)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![First Timers Only](https://img.shields.io/badge/first--timers--only-friendly-blue.svg)](https://www.firsttimersonly.com/)
@@ -272,7 +272,7 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 
 | 🐛 **Report Issues** | 💡 **Suggest Features** | 🔧 **Contribute Code** | 📖 **Improve Docs** |
 |---------------------|----------------------|---------------------|-------------------|
-| Found a bug? [Open an issue](https://github.com/jrodeiro5/addocu/issues) | Have an idea? [Start a discussion](https://github.com/jrodeiro5/addocu/discussions) | Fork → Code → PR | Fix typos, add examples |
+| Found a bug? [Open an issue](https://github.com/Addocu/addocu/issues) | Have an idea? [Start a discussion](https://github.com/Addocu/addocu/discussions) | Fork → Code → PR | Fix typos, add examples |
 
 ### **🚀 Getting Started:**
 1. **Fork** the repository
@@ -291,7 +291,7 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 
 | 💬 **Discussions** | 🐛 **Bug Reports** | 📧 **Direct Support** | 🌐 **Website** |
 |------------------|------------------|---------------------|----------------|
-| [GitHub Discussions](https://github.com/jrodeiro5/addocu/discussions) | [GitHub Issues](https://github.com/jrodeiro5/addocu/issues) | hello@addocu.com | [addocu.com](https://addocu.com) |
+| [GitHub Discussions](https://github.com/Addocu/addocu/discussions) | [GitHub Issues](https://github.com/Addocu/addocu/issues) | hello@addocu.com | [addocu.com](https://addocu.com) |
 
 </div>
 
@@ -313,8 +313,8 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 
 **Thank you to all the amazing people who have contributed to Addocu!**
 
-<a href="https://github.com/jrodeiro5/addocu/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=jrodeiro5/addocu" />
+<a href="https://github.com/Addocu/addocu/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Addocu/addocu" />
 </a>
 
 **Made with [contrib.rocks](https://contrib.rocks)**
@@ -337,10 +337,10 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 
 <div align="center">
 
-![GitHub Repo stars](https://img.shields.io/github/stars/jrodeiro5/addocu?style=for-the-badge&logo=github)
-![GitHub forks](https://img.shields.io/github/forks/jrodeiro5/addocu?style=for-the-badge&logo=github)
-![GitHub issues](https://img.shields.io/github/issues/jrodeiro5/addocu?style=for-the-badge&logo=github)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/jrodeiro5/addocu?style=for-the-badge&logo=github)
+![GitHub Repo stars](https://img.shields.io/github/stars/Addocu/addocu?style=for-the-badge&logo=github)
+![GitHub forks](https://img.shields.io/github/forks/Addocu/addocu?style=for-the-badge&logo=github)
+![GitHub issues](https://img.shields.io/github/issues/Addocu/addocu?style=for-the-badge&logo=github)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/Addocu/addocu?style=for-the-badge&logo=github)
 
 ![Profile views](https://komarev.com/ghpvc/?username=addocu&color=brightgreen&style=for-the-badge&label=Profile+Views)
 
@@ -356,6 +356,6 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 
 **⭐ If Addocu helps you, please give us a star on GitHub! ⭐**
 
-[![Star History Chart](https://api.star-history.com/svg?repos=jrodeiro5/addocu&type=Date)](https://star-history.com/#jrodeiro5/addocu&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Addocu/addocu&type=Date)](https://star-history.com/#Addocu/addocu&Date)
 
 </div>

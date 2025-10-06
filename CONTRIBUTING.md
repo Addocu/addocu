@@ -200,7 +200,7 @@ src/
 ### Development Questions
 - **GitHub Discussions** for general questions
 - **Issues** for bug reports and feature requests
-- **Email** hola@addocu.com for other inquiries
+- **Email** hello@addocu.com for other inquiries
 
 ### Community Resources
 - **Documentation** in the `/docs` folder
