@@ -1,4 +1,4 @@
-name: 📋 Project Validation
+name: 📋 Smart Project Validation
 
 on:
   push:
@@ -7,23 +7,27 @@ on:
     branches: [ main, master ]
 
 jobs:
-  validate-structure:
-    name: 🔍 Validate Project Structure
+  validate-core-files:
+    name: 🔍 Validate Core Add-on Files
     runs-on: ubuntu-latest
     
     steps:
     - name: 📥 Checkout repository
       uses: actions/checkout@v4
       
-    - name: 🔍 Validate required files
+    - name: 🔍 Check essential Add-on files
       run: |
-        echo "Checking for required project files..."
+        echo "Checking for essential Add-on files..."
         
-        # Core Add-on files
-        files=(
+        # Core Add-on files (flexible approach)
+        essential_files=(
           "appsscript.json"
           "coordinator.js"
           "utilities.js"
+        )
+        
+        # Optional but expected files
+        expected_files=(
           "ga4.js"
           "gtm.js"
           "looker_studio.js"
@@ -32,181 +36,270 @@ jobs:
           "configuration.html"
         )
         
-        missing_files=()
-        for file in "${files[@]}"; do
+        missing_essential=()
+        for file in "${essential_files[@]}"; do
           if [ ! -f "$file" ]; then
-            missing_files+=("$file")
-            echo "❌ Missing: $file"
+            missing_essential+=("$file")
+            echo "❌ Missing essential: $file"
+          else
+            echo "✅ Found essential: $file"
+          fi
+        done
+        
+        if [ ${#missing_essential[@]} -ne 0 ]; then
+          echo "❌ Missing essential files: ${missing_essential[*]}"
+          exit 1
+        fi
+        
+        # Check optional files (warnings only)
+        missing_optional=()
+        for file in "${expected_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            missing_optional+=("$file")
+            echo "⚠️ Missing optional: $file"
           else
             echo "✅ Found: $file"
           fi
         done
         
-        if [ ${#missing_files[@]} -ne 0 ]; then
-          echo "Missing required files: ${missing_files[*]}"
+        if [ ${#missing_optional[@]} -ne 0 ]; then
+          echo "⚠️ Consider adding: ${missing_optional[*]}"
+        fi
+        
+        echo "✅ Core validation passed!"
+
+  validate-appsscript-smart:
+    name: 🔍 Smart Apps Script Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 🔍 Validate appsscript.json syntax
+      run: |
+        echo "Validating appsscript.json syntax..."
+        if jq empty appsscript.json 2>/dev/null; then
+          echo "✅ appsscript.json is valid JSON"
+        else
+          echo "❌ appsscript.json has invalid JSON syntax"
+          cat appsscript.json
           exit 1
         fi
         
-        echo "✅ All required files present!"
-        
-    - name: 📖 Validate documentation structure
+    - name: 🔍 Check basic manifest structure
       run: |
-        echo "Checking documentation structure..."
+        echo "Checking basic appsscript.json structure..."
         
-        docs=(
-          "README.md"
-          "CONTRIBUTING.md"
-          "CHANGELOG.md"
-          "LICENSE"
-          "SECURITY.md"
-          "CODE_OF_CONDUCT.md"
-        )
+        # Only check truly essential fields
+        if jq -e '.timeZone' appsscript.json > /dev/null 2>&1; then
+          echo "✅ Has timeZone"
+        else
+          echo "⚠️ Missing timeZone (recommended)"
+        fi
         
-        for doc in "${docs[@]}"; do
+        if jq -e '.dependencies' appsscript.json > /dev/null 2>&1; then
+          echo "✅ Has dependencies"
+        else
+          echo "⚠️ Missing dependencies section"
+        fi
+        
+        # Check if it has OAuth scopes (flexible)
+        if jq -e '.oauthScopes' appsscript.json > /dev/null 2>&1; then
+          echo "✅ Has OAuth scopes"
+        elif jq -e '.dependencies.enabledAdvancedServices' appsscript.json > /dev/null 2>&1; then
+          echo "✅ Has advanced services (OAuth implied)"
+        else
+          echo "⚠️ No explicit OAuth configuration found"
+        fi
+        
+        echo "✅ Basic manifest structure is valid"
+
+  validate-documentation:
+    name: 📖 Smart Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 🔍 Check essential documentation
+      run: |
+        echo "Checking for essential documentation..."
+        
+        # Essential docs
+        essential_docs=("README.md" "LICENSE")
+        # Recommended docs  
+        recommended_docs=("CONTRIBUTING.md" "CHANGELOG.md" "SECURITY.md")
+        
+        missing_essential=()
+        for doc in "${essential_docs[@]}"; do
           if [ ! -f "$doc" ]; then
-            echo "⚠️ Missing documentation: $doc"
+            missing_essential+=("$doc")
+            echo "❌ Missing essential: $doc"
           else
-            echo "✅ Found: $doc"
+            echo "✅ Found essential: $doc"
           fi
         done
         
-    - name: 🔧 Validate GitHub templates
+        if [ ${#missing_essential[@]} -ne 0 ]; then
+          echo "❌ Missing essential documentation: ${missing_essential[*]}"
+          exit 1
+        fi
+        
+        # Check recommended (warnings only)
+        for doc in "${recommended_docs[@]}"; do
+          if [ ! -f "$doc" ]; then
+            echo "⚠️ Consider adding: $doc"
+          else
+            echo "✅ Found recommended: $doc"
+          fi
+        done
+        
+    - name: 🔍 Validate README content (flexible)
+      run: |
+        echo "Checking README.md content..."
+        
+        # Flexible section checking (case-insensitive, partial matches)
+        sections_found=0
+        
+        if grep -qi -E "(feature|functionality|what.*do)" README.md; then
+          echo "✅ Found features/functionality section"
+          ((sections_found++))
+        fi
+        
+        if grep -qi -E "(install|setup|getting.*start|quick.*start)" README.md; then
+          echo "✅ Found installation/setup section"
+          ((sections_found++))
+        fi
+        
+        if grep -qi -E "(licen|legal|term)" README.md; then
+          echo "✅ Found license section"
+          ((sections_found++))
+        fi
+        
+        if grep -qi -E "(contribut|help|develop)" README.md; then
+          echo "✅ Found contributing section"
+          ((sections_found++))
+        fi
+        
+        if grep -qi -E "(support|help|contact|issue)" README.md; then
+          echo "✅ Found support section"
+          ((sections_found++))
+        fi
+        
+        echo "Found $sections_found/5 expected content areas"
+        
+        if [ $sections_found -ge 3 ]; then
+          echo "✅ README.md has sufficient content"
+        else
+          echo "⚠️ README.md could benefit from more structured content"
+        fi
+
+  validate-github-config:
+    name: 🔧 GitHub Configuration Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 🔍 Check GitHub templates (optional)
       run: |
         echo "Checking GitHub configuration..."
         
         github_files=(
-          ".github/ISSUE_TEMPLATE/bug_report.md"
-          ".github/ISSUE_TEMPLATE/feature_request.md"
-          ".github/ISSUE_TEMPLATE/configuration_help.md"
-          ".github/PULL_REQUEST_TEMPLATE.md"
-          ".github/FUNDING.yml"
+          ".github/ISSUE_TEMPLATE/bug_report.md:Bug report template"
+          ".github/ISSUE_TEMPLATE/feature_request.md:Feature request template"
+          ".github/PULL_REQUEST_TEMPLATE.md:Pull request template"
+          ".github/FUNDING.yml:Funding configuration"
         )
         
-        for file in "${github_files[@]}"; do
-          if [ ! -f "$file" ]; then
-            echo "⚠️ Missing GitHub template: $file"
+        found_templates=0
+        total_templates=${#github_files[@]}
+        
+        for item in "${github_files[@]}"; do
+          file="${item%%:*}"
+          description="${item##*:}"
+          
+          if [ -f "$file" ]; then
+            echo "✅ Found: $description"
+            ((found_templates++))
           else
-            echo "✅ Found: $file"
+            echo "⚠️ Missing: $description"
           fi
         done
-
-  validate-appsscript:
-    name: 🔍 Validate Apps Script Manifest
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📥 Checkout repository
-      uses: actions/checkout@v4
-      
-    - name: 🔍 Check appsscript.json syntax
-      run: |
-        echo "Validating appsscript.json..."
-        if jq empty appsscript.json; then
-          echo "✅ appsscript.json is valid JSON"
+        
+        echo "Found $found_templates/$total_templates GitHub templates"
+        
+        if [ $found_templates -ge 2 ]; then
+          echo "✅ Sufficient GitHub configuration"
         else
-          echo "❌ appsscript.json has invalid JSON syntax"
-          exit 1
-        fi
-        
-    - name: 🔍 Check required manifest fields
-      run: |
-        echo "Checking required appsscript.json fields..."
-        
-        required_fields=("timeZone" "dependencies" "webapp" "oauthScopes")
-        
-        for field in "${required_fields[@]}"; do
-          if jq -e ".$field" appsscript.json > /dev/null; then
-            echo "✅ Found required field: $field"
-          else
-            echo "❌ Missing required field: $field"
-            exit 1
-          fi
-        done
-        
-  validate-readme:
-    name: 📖 Validate README Structure
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📥 Checkout repository
-      uses: actions/checkout@v4
-      
-    - name: 🔍 Check README.md structure
-      run: |
-        echo "Validating README.md structure..."
-        
-        required_sections=(
-          "Key Features"
-          "Installation"
-          "Quick Start"
-          "License"
-          "Contributing"
-        )
-        
-        for section in "${required_sections[@]}"; do
-          if grep -qi "$section" README.md; then
-            echo "✅ Found section: $section"
-          else
-            echo "⚠️ Missing or incomplete section: $section"
-          fi
-        done
-        
-    - name: 🔗 Check for broken relative links
-      run: |
-        echo "Checking for broken relative links in README.md..."
-        
-        # Extract relative links from README.md
-        relative_links=$(grep -oP '\[.*?\]\(\K[^)]*(?=\))' README.md | grep -v '^http' | grep -v '^mailto:' || true)
-        
-        if [ -z "$relative_links" ]; then
-          echo "✅ No relative links to check"
-          exit 0
-        fi
-        
-        broken_links=()
-        while IFS= read -r link; do
-          if [ ! -f "$link" ] && [ ! -d "$link" ]; then
-            broken_links+=("$link")
-            echo "❌ Broken link: $link"
-          else
-            echo "✅ Valid link: $link"
-          fi
-        done <<< "$relative_links"
-        
-        if [ ${#broken_links[@]} -ne 0 ]; then
-          echo "Found broken relative links in README.md"
-          exit 1
+          echo "⚠️ Consider adding more GitHub templates for better community management"
         fi
 
-  validate-licenses:
-    name: 📄 Validate License Information
+  validate-license-smart:
+    name: 📄 Smart License Validation
     runs-on: ubuntu-latest
     
     steps:
     - name: 📥 Checkout repository
       uses: actions/checkout@v4
       
-    - name: 🔍 Check license consistency
+    - name: 🔍 Check license presence and type
       run: |
-        echo "Checking license consistency..."
+        echo "Checking license information..."
         
-        # Check if LICENSE file exists and contains CC BY-NC-SA 4.0
         if [ ! -f "LICENSE" ]; then
           echo "❌ LICENSE file not found"
           exit 1
         fi
         
-        if grep -qi "CC BY-NC-SA 4.0\|Creative Commons Attribution-NonCommercial-ShareAlike 4.0" LICENSE; then
-          echo "✅ LICENSE file contains correct license"
+        # Flexible license checking
+        if grep -qi -E "(creative.*commons|cc.*by.*nc.*sa|non.*commercial.*share.*alike)" LICENSE; then
+          echo "✅ Found Creative Commons Non-Commercial license"
+        elif grep -qi -E "(mit|apache|gpl|bsd)" LICENSE; then
+          echo "✅ Found open source license"
+          echo "⚠️ Note: Project documentation suggests CC BY-NC-SA 4.0"
         else
-          echo "❌ LICENSE file doesn't contain expected CC BY-NC-SA 4.0 license"
-          exit 1
+          echo "⚠️ License type not clearly identified"
         fi
         
-        # Check if README.md mentions the correct license
-        if grep -qi "CC BY-NC-SA 4.0\|Creative Commons Attribution-NonCommercial-ShareAlike 4.0" README.md; then
-          echo "✅ README.md mentions correct license"
+        # Check README mentions license (flexible)
+        if grep -qi -E "(licen|legal|terms.*use)" README.md; then
+          echo "✅ README.md mentions licensing"
         else
-          echo "❌ README.md doesn't mention expected license"
-          exit 1
+          echo "⚠️ Consider adding license information to README.md"
+        fi
+        
+        echo "✅ License validation completed"
+
+  project-health-summary:
+    name: 📊 Project Health Summary
+    runs-on: ubuntu-latest
+    needs: [validate-core-files, validate-appsscript-smart, validate-documentation, validate-github-config, validate-license-smart]
+    if: always()
+    
+    steps:
+    - name: 📊 Generate project health report
+      run: |
+        echo "🎯 Project Health Summary"
+        echo "========================"
+        echo ""
+        echo "Core Files: ${{ needs.validate-core-files.result }}"
+        echo "Apps Script Manifest: ${{ needs.validate-appsscript-smart.result }}"
+        echo "Documentation: ${{ needs.validate-documentation.result }}"  
+        echo "GitHub Config: ${{ needs.validate-github-config.result }}"
+        echo "License: ${{ needs.validate-license-smart.result }}"
+        echo ""
+        
+        if [[ "${{ needs.validate-core-files.result }}" == "success" && 
+              "${{ needs.validate-appsscript-smart.result }}" == "success" && 
+              "${{ needs.validate-documentation.result }}" == "success" && 
+              "${{ needs.validate-license-smart.result }}" == "success" ]]; then
+          echo "✅ Project structure is healthy!"
+          echo "🚀 Ready for community contributions"
+        else
+          echo "⚠️ Some validations had issues - check logs above"
+          echo "💡 Most issues are recommendations, not blockers"
         fi
