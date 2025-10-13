@@ -80,8 +80,6 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 </tr>
 </table>
 
----
-
 ## ✨ Key Features
 
 ### 📊 **Google Analytics 4 Complete Audit**
@@ -129,20 +127,18 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 
 ### **Step-by-Step Setup:**
 
-1. **📥 Install Addocu** from the [Google Workspace Marketplace](https://workspace.google.com/marketplace)
-2. **📝 Open Google Sheets** (new or existing spreadsheet)
-3. **⚙️ Configure** → `Extensions > Addocu > Configure`
-4. **🔑 Authorize** when prompted (OAuth2 - no API keys needed!)
-5. **🚀 Run Audit** → `Extensions > Addocu > Audit Complete Stack`
+1.  **📥 Install Addocu** from the [Google Workspace Marketplace](https://workspace.google.com/marketplace)
+2.  **📝 Open Google Sheets** (new or existing spreadsheet)
+3.  **⚙️ Open the Add-on** → `Extensions > Addocu > Configure`
+4.  **🔑 Authorize Permissions** when prompted. That's it! The connection is automatic via OAuth2.
+5.  **🚀 Run Audit** → `Extensions > Addocu > Audit Complete Stack`
 
 **That's it!** Your audit data will appear in dedicated sheets:
 - `DASHBOARD` - Executive summary
 - `GA4_PROPERTIES` - Analytics data
-- `GTM_TAGS` - Tag Manager inventory  
+- `GTM_TAGS` - Tag Manager inventory
 - `LOOKER_STUDIO` - Report catalog
 - `LOGS` - Detailed operation logs
-
----
 
 ## 📋 Prerequisites
 
@@ -155,7 +151,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 
 **Before anything else:**
 1. Check your Chrome profile (top-right corner)
-2. Check your Google Sheets account (top-right corner)  
+2. Check your Google Sheets account (top-right corner)
 3. If different → Sign out everywhere and use ONE account
 
 **95% of Addocu issues are caused by account mismatches!**
@@ -170,7 +166,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 
 ### 🔑 **Access Requirements**
 - **"Viewer"** (or higher) access to the Google platforms you wish to audit
-- **OAuth2 Authentication** - handled automatically, no manual API key setup required
+- **OAuth2 Authentication:** Handled automatically. **No manual API key setup is required.**
 
 ---
 
@@ -179,7 +175,6 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 <details>
 <summary><strong>📁 Project Structure</strong></summary>
 
-```
 📁 Addocu Open Source Project
 ├── 📄 appsscript.json           # Add-on manifest and permissions
 ├── 📄 coordinator.js            # UI orchestration and menu logic
@@ -194,7 +189,6 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 ├── 📁 docs/                     # Documentation and guides
 ├── 📁 examples/                 # Usage examples and samples
 └── 📁 .github/                  # GitHub templates and workflows
-```
 
 </details>
 
@@ -228,8 +222,6 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - **🚫 Non-Commercial:** You cannot sell this tool or charge for it
 - **🔄 Share-Alike:** Any modifications must be shared under the same license
 
----
-
 ## 🗺️ Roadmap & Future
 
 ### **📍 Current Status: v2.1.0**
@@ -237,21 +229,21 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - ✅ Interactive dashboard and reporting
 - ✅ Open source codebase with community license
 - ✅ Google Workspace Marketplace distribution
-- ✅ OAuth2 authentication for all services
+- ✅ Fully automatic OAuth2 authentication for all services
 
-### **🔮 Coming Soon**
-- 📋 Google Ads integration
-- 📋 Google Search Console support
-- 📋 BigQuery data source analysis
+### **🔮 Coming Soon to the Community Edition**
+- 📋 **Google Ads** integration
+- 📋 **Google Search Console** support
+- 📋 **BigQuery** data source analysis
 - 📋 Enhanced error detection and recommendations
 - 📋 Multi-language support
 
 ### **🚀 The Future: Addocu Pro**
-We're planning a separate, commercial **Addocu Pro** version with advanced features:
+We're planning a separate, commercial **Addocu Pro** version with advanced features for teams and agencies:
 - 🤖 AI-powered analysis and optimization suggestions
 - ⏰ Automated scheduling and monitoring
-- 🔗 Advanced integrations (BigQuery, Search Console, Ads)
 - 🚨 Proactive alerts for configuration changes
+- องค์ Advanced team collaboration features
 
 **Important:** Addocu Community Edition will always remain free and fully functional.
 
@@ -271,7 +263,7 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 ### **🌟 Ways to Contribute:**
 
 | 🐛 **Report Issues** | 💡 **Suggest Features** | 🔧 **Contribute Code** | 📖 **Improve Docs** |
-|---------------------|----------------------|---------------------|-------------------|
+|:---:|:---:|:---:|:---:|
 | Found a bug? [Open an issue](https://github.com/Addocu/addocu/issues) | Have an idea? [Start a discussion](https://github.com/Addocu/addocu/discussions) | Fork → Code → PR | Fix typos, add examples |
 
 ### **🚀 Getting Started:**
@@ -290,7 +282,7 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 <div align="center">
 
 | 💬 **Discussions** | 🐛 **Bug Reports** | 📧 **Direct Support** | 🌐 **Website** |
-|------------------|------------------|---------------------|----------------|
+|:---:|:---:|:---:|:---:|
 | [GitHub Discussions](https://github.com/Addocu/addocu/discussions) | [GitHub Issues](https://github.com/Addocu/addocu/issues) | hello@addocu.com | [addocu.com](https://addocu.com) |
 
 </div>
@@ -326,7 +318,7 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 ## 🙏 Acknowledgments
 
 - **Google Workspace Team** for the excellent Add-on platform
-- **Digital Marketing Community** for inspiration and feedback  
+- **Digital Marketing Community** for inspiration and feedback
 - **Open Source Contributors** who help make this tool better every day
 - **Beta Testers** who provided invaluable early feedback
 - **You!** For considering Addocu for your marketing auditing needs

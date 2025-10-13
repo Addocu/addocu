@@ -1,6 +1,6 @@
 /**
- * @fileoverview Looker Studio Module v3.0 - OAUTH2 ONLY
- * Works same as GA4 and GTM (no API Keys)
+ * @fileoverview Looker Studio Module v3.0 - Hybrid Authentication
+ * Uses OAuth2 for permissions + User API Key for access (consistent with Addocu model)
  */
 
 const LOOKER_STUDIO_HEADERS = [
