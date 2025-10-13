@@ -18,11 +18,6 @@
         "userSymbol": "TagManager",
         "serviceId": "tagmanager",
         "version": "v2"
-      },
-      {
-        "userSymbol": "Sheets",
-        "serviceId": "sheets",
-        "version": "v4"
       }
     ]
   },
