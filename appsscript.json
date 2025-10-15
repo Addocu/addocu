@@ -31,23 +31,13 @@
     "https://www.googleapis.com/auth/datastudio",
     "https://www.googleapis.com/auth/script.container.ui"
   ],
-  "addOns": {
-    "common": {
-      "name": "Addocu",
-      "logoUrl": "https://drive.google.com/uc?export=view&id=1ipZNfnUMatmgMGT3Vtn8ferV0n-Afr8P",
-      "layoutProperties": {
-        "primaryColor": "#1A5DBB",
-        "secondaryColor": "#00AEEF"
-      },
-      "useLocaleFromApp": true
-    },
-    "sheets": {
-      "homepageTrigger": {
-        "runFunction": "openConfigurationSidebar"
-      },
-      "onFileScopeGrantedTrigger": {
-        "runFunction": "onFileScopeGranted"
-      }
+  "sheets": {
+    "name": "Addocu",
+    "logoUrl": "https://raw.githubusercontent.com/jrodeiro5/addocu/main/docs/addocu_logo.png",
+    "primaryColor": "#1A5DBB",
+    "secondaryColor": "#00AEEF",
+    "onFileScopeGrantedTrigger": {
+      "runFunction": "onFileScopeGranted"
     }
   },
   "urlFetchWhitelist": [
