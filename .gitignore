@@ -212,3 +212,6 @@ bower_components/
 *.so
 *.dll
 *.exe
+
+CLAUDE.md
+GEMINI.md
