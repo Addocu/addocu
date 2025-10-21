@@ -34,7 +34,7 @@
   "addOns": {
     "common": {
       "name": "Addocu",
-      "logoUrl": "https://raw.githubusercontent.com/jrodeiro5/addocu/main/docs/addocu_logo.png",
+      "logoUrl": "https://raw.githubusercontent.com/Addocu/addocu/main/docs/addocu_logo.png",
       "layoutProperties": {
         "primaryColor": "#1A5DBB",
         "secondaryColor": "#00AEEF"
