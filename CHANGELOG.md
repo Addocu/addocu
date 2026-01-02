@@ -82,6 +82,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced error detection and recommendations
 - Multi-language support
 
+## [2.2.0] - 2026-01-02
+
+### Added
+- **💰 Google Ads Integration**: Complete audit of campaigns, conversion actions, and audiences using GAQL.
+- **🏪 Google Business Profile (GBP)**: Inventory of business accounts and verified locations.
+- **🛠️ Clasp Support**: Added `.clasp.json` and `.claspignore` for streamlined local development.
+- **📊 Extended Dashboard**: New KPI cards for Ads Conversions/Audiences and GBP Locations.
+- **📈 Expanded Charts**: "Elements by Tool" now includes Google Ads and GBP data.
+- **🚦 Service Toggles**: Ability to enable/disable Ads and GBP in the configuration sidebar.
+- **🔑 Developer Token Support**: New secure input for Google Ads Developer Token.
+
 ## [2.1.0] - 2025-09-06
 
 ### 🚨 BREAKING CHANGES

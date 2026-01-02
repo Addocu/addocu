@@ -101,6 +101,15 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - **Data Sources:** Complete mapping of connections and refresh status
 - **Performance Metrics:** Usage statistics and data freshness indicators
 - **Permissions Audit:** Who has access to what reports across your organization
+104: 
+105: ### 💰 **Google Ads Comprehensive Audit**
+106: - **Campaigns:** Status, type, startDate, and endDate for all campaigns
+107: - **Conversion Actions:** Detailed inventory of tracking events and categories
+108: - **Audiences:** User lists and remarketing segments with size estimates
+109: 
+110: ### 🏪 **Google Business Profile (GBP)**
+111: - **Accounts:** Inventory of all business accounts/groups managed
+112: - **Locations:** Complete list of physical storefronts and verification status
 
 ### 🎯 **Interactive Dashboard**
 - **Visual Summary:** Bird's eye view of your entire marketing stack health
@@ -138,6 +147,8 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - `GA4_PROPERTIES` - Analytics data
 - `GTM_TAGS` - Tag Manager inventory
 - `LOOKER_STUDIO` - Report catalog
+- `GOOGLE_ADS_CAMPAIGNS` - Paid media campaigns
+- `GBP_LOCATIONS` - Business locations
 - `LOGS` - Detailed operation logs
 
 ## 📋 Prerequisites
@@ -232,8 +243,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - ✅ Fully automatic OAuth2 authentication for all services
 
 ### **🔮 Coming Soon to the Community Edition**
-- 📋 **Google Ads** integration
-- 📋 **Google Search Console** support
+- 📋 **Google Search Console** (Enhanced Support)
 - 📋 **BigQuery** data source analysis
 - 📋 Enhanced error detection and recommendations
 - 📋 Multi-language support
@@ -274,6 +284,10 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 5. **Open** a Pull Request
 
 **📖 Read our [Contributing Guide](CONTRIBUTING.md) for detailed instructions**
+
+> [!TIP]
+> **Developer Note**: This project uses `clasp` for local development.
+> Run `clasp push` to sync your local changes to the Google Apps Script project.
 
 ---
 
