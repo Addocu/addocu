@@ -82,7 +82,17 @@ function syncGBPCore() {
  */
 function listGBPAccounts() {
     const url = 'https://mybusinessaccountmanagement.googleapis.com/v1/accounts';
-    const response = makeRequest('googleBusinessProfile', url);
+
+    // Get auth config
+    const auth = getAuthConfig('googleBusinessProfile');
+    const options = {
+        method: 'get',
+        headers: auth.headers,
+        muteHttpExceptions: true
+    };
+
+    // Use fetchWithRetry from utilities.js
+    const response = fetchWithRetry(url, options, 'GBP-Accounts');
 
     if (!response || !response.accounts) return [];
 
@@ -103,8 +113,16 @@ function listGBPAccounts() {
 function listGBPLocations(accountName) {
     const url = `https://mybusinessbusinessinformation.googleapis.com/v1/${accountName}/locations?readMask=name,title,categories,storeCode,regularHours,labels,latlng,openInfo,metadata,serviceArea,relationshipData`;
 
-    // Note: The API might require a readMask for v1.
-    const response = makeRequest('googleBusinessProfile', url);
+    // Get auth config
+    const auth = getAuthConfig('googleBusinessProfile');
+    const options = {
+        method: 'get',
+        headers: auth.headers,
+        muteHttpExceptions: true
+    };
+
+    // Use fetchWithRetry from utilities.js
+    const response = fetchWithRetry(url, options, 'GBP-Locations');
 
     if (!response || !response.locations) return [];
 
