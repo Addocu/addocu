@@ -19,6 +19,13 @@ const YOUTUBE_PLAYLISTS_HEADERS = [
     'Thumbnail URL', 'Sync Date'
 ];
 
+const YOUTUBE_VIDEOS_HEADERS = [
+    'Video ID', 'Channel ID', 'Title', 'Description',
+    'Published At', 'Duration', 'Category ID', 'Privacy Status',
+    'View Count', 'Like Count', 'Comment Count',
+    'Tags', 'Thumbnail URL', 'Embeddable', 'License', 'Sync Date'
+];
+
 // =================================================================
 // MAIN SYNC FUNCTIONS
 // =================================================================
@@ -67,6 +74,28 @@ function syncYouTubeCore() {
             writeYouTubePlaylistsToSheet(playlists);
             result.records += playlists.length;
             logEvent('YOUTUBE_SYNC', `Successfully inventoried ${playlists.length} playlists.`);
+        }
+
+        // 3. Get Videos for those channels (from uploads playlist)
+        const videos = [];
+        if (channels && channels.length > 0) {
+            channels.forEach(channel => {
+                try {
+                    const channelVideos = listYouTubeVideos(channel.uploadsPlaylistId);
+                    if (channelVideos && channelVideos.length > 0) {
+                        videos.push(...channelVideos);
+                    }
+                } catch (e) {
+                    logError('YOUTUBE_SYNC', `Error fetching videos for channel ${channel.id}: ${e.message}`);
+                    result.errors.push(`Videos (${channel.id}): ${e.message}`);
+                }
+            });
+        }
+
+        if (videos.length > 0) {
+            writeYouTubeVideosToSheet(videos);
+            result.records += videos.length;
+            logEvent('YOUTUBE_SYNC', `Successfully inventoried ${videos.length} videos.`);
         }
 
         result.status = 'SUCCESS';
@@ -135,7 +164,8 @@ function listYouTubeChannels() {
         videoCount: item.statistics.videoCount,
         viewCount: item.statistics.viewCount,
         hiddenSubscriberCount: item.statistics.hiddenSubscriberCount,
-        thumbnailUrl: item.snippet.thumbnails?.default?.url || ''
+        thumbnailUrl: item.snippet.thumbnails?.default?.url || '',
+        uploadsPlaylistId: item.contentDetails?.relatedPlaylists?.uploads || ''
     }));
 }
 
@@ -166,6 +196,59 @@ function listYouTubePlaylists(channelId) {
         itemCount: item.contentDetails.itemCount,
         privacyStatus: item.status.privacyStatus,
         thumbnailUrl: item.snippet.thumbnails?.default?.url || ''
+    }));
+}
+
+/**
+ * Lists videos from a channel's uploads playlist.
+ * @param {string} uploadsPlaylistId - The uploads playlist ID.
+ * @returns {Array<Object>} Array of video data objects.
+ */
+function listYouTubeVideos(uploadsPlaylistId) {
+    if (!uploadsPlaylistId) return [];
+
+    const auth = getAuthConfig('youtube');
+
+    // Step 1: Get video IDs from playlist
+    const playlistEndpoint = 'https://www.googleapis.com/youtube/v3/playlistItems';
+    const playlistUrl = buildUrl(playlistEndpoint, {
+        playlistId: uploadsPlaylistId,
+        part: 'contentDetails',
+        maxResults: 50 // Limit to 50 most recent videos
+    });
+
+    const playlistResponse = fetchWithRetry(playlistUrl, { headers: auth.headers }, 'YouTube');
+    if (!playlistResponse || !playlistResponse.items) return [];
+
+    const videoIds = playlistResponse.items.map(item => item.contentDetails.videoId).join(',');
+    if (!videoIds) return [];
+
+    // Step 2: Get full video details
+    const videosEndpoint = 'https://www.googleapis.com/youtube/v3/videos';
+    const videosUrl = buildUrl(videosEndpoint, {
+        id: videoIds,
+        part: 'snippet,contentDetails,statistics,status'
+    });
+
+    const videosResponse = fetchWithRetry(videosUrl, { headers: auth.headers }, 'YouTube');
+    if (!videosResponse || !videosResponse.items) return [];
+
+    return videosResponse.items.map(item => ({
+        id: item.id,
+        channelId: item.snippet.channelId,
+        title: item.snippet.title,
+        description: item.snippet.description,
+        publishedAt: item.snippet.publishedAt,
+        duration: item.contentDetails.duration,
+        categoryId: item.snippet.categoryId,
+        privacyStatus: item.status.privacyStatus,
+        viewCount: item.statistics.viewCount || 0,
+        likeCount: item.statistics.likeCount || 0,
+        commentCount: item.statistics.commentCount || 0,
+        tags: item.snippet.tags ? item.snippet.tags.join(', ') : '',
+        thumbnailUrl: item.snippet.thumbnails?.default?.url || '',
+        embeddable: item.status.embeddable,
+        license: item.status.license
     }));
 }
 
@@ -201,4 +284,20 @@ function writeYouTubePlaylistsToSheet(playlists) {
     ]);
 
     writeToSheet('YOUTUBE_PLAYLISTS', YOUTUBE_PLAYLISTS_HEADERS, data);
+}
+
+/**
+ * Writes video data to the YOUTUBE_VIDEOS sheet.
+ * @param {Array<Object>} videos - Array of video objects.
+ */
+function writeYouTubeVideosToSheet(videos) {
+    const syncDate = formatDate(new Date());
+    const data = videos.map(v => [
+        v.id, v.channelId, v.title, v.description,
+        v.publishedAt, v.duration, v.categoryId, v.privacyStatus,
+        v.viewCount, v.likeCount, v.commentCount,
+        v.tags, v.thumbnailUrl, v.embeddable, v.license, syncDate
+    ]);
+
+    writeToSheet('YOUTUBE_VIDEOS', YOUTUBE_VIDEOS_HEADERS, data);
 }

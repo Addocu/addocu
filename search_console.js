@@ -15,6 +15,10 @@ const GSC_SITEMAPS_HEADERS = [
   'Total URLs', 'Errors', 'Warnings', 'Notes'
 ];
 
+const GSC_SEARCH_APPEARANCE_HEADERS = [
+  'Site URL', 'Appearance Type', 'Clicks', 'Impressions', 'CTR', 'Average Position'
+];
+
 // =================================================================
 // SYNCHRONIZATION FUNCTIONS (EXECUTABLE FROM MENU)
 // =================================================================
@@ -56,14 +60,14 @@ function syncSearchConsoleCore() {
     logEvent('GSC', 'Phase 1: Extracting verified sites...');
     const sites = listSearchConsoleSites();
     results.sites = sites.length;
-    
+
     const processedSites = sites.map(site => ({
       'Site URL': site.siteUrl,
       'Permission Level': site.permissionLevel,
       'Site Type': site.siteUrl.startsWith('sc-domain:') ? 'Domain Property' : 'URL Prefix',
       'Notes': `Permission: ${site.permissionLevel}`
     }));
-    
+
     writeDataToSheet('GSC_SITES', GSC_SITES_HEADERS, processedSites);
 
     // 2. GET SITEMAPS
@@ -91,7 +95,22 @@ function syncSearchConsoleCore() {
     results.sitemaps = allSitemaps.length;
     writeDataToSheet('GSC_SITEMAPS', GSC_SITEMAPS_HEADERS, allSitemaps);
 
-    const totalElements = results.sites + results.sitemaps;
+    // 3. GET SEARCH APPEARANCE DATA
+    logEvent('GSC', 'Phase 3: Extracting search appearance data...');
+    const allAppearances = [];
+    for (const site of sites) {
+      try {
+        const appearances = getSearchAppearanceData(site.siteUrl);
+        allAppearances.push(...appearances);
+        Utilities.sleep(200); // Pause between sites
+      } catch (e) {
+        logWarning('GSC', `Could not get search appearance for ${site.siteUrl}: ${e.message}`);
+      }
+    }
+    results.appearances = allAppearances.length;
+    writeDataToSheet('GSC_SEARCH_APPEARANCE', GSC_SEARCH_APPEARANCE_HEADERS, allAppearances);
+
+    const totalElements = results.sites + results.sitemaps + (results.appearances || 0);
     const duration = Date.now() - startTime;
     logSyncEnd('GSC_Sync', totalElements, duration, 'SUCCESS');
 
@@ -120,7 +139,7 @@ function listSearchConsoleSites() {
   const auth = getAuthConfig('searchConsole');
   const url = 'https://www.googleapis.com/webmasters/v3/sites';
   const options = { method: 'GET', headers: auth.headers, muteHttpExceptions: true };
-  
+
   const response = fetchWithRetry(url, options, 'GSC-Sites');
   return response.siteEntry || [];
 }
@@ -131,7 +150,51 @@ function getSearchConsoleSitemaps(siteUrl) {
   const encodedSiteUrl = encodeURIComponent(siteUrl);
   const url = `https://www.googleapis.com/webmasters/v3/sites/${encodedSiteUrl}/sitemaps`;
   const options = { method: 'GET', headers: auth.headers, muteHttpExceptions: true };
-  
+
   const response = fetchWithRetry(url, options, `GSC-Sitemaps-${siteUrl}`);
   return response.sitemap || [];
+}
+
+/**
+ * Gets search appearance performance data for a site.
+ * @param {string} siteUrl - The site URL.
+ * @returns {Array} Array of appearance data.
+ */
+function getSearchAppearanceData(siteUrl) {
+  const auth = getAuthConfig('searchConsole');
+  const encodedSiteUrl = encodeURIComponent(siteUrl);
+
+  // Get data for last 28 days, grouped by searchAppearance
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 28);
+
+  const url = `https://www.googleapis.com/webmasters/v3/sites/${encodedSiteUrl}/searchAnalytics/query`;
+  const payload = {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0],
+    dimensions: ['searchAppearance'],
+    rowLimit: 100
+  };
+
+  const options = {
+    method: 'POST',
+    headers: auth.headers,
+    payload: JSON.stringify(payload),
+    contentType: 'application/json',
+    muteHttpExceptions: true
+  };
+
+  const response = fetchWithRetry(url, options, `GSC-Appearance-${siteUrl}`);
+
+  if (!response || !response.rows) return [];
+
+  return response.rows.map(row => ({
+    'Site URL': siteUrl,
+    'Appearance Type': row.keys[0] || 'Unknown',
+    'Clicks': row.clicks || 0,
+    'Impressions': row.impressions || 0,
+    'CTR': row.ctr ? (row.ctr * 100).toFixed(2) + '%' : '0.00%',
+    'Average Position': row.position ? row.position.toFixed(1) : 'N/A'
+  }));
 }

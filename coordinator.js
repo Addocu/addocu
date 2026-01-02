@@ -519,7 +519,7 @@ function executeAuditWithFilters(auditConfig) {
         results.searchConsole = gscResult;
         if (gscResult.status === 'SUCCESS') {
           totalRecords += gscResult.records || 0;
-          sheetsCreated += 2; // GSC creates 2 sheets (sites, sitemaps)
+          sheetsCreated += 3; // GSC creates 3 sheets (sites, sitemaps, search appearance)
         }
       } catch (e) {
         logError('AUDIT_FILTERED', `Error in Search Console audit: ${e.message}`);
@@ -535,7 +535,7 @@ function executeAuditWithFilters(auditConfig) {
         results.youtube = youtubeResult;
         if (youtubeResult.status === 'SUCCESS') {
           totalRecords += youtubeResult.records || 0;
-          sheetsCreated += 2; // YouTube creates 2 sheets (channels, playlists)
+          sheetsCreated += 3; // YouTube creates 3 sheets (channels, playlists, videos)
         }
       } catch (e) {
         logError('AUDIT_FILTERED', `Error in YouTube audit: ${e.message}`);
