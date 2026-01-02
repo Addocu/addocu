@@ -229,6 +229,8 @@ function readUserConfiguration() {
       syncGTM: userProperties.getProperty('ADDOCU_SYNC_GTM') !== 'false', // Default true
       syncSearchConsole: userProperties.getProperty('ADDOCU_SYNC_GSC') !== 'false', // Default true
       syncYouTube: userProperties.getProperty('ADDOCU_SYNC_YOUTUBE') !== 'false', // Default true
+      syncGBP: userProperties.getProperty('ADDOCU_SYNC_GBP') !== 'false', // Default true
+      syncGoogleAds: userProperties.getProperty('ADDOCU_SYNC_ADS') !== 'false', // Default true
 
       // OAuth2 Information
       oauth2Ready: true, // OAuth2 always available
@@ -704,6 +706,21 @@ function startCompleteAudit() {
   // Search Console only if enabled
   if (config.syncSearchConsole) {
     services.push('searchConsole');
+  }
+
+  // YouTube only if enabled
+  if (config.syncYouTube) {
+    services.push('youtube');
+  }
+
+  // Google Business Profile only if enabled
+  if (config.syncGBP) {
+    services.push('googleBusinessProfile');
+  }
+
+  // Google Ads only if enabled
+  if (config.syncGoogleAds) {
+    services.push('googleAds');
   }
 
   const ui = SpreadsheetApp.getUi();
