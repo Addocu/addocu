@@ -71,8 +71,12 @@ function syncGBPCore() {
         };
 
     } catch (e) {
-        logError('GBP_CORE', 'Error in syncGBPCore: ' + e.message);
-        throw e;
+        let errorMsg = e.message;
+        if (errorMsg.includes('429') || errorMsg.includes('Rate limit')) {
+            errorMsg = 'Rate limit exceeded (429). Note: GBP API often defaults to 0 quota and requires explicit project approval from Google.';
+        }
+        logError('GBP_CORE', 'Error in syncGBPCore: ' + errorMsg);
+        throw new Error(errorMsg);
     }
 }
 
