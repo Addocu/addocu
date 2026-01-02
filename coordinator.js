@@ -514,44 +514,64 @@ function executeAuditWithFilters(auditConfig) {
     // Audit Search Console
     if (services.includes('gsc') || services.includes('searchConsole')) {
       logEvent('AUDIT_FILTERED', 'Starting Search Console audit');
-      const gscResult = syncSearchConsoleCore();
-      results.searchConsole = gscResult;
-      if (gscResult.status === 'SUCCESS') {
-        totalRecords += gscResult.records || 0;
-        sheetsCreated += 2; // GSC creates 2 sheets (sites, sitemaps)
+      try {
+        const gscResult = syncSearchConsoleCore();
+        results.searchConsole = gscResult;
+        if (gscResult.status === 'SUCCESS') {
+          totalRecords += gscResult.records || 0;
+          sheetsCreated += 2; // GSC creates 2 sheets (sites, sitemaps)
+        }
+      } catch (e) {
+        logError('AUDIT_FILTERED', `Error in Search Console audit: ${e.message}`);
+        results.searchConsole = { success: false, error: e.message };
       }
     }
 
     // Audit YouTube
     if (services.includes('youtube')) {
       logEvent('AUDIT_FILTERED', 'Starting YouTube audit');
-      const youtubeResult = syncYouTubeCore();
-      results.youtube = youtubeResult;
-      if (youtubeResult.status === 'SUCCESS') {
-        totalRecords += youtubeResult.records || 0;
-        sheetsCreated += 2; // YouTube creates 2 sheets (channels, playlists)
+      try {
+        const youtubeResult = syncYouTubeCore();
+        results.youtube = youtubeResult;
+        if (youtubeResult.status === 'SUCCESS') {
+          totalRecords += youtubeResult.records || 0;
+          sheetsCreated += 2; // YouTube creates 2 sheets (channels, playlists)
+        }
+      } catch (e) {
+        logError('AUDIT_FILTERED', `Error in YouTube audit: ${e.message}`);
+        results.youtube = { success: false, error: e.message };
       }
     }
 
     // Audit GBP
     if (services.includes('googleBusinessProfile') || services.includes('gbp')) {
       logEvent('AUDIT_FILTERED', 'Starting GBP audit');
-      const gbpResult = syncGBPCore();
-      results.googleBusinessProfile = gbpResult;
-      if (gbpResult.status === 'SUCCESS' || gbpResult.success) {
-        totalRecords += gbpResult.records || 0;
-        sheetsCreated += 2; // GBP creates 2 sheets (accounts, locations)
+      try {
+        const gbpResult = syncGBPCore();
+        results.googleBusinessProfile = gbpResult;
+        if (gbpResult.status === 'SUCCESS' || gbpResult.success) {
+          totalRecords += gbpResult.records || 0;
+          sheetsCreated += 2; // GBP creates 2 sheets (accounts, locations)
+        }
+      } catch (e) {
+        logError('AUDIT_FILTERED', `Error in GBP audit: ${e.message}`);
+        results.googleBusinessProfile = { success: false, error: e.message };
       }
     }
 
     // Audit Google Ads
     if (services.includes('googleAds') || services.includes('ads')) {
       logEvent('AUDIT_FILTERED', 'Starting Google Ads audit');
-      const adsResult = syncGoogleAdsCore();
-      results.googleAds = adsResult;
-      if (adsResult.status === 'SUCCESS' || adsResult.success) {
-        totalRecords += adsResult.records || 0;
-        sheetsCreated += 3; // Ads creates 3 sheets (campaigns, conversions, audiences)
+      try {
+        const adsResult = syncGoogleAdsCore();
+        results.googleAds = adsResult;
+        if (adsResult.status === 'SUCCESS' || adsResult.success) {
+          totalRecords += adsResult.records || 0;
+          sheetsCreated += 3; // Ads creates 3 sheets (campaigns, conversions, audiences)
+        }
+      } catch (e) {
+        logError('AUDIT_FILTERED', `Error in Google Ads audit: ${e.message}`);
+        results.googleAds = { success: false, error: e.message };
       }
     }
 
