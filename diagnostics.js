@@ -13,7 +13,7 @@
 function showAccountVerification() {
   try {
     const ui = SpreadsheetApp.getUi();
-    
+
     const message = '🔍 ACCOUNT VERIFICATION GUIDE\n\n' +
       '95% of Addocu problems are caused by using different Google accounts\n' +
       'in Chrome vs Google Sheets.\n\n' +
@@ -34,14 +34,14 @@ function showAccountVerification() {
       '• The problem is NOT account mismatch\n' +
       '• Try: Extensions > Addocu > 🔄 Reauthorize Permissions\n\n' +
       '💡 This is the #1 cause of authorization problems!';
-    
+
     ui.alert('🔍 Manual Account Verification', message, ui.ButtonSet.OK);
-    
+
     logEvent('ACCOUNT_VERIFICATION', 'Account verification guide shown to user');
-    
+
   } catch (error) {
     logError('ACCOUNT_VERIFICATION', `Error showing account verification: ${error.message}`);
-    
+
     try {
       const ui = SpreadsheetApp.getUi();
       ui.alert(
@@ -61,18 +61,18 @@ function showAccountVerification() {
 function showSimplifiedDiagnostics() {
   try {
     logEvent('DIAGNOSTIC_MENU', 'Starting simplified diagnostics from menu...');
-    
+
     const results = simplifiedConnectionDiagnostics();
-    
+
     // Format results for display
     let message = '🔍 SIMPLIFIED DIAGNOSTICS\n\n';
-    
+
     results.forEach(result => {
       const serviceName = result[0];
       const account = result[1];
       const status = result[2];
       const details = result[3];
-      
+
       let indicator = '❓';
       if (status === 'OK' || status === 'SUCCESS') {
         indicator = '✅';
@@ -81,7 +81,7 @@ function showSimplifiedDiagnostics() {
       } else if (status === 'PENDING') {
         indicator = '⏳';
       }
-      
+
       message += `${indicator} ${serviceName}\n`;
       if (account && account !== 'N/A') {
         message += `   Account: ${account}\n`;
@@ -91,11 +91,11 @@ function showSimplifiedDiagnostics() {
       }
       message += '\n';
     });
-    
+
     // Add recommendations
     const hasErrors = results.some(r => r[2] === 'ERROR' || r[2] === 'PERMISSION_ERROR');
     const hasPending = results.some(r => r[2] === 'PENDING');
-    
+
     if (hasErrors) {
       message += '🚨 ISSUES DETECTED:\n';
       message += 'Try: Extensions > Addocu > 🔄 Reauthorize Permissions\n';
@@ -107,15 +107,15 @@ function showSimplifiedDiagnostics() {
       message += '✅ ALL SYSTEMS WORKING:\n';
       message += 'Addocu is ready to use!\n';
     }
-    
+
     const ui = SpreadsheetApp.getUi();
     ui.alert('🔍 Simplified Diagnostics', message, ui.ButtonSet.OK);
-    
+
     logEvent('DIAGNOSTIC_MENU', 'Simplified diagnostics completed and shown');
-    
+
   } catch (error) {
     logError('DIAGNOSTIC_MENU', `Error in simplified diagnostics: ${error.message}`);
-    
+
     try {
       const ui = SpreadsheetApp.getUi();
       ui.alert(
@@ -141,38 +141,44 @@ function showSimplifiedDiagnostics() {
 function simplifiedConnectionDiagnostics() {
   try {
     logEvent('DIAGNOSTIC', 'Starting simplified connection diagnostics...');
-    
+
     const results = [];
     const servicesToTest = [
       { id: 'ga4', name: 'Google Analytics 4 Admin API' },
       { id: 'gtm', name: 'Google Tag Manager API' },
-      { id: 'looker', name: 'Looker Studio API' }
+      { id: 'looker', name: 'Looker Studio API' },
+      { id: 'searchConsole', name: 'Google Search Console API' },
+      { id: 'youtube', name: 'YouTube Data API' },
+      { id: 'googleBusinessProfile', name: 'Google Business Profile API' }
     ];
-    
+
     // First check basic permissions
-    const permissionTest = typeof testBasicPermissionsEnhanced !== 'undefined' ? 
-      testBasicPermissionsEnhanced() : 
+    const permissionTest = typeof testBasicPermissionsEnhanced !== 'undefined' ?
+      testBasicPermissionsEnhanced() :
       testBasicPermissions();
-    
+
     if (!permissionTest.success) {
       // If basic permissions fail, return permission error information
       return [
         ['System Permissions', 'Authorization Required', 'ERROR', 'Execute reauthorization via menu'],
         ['Google Analytics 4 Admin API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
         ['Google Tag Manager API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
-        ['Looker Studio API', 'Pending Authorization', 'PENDING', 'OAuth2 pending']
+        ['Looker Studio API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
+        ['Google Search Console API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
+        ['YouTube Data API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
+        ['Google Business Profile API', 'Pending Authorization', 'PENDING', 'OAuth2 pending']
       ];
     }
-    
+
     // Test each service
     servicesToTest.forEach(service => {
       try {
         const result = validateService(service.id);
-        
+
         let status = 'ERROR';
         let account = 'Unknown';
         let message = result.message || 'Unknown error';
-        
+
         if (result.status === 'OK') {
           status = 'OK';
           account = result.account || 'OAuth2 connected';
@@ -190,9 +196,9 @@ function simplifiedConnectionDiagnostics() {
           account = 'Error';
           message = result.message || 'Unknown error';
         }
-        
+
         results.push([service.name, account, status, message]);
-        
+
       } catch (e) {
         logError('DIAGNOSTIC', `Error testing ${service.id}: ${e.message}`);
         results.push([
@@ -203,13 +209,13 @@ function simplifiedConnectionDiagnostics() {
         ]);
       }
     });
-    
+
     logEvent('DIAGNOSTIC', `Simplified diagnostics completed for ${results.length} services`);
     return results;
-    
+
   } catch (error) {
     logError('DIAGNOSTIC', `Error in simplified diagnostics: ${error.message}`);
-    
+
     return [
       ['Addocu System', 'Critical Error', 'ERROR', `Diagnostic error: ${error.message}`],
       ['Recommended Action', 'Reauthorization', 'ACTION', 'Extensions > Addocu > 🔄 Reauthorize Permissions']
@@ -224,11 +230,11 @@ function simplifiedConnectionDiagnostics() {
 function diagnoseConnectionsComplete() {
   try {
     logEvent('DIAGNOSTIC_COMPLETE', 'Starting complete connection diagnostics...');
-    
+
     // Use the existing complete diagnostic function if available
     if (typeof runCompleteConnectivityDiagnostic !== 'undefined') {
       const detailedResults = runCompleteConnectivityDiagnostic();
-      
+
       // Convert to expected format
       return detailedResults.map(result => [
         result[0], // Service name
@@ -237,13 +243,13 @@ function diagnoseConnectionsComplete() {
         result[3]  // Message
       ]);
     }
-    
+
     // Fallback to simplified diagnostics
     return simplifiedConnectionDiagnostics();
-    
+
   } catch (error) {
     logError('DIAGNOSTIC_COMPLETE', `Error in complete diagnostics: ${error.message}`);
-    
+
     return [
       ['Diagnostic System', 'Error', 'ERROR', `Complete diagnostic failed: ${error.message}`],
       ['Fallback', 'Simplified Mode', 'INFO', 'Using simplified diagnostics instead']
@@ -266,7 +272,7 @@ function testBasicPermissions() {
     permissions: {},
     errors: []
   };
-  
+
   // Test 1: UserProperties
   try {
     const userProps = PropertiesService.getUserProperties();
@@ -278,7 +284,7 @@ function testBasicPermissions() {
     results.errors.push(`UserProperties: ${error.message}`);
     results.success = false;
   }
-  
+
   // Test 2: Spreadsheet
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -288,7 +294,7 @@ function testBasicPermissions() {
     results.errors.push(`Spreadsheet: ${error.message}`);
     results.success = false;
   }
-  
+
   // Test 3: OAuth Token
   try {
     const token = ScriptApp.getOAuthToken();
@@ -298,7 +304,7 @@ function testBasicPermissions() {
     results.errors.push(`OAuth: ${error.message}`);
     results.success = false;
   }
-  
+
   // Test 4: UI Access
   try {
     const ui = SpreadsheetApp.getUi();
@@ -308,7 +314,7 @@ function testBasicPermissions() {
     results.errors.push(`UI: ${error.message}`);
     results.success = false;
   }
-  
+
   return results;
 }
 
@@ -324,14 +330,14 @@ function emergencyDiagnostic() {
   try {
     const user = Session.getActiveUser().getEmail();
     const timestamp = new Date().toISOString();
-    
+
     return [
       ['Emergency Diagnostic', 'Active', 'INFO', `User: ${user}`],
       ['Timestamp', timestamp, 'INFO', 'Diagnostic executed'],
       ['Recommendation', 'Manual Reauthorization', 'ACTION', 'Extensions > Addocu > 🔄 Reauthorize Permissions'],
       ['Alternative', 'Account Verification', 'ACTION', 'Verify Chrome/Sheets use same account']
     ];
-    
+
   } catch (error) {
     return [
       ['Emergency Diagnostic', 'Failed', 'ERROR', error.message],

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <base target="_top">
   <meta charset="UTF-8">
@@ -7,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  
+
   <style>
     :root {
       /* Addocu Brand Colors */
@@ -32,16 +33,16 @@
       box-sizing: border-box;
     }
 
-    body { 
-      padding: 0; 
-      margin: 0; 
+    body {
+      padding: 0;
+      margin: 0;
       font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: var(--addocu-bg);
       color: var(--addocu-text-primary);
       line-height: 1.5;
       overflow: hidden;
     }
-    
+
     .sidebar-container {
       height: 100vh;
       overflow-y: auto;
@@ -49,14 +50,14 @@
       width: 100%;
       max-width: 380px;
     }
-    
+
     /* Header */
     .header {
       padding: 36px 24px 28px;
       border-bottom: 1px solid var(--addocu-border-light);
       text-align: center;
     }
-    
+
     .logo {
       display: flex;
       flex-direction: column;
@@ -93,7 +94,7 @@
       letter-spacing: -0.5px;
       margin-bottom: 4px;
     }
-    
+
     .tagline {
       font-size: 14px;
       color: var(--addocu-text-secondary);
@@ -299,9 +300,17 @@
       flex-shrink: 0;
     }
 
-    .indicator-pending { background: var(--addocu-text-muted); }
-    .indicator-success { background: var(--addocu-green); }
-    .indicator-error { background: var(--addocu-error); }
+    .indicator-pending {
+      background: var(--addocu-text-muted);
+    }
+
+    .indicator-success {
+      background: var(--addocu-green);
+    }
+
+    .indicator-error {
+      background: var(--addocu-error);
+    }
 
     .connection-name {
       font-size: 14px;
@@ -443,14 +452,14 @@
       background: white;
       transition: 0.2s ease;
       border-radius: 50%;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
-    .toggle input:checked + .toggle-slider {
+    .toggle input:checked+.toggle-slider {
       background: var(--addocu-blue-primary);
     }
 
-    .toggle input:checked + .toggle-slider:before {
+    .toggle input:checked+.toggle-slider:before {
       transform: translateX(20px);
     }
 
@@ -615,7 +624,7 @@
     .spinner {
       width: 16px;
       height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
+      border: 2px solid rgba(255, 255, 255, 0.3);
       border-top: 2px solid white;
       border-radius: 50%;
       animation: spin 1s linear infinite;
@@ -623,8 +632,13 @@
     }
 
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     /* Fade animation */
@@ -633,13 +647,14 @@
     }
 
     @keyframes fadeIn {
-      from { 
-        opacity: 0; 
-        transform: translateY(4px); 
+      from {
+        opacity: 0;
+        transform: translateY(4px);
       }
-      to { 
-        opacity: 1; 
-        transform: translateY(0); 
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
@@ -695,9 +710,17 @@
     }
 
     @keyframes successPulse {
-      0% { transform: scale(0) rotate(0deg); }
-      50% { transform: scale(1.1) rotate(180deg); }
-      100% { transform: scale(1) rotate(360deg); }
+      0% {
+        transform: scale(0) rotate(0deg);
+      }
+
+      50% {
+        transform: scale(1.1) rotate(180deg);
+      }
+
+      100% {
+        transform: scale(1) rotate(360deg);
+      }
     }
 
     .success-title {
@@ -783,26 +806,24 @@
       .content {
         padding: 20px;
       }
-      
+
       .btn-group {
         grid-template-columns: 1fr;
       }
-      
+
       .success-actions {
         grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="sidebar-container">
     <div class="header">
       <div class="logo">
-        <img 
-          src="https://raw.githubusercontent.com/Addocu/addocu/main/docs/addocu_logo.png" 
-          alt="Addocu Logo" 
-          class="logo-image"
-        >
+        <img src="https://raw.githubusercontent.com/Addocu/addocu/main/docs/addocu_logo.png" alt="Addocu Logo"
+          class="logo-image">
       </div>
       <p class="tagline">Audit and Document Your Google Marketing Stack in Seconds</p>
     </div>
@@ -837,9 +858,10 @@
           Authentication Setup
           <span class="required">*</span>
         </div>
-        
+
         <div class="section-description highlight">
-          <strong>Hybrid Model:</strong> Addocu requires both OAuth2 (automatic) for permissions AND your Google Cloud API Key (manual) for API access. Both are mandatory.
+          <strong>Hybrid Model:</strong> Addocu requires both OAuth2 (automatic) for permissions AND your Google Cloud
+          API Key (manual) for API access. Both are mandatory.
         </div>
 
         <div class="input-group">
@@ -848,16 +870,13 @@
             <span class="required">*</span>
           </label>
           <div class="input-field">
-            <input 
-              type="password" 
-              id="api-key" 
-              placeholder="Paste your Google Cloud API Key here..."
-              autocomplete="off"
-            >
+            <input type="password" id="api-key" placeholder="Paste your Google Cloud API Key here..."
+              autocomplete="off">
           </div>
           <div class="input-help">
             <strong>How to get your API Key:</strong><br>
-            1. Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a><br>
+            1. Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud
+              Console</a><br>
             2. Create or select a project<br>
             3. Enable APIs: Analytics Admin, Tag Manager, Looker Studio<br>
             4. Create API Key in "Credentials" section<br>
@@ -900,6 +919,27 @@
               <div class="connection-details" id="looker-status">Waiting for API key...</div>
             </div>
           </div>
+          <div class="connection-item">
+            <div class="connection-indicator indicator-pending" id="gsc-indicator"></div>
+            <div>
+              <div class="connection-name">Search Console</div>
+              <div class="connection-details" id="gsc-status">Waiting for API key...</div>
+            </div>
+          </div>
+          <div class="connection-item">
+            <div class="connection-indicator indicator-pending" id="youtube-indicator"></div>
+            <div>
+              <div class="connection-name">YouTube</div>
+              <div class="connection-details" id="youtube-status">Waiting for API key...</div>
+            </div>
+          </div>
+          <div class="connection-item">
+            <div class="connection-indicator indicator-pending" id="gbp-indicator"></div>
+            <div>
+              <div class="connection-name">Business Profile</div>
+              <div class="connection-details" id="gbp-status">Waiting for API key...</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -907,7 +947,8 @@
       <div class="section">
         <div class="section-title">Run Audit</div>
         <div class="section-description">
-          Ready to audit your Google Marketing Stack? This will extract all configurations and generate a comprehensive report.
+          Ready to audit your Google Marketing Stack? This will extract all configurations and generate a comprehensive
+          report.
         </div>
         <button class="btn btn-primary btn-full" onclick="runAudit()" id="audit-button">
           Audit Marketing Stack
@@ -950,6 +991,39 @@
               <span class="toggle-slider"></span>
             </label>
           </div>
+
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">Search Console</div>
+              <div class="service-description">Verified sites and submitted sitemaps</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-gsc" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">YouTube</div>
+              <div class="service-description">Channels, playlists and metadata</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-youtube" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">Business Profile</div>
+              <div class="service-description">Accounts, locations and metadata</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-gbp" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
         </div>
 
         <!-- Advanced Filters -->
@@ -965,11 +1039,7 @@
               <div class="input-group">
                 <label class="input-label">GA4 Properties (Optional)</label>
                 <div class="input-field">
-                  <input 
-                    type="text" 
-                    id="ga4-properties" 
-                    placeholder="properties/123456789, properties/987654321"
-                  >
+                  <input type="text" id="ga4-properties" placeholder="properties/123456789, properties/987654321">
                 </div>
                 <div class="input-help">
                   Specific property IDs to audit. Leave empty to audit all accessible properties.
@@ -982,11 +1052,7 @@
               <div class="input-group">
                 <label class="input-label">GTM Workspaces (Optional)</label>
                 <div class="input-field">
-                  <input 
-                    type="text" 
-                    id="gtm-workspaces" 
-                    placeholder="Default Workspace, Marketing Team"
-                  >
+                  <input type="text" id="gtm-workspaces" placeholder="Default Workspace, Marketing Team">
                 </div>
                 <div class="input-help">
                   Specific workspace names to audit. Leave empty to audit all workspaces.
@@ -1002,45 +1068,41 @@
 
       <!-- Future Features -->
       <div class="future-section">
-          <div class="future-header">
-            <div class="future-icon">★</div>
-            <h4 class="future-title">Pro Version Coming Soon</h4>
+        <div class="future-header">
+          <div class="future-icon">★</div>
+          <h4 class="future-title">Pro Version Coming Soon</h4>
+        </div>
+        <p class="future-description">
+          We're working on advanced features to make Addocu even more powerful for professional teams.
+        </p>
+        <div class="future-list">
+          <div class="future-item">
+            <div class="future-bullet"></div>
+            <span>BigQuery integration for data warehouse audits</span>
           </div>
-          <p class="future-description">
-            We're working on advanced features to make Addocu even more powerful for professional teams.
-          </p>
-          <div class="future-list">
-            <div class="future-item">
-              <div class="future-bullet"></div>
-              <span>BigQuery integration for data warehouse audits</span>
-            </div>
-            <div class="future-item">
-              <div class="future-bullet"></div>
-              <span>Google Ads campaigns and conversion tracking</span>
-            </div>
-            <div class="future-item">
-              <div class="future-bullet"></div>
-              <span>AI-powered analysis and optimization suggestions</span>
-            </div>
-            <div class="future-item">
-              <div class="future-bullet"></div>
-              <span>Scheduled audits and automated monitoring</span>
-            </div>
-            <div class="future-item">
-              <div class="future-bullet"></div>
-              <span>Google Search Console performance insights</span>
-            </div>
-            <div class="future-item">
-              <div class="future-bullet"></div>
-              <span>Multi-team collaboration and permissions</span>
-            </div>
+          <div class="future-item">
+            <div class="future-bullet"></div>
+            <span>Google Ads campaigns and conversion tracking</span>
+          </div>
+          <div class="future-item">
+            <div class="future-bullet"></div>
+            <span>AI-powered analysis and optimization suggestions</span>
+          </div>
+          <div class="future-item">
+            <div class="future-bullet"></div>
+            <span>Scheduled audits and automated monitoring</span>
+          </div>
+          <div class="future-item">
+            <div class="future-bullet"></div>
+            <span>Multi-team collaboration and permissions</span>
           </div>
         </div>
       </div>
-
-      <!-- Status Messages -->
-      <div id="status-messages"></div>
     </div>
+
+    <!-- Status Messages -->
+    <div id="status-messages"></div>
+  </div>
   </div>
 
   <!-- Success Modal -->
@@ -1049,9 +1111,10 @@
       <div class="success-icon">✅</div>
       <h3 class="success-title">Audit Completed</h3>
       <p class="success-message">
-        Your Google Marketing Stack has been successfully audited. All data has been extracted and organized into spreadsheets.
+        Your Google Marketing Stack has been successfully audited. All data has been extracted and organized into
+        spreadsheets.
       </p>
-      
+
       <div class="success-stats">
         <div class="success-stat">
           <div class="success-stat-value" id="modal-assets-count">0</div>
@@ -1066,7 +1129,7 @@
           <div class="success-stat-label">Time</div>
         </div>
       </div>
-      
+
       <div class="success-actions">
         <button class="success-btn secondary" onclick="closeSuccessModal()">
           Close
@@ -1082,19 +1145,24 @@
     // ========================================
     // STATE MANAGEMENT
     // ========================================
-    
+
     let appState = {
       apiKey: '',
       isConfigured: false,
       connectionStatus: {
         ga4: 'pending',
-        gtm: 'pending', 
-        looker: 'pending'
+        gtm: 'pending',
+        gsc: 'pending',
+        youtube: 'pending',
+        gbp: 'pending'
       },
       services: {
         ga4: true,
         gtm: true,
-        looker: true
+        looker: true,
+        gsc: true,
+        youtube: true,
+        gbp: true
       },
       filters: {
         ga4Properties: '',
@@ -1105,8 +1173,8 @@
     // ========================================
     // INITIALIZATION
     // ========================================
-    
-    document.addEventListener('DOMContentLoaded', function() {
+
+    document.addEventListener('DOMContentLoaded', function () {
       loadConfiguration();
       setupEventListeners();
     });
@@ -1116,20 +1184,23 @@
       document.getElementById('service-ga4').addEventListener('change', updateServices);
       document.getElementById('service-gtm').addEventListener('change', updateServices);
       document.getElementById('service-looker').addEventListener('change', updateServices);
-      
+      document.getElementById('service-gsc').addEventListener('change', updateServices);
+      document.getElementById('service-youtube').addEventListener('change', updateServices);
+      document.getElementById('service-gbp').addEventListener('change', updateServices);
+
       // Filter inputs
       document.getElementById('ga4-properties').addEventListener('input', updateFilters);
       document.getElementById('gtm-workspaces').addEventListener('input', updateFilters);
-      
+
       // API Key input validation
       const apiKeyInput = document.getElementById('api-key');
-      apiKeyInput.addEventListener('input', function() {
+      apiKeyInput.addEventListener('input', function () {
         const hasValue = this.value.trim().length > 0;
         updateStepStatus('apikey', hasValue);
       });
 
       // Auto-save on Enter key
-      apiKeyInput.addEventListener('keypress', function(e) {
+      apiKeyInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
           e.preventDefault();
           saveConfiguration();
@@ -1139,43 +1210,43 @@
 
     function loadConfiguration() {
       showStatus('Loading saved configuration...', 'info');
-      
+
       google.script.run
-        .withSuccessHandler(function(config) {
+        .withSuccessHandler(function (config) {
           // Check for permission errors
           if (config && config.permissionsError) {
             handlePermissionError(config.permissionsErrorMessage || 'Permission denied');
             return;
           }
-          
+
           if (config && config.lookerApiKey) {
             appState.apiKey = config.lookerApiKey;
             appState.isConfigured = true;
-            
+
             // Update UI
             document.getElementById('api-key').value = config.lookerApiKey;
             updateStepStatus('apikey', true);
           }
-          
+
           // Load saved filters
           if (config && config.ga4Properties) {
             appState.filters.ga4Properties = config.ga4Properties;
             document.getElementById('ga4-properties').value = config.ga4Properties;
           }
-          
+
           if (config && config.gtmWorkspaces) {
             appState.filters.gtmWorkspaces = config.gtmWorkspaces;
             document.getElementById('gtm-workspaces').value = config.gtmWorkspaces;
           }
-          
+
           hideStatus();
-          
+
           // Auto-test connection if API key is configured
           if (appState.isConfigured) {
             setTimeout(() => testConnection(), 1000);
           }
         })
-        .withFailureHandler(function(error) {
+        .withFailureHandler(function (error) {
           handleConfigurationError(error);
         })
         .getUserConfig(); // Using the correct function name
@@ -1184,11 +1255,11 @@
     // ========================================
     // FILTERS MANAGEMENT
     // ========================================
-    
+
     function toggleFilters() {
       const content = document.getElementById('filters-content');
       const toggleText = document.getElementById('filters-toggle-text');
-      
+
       if (content.classList.contains('expanded')) {
         content.classList.remove('expanded');
         toggleText.textContent = 'Show filters';
@@ -1213,10 +1284,10 @@
     // ========================================
     // CONFIGURATION MANAGEMENT
     // ========================================
-    
+
     function saveConfiguration() {
       const apiKey = document.getElementById('api-key').value.trim();
-      
+
       if (!apiKey) {
         showStatus('Please enter your Google Cloud API Key', 'error');
         return;
@@ -1228,27 +1299,27 @@
       }
 
       showButtonLoading('save-btn', 'Saving...');
-      
+
       const configObject = {
         lookerApiKey: apiKey
       };
 
       google.script.run
-        .withSuccessHandler(function(result) {
+        .withSuccessHandler(function (result) {
           appState.apiKey = apiKey;
           appState.isConfigured = true;
-          
+
           updateStepStatus('apikey', true);
           hideButtonLoading('save-btn', 'Save API Key');
-          
+
           showStatus('✅ API Key saved successfully!', 'success');
-          
+
           // Auto-test connections
           setTimeout(() => {
             testConnection();
           }, 1000);
         })
-        .withFailureHandler(function(error) {
+        .withFailureHandler(function (error) {
           hideButtonLoading('save-btn', 'Save API Key');
           showStatus(`Save failed: ${error.message}`, 'error');
         })
@@ -1258,7 +1329,7 @@
     // ========================================
     // CONNECTION TESTING
     // ========================================
-    
+
     function testConnection() {
       if (!appState.isConfigured) {
         showStatus('Please save your API Key first', 'warning');
@@ -1271,19 +1342,19 @@
 
       // Reset all indicators to pending
       resetConnectionStatus();
-      
+
       showStatus('Testing API connections with OAuth2 + API Key...', 'info');
-      
+
       google.script.run
-        .withSuccessHandler(function(results) {
+        .withSuccessHandler(function (results) {
           updateConnectionResults(results);
           updateStepStatus('connection', true);
-          
+
           const hasErrors = results.some(r => {
             const status = Array.isArray(r) ? r[2] : r.estado;
             return status === 'ERROR';
           });
-          
+
           if (!hasErrors) {
             showStatus('✅ All connections working correctly', 'success');
             updateStepStatus('audit', false); // Make audit step active
@@ -1291,20 +1362,20 @@
             showStatus('Some services need authorization - check API key and OAuth2 permissions', 'warning');
           }
         })
-        .withFailureHandler(function(error) {
+        .withFailureHandler(function (error) {
           handleConnectionTestError(error);
         })
         .simplifiedConnectionDiagnostics(); // Using the correct function name
     }
 
     function resetConnectionStatus() {
-      const indicators = ['ga4-indicator', 'gtm-indicator', 'looker-indicator'];
-      const statuses = ['ga4-status', 'gtm-status', 'looker-status'];
-      
+      const indicators = ['ga4-indicator', 'gtm-indicator', 'looker-indicator', 'gsc-indicator', 'youtube-indicator', 'gbp-indicator'];
+      const statuses = ['ga4-status', 'gtm-status', 'looker-status', 'gsc-status', 'youtube-status', 'gbp-status'];
+
       indicators.forEach(id => {
         document.getElementById(id).className = 'connection-indicator indicator-pending';
       });
-      
+
       statuses.forEach(id => {
         const element = document.getElementById(id);
         element.textContent = 'Testing...';
@@ -1315,9 +1386,12 @@
       const serviceMapping = {
         'Google Analytics 4 Admin API': 'ga4',
         'Google Tag Manager API': 'gtm',
-        'Looker Studio API': 'looker'
+        'Looker Studio API': 'looker',
+        'Google Search Console API': 'gsc',
+        'YouTube Data API': 'youtube',
+        'Google Business Profile API': 'gbp'
       };
-      
+
       const formattedResults = results.map(result => {
         if (Array.isArray(result)) {
           return {
@@ -1329,26 +1403,26 @@
         }
         return result;
       });
-      
+
       formattedResults.forEach(result => {
         const serviceKey = serviceMapping[result.service];
         if (serviceKey) {
           const indicator = document.getElementById(`${serviceKey}-indicator`);
           const status = document.getElementById(`${serviceKey}-status`);
-          
+
           if (result.status === 'OK') {
             indicator.className = 'connection-indicator indicator-success';
             status.textContent = result.account || 'OAuth2 + API Key connected';
-            
+
             appState.connectionStatus[serviceKey] = 'success';
           } else {
             indicator.className = 'connection-indicator indicator-error';
-            
+
             let errorMessage = result.message || 'Connection error';
             if (errorMessage.includes('account') || errorMessage.includes('same account')) {
               errorMessage = 'Account mismatch - verify Chrome/Sheets use same account';
             }
-            
+
             status.textContent = errorMessage;
             appState.connectionStatus[serviceKey] = 'error';
           }
@@ -1359,38 +1433,41 @@
     // ========================================
     // SERVICE MANAGEMENT
     // ========================================
-    
+
     function updateServices() {
       appState.services.ga4 = document.getElementById('service-ga4').checked;
       appState.services.gtm = document.getElementById('service-gtm').checked;
       appState.services.looker = document.getElementById('service-looker').checked;
+      appState.services.gsc = document.getElementById('service-gsc').checked;
+      appState.services.youtube = document.getElementById('service-youtube').checked;
+      appState.services.gbp = document.getElementById('service-gbp').checked;
     }
 
     // ========================================
     // AUDIT EXECUTION
     // ========================================
-    
+
     function runAudit() {
       if (!appState.isConfigured) {
         showStatus('Please configure your API Key first', 'error');
         return;
       }
-      
+
       updateServices();
       updateFilters();
-      
+
       const enabledServices = Object.entries(appState.services)
         .filter(([key, value]) => value)
         .map(([key]) => key);
-      
+
       if (enabledServices.length === 0) {
         showStatus('Select at least one service to audit', 'error');
         return;
       }
-      
+
       const startTime = Date.now();
       showButtonLoading('audit-button', `Auditing ${enabledServices.length} services...`);
-      
+
       // Prepare audit configuration with filters
       const auditConfig = {
         services: enabledServices,
@@ -1399,29 +1476,29 @@
           gtmWorkspaces: parseCommaSeparatedValues(appState.filters.gtmWorkspaces)
         }
       };
-      
+
       google.script.run
-        .withSuccessHandler(function(response) {
+        .withSuccessHandler(function (response) {
           if (response.success) {
             updateStepStatus('audit', true);
-            
+
             // Calculate execution time
             const executionTime = Math.round((Date.now() - startTime) / 1000);
-            
+
             // Show success modal with stats
             showSuccessModal({
               assetsCount: response.totalAssets || 'N/A',
               sheetsCount: response.sheetsCreated || enabledServices.length,
               executionTime: executionTime
             });
-            
+
             showStatus('Audit completed successfully', 'success');
           } else {
             showStatus(`Audit error: ${response.error}`, 'error');
           }
           hideButtonLoading('audit-button', 'Audit Marketing Stack');
         })
-        .withFailureHandler(function(error) {
+        .withFailureHandler(function (error) {
           showStatus(`Audit failed: ${error.message}`, 'error');
           hideButtonLoading('audit-button', 'Audit Marketing Stack');
         })
@@ -1431,10 +1508,10 @@
     // ========================================
     // ERROR HANDLING
     // ========================================
-    
+
     function handlePermissionError(errorMessage) {
       hideStatus();
-      
+
       const statusDiv = document.getElementById('status-messages');
       const errorCard = document.createElement('div');
       errorCard.className = 'status-message status-error fade-in';
@@ -1447,37 +1524,37 @@
         3. Return here to continue setup<br><br>
         <small>Technical details: ${errorMessage}</small>
       `;
-      
+
       statusDiv.innerHTML = '';
       statusDiv.appendChild(errorCard);
-      
+
       console.error('Addocu Permission Error:', errorMessage);
     }
-    
+
     function handleConfigurationError(error) {
       console.error('Addocu Configuration Error:', error);
-      
+
       // Check if it's a permission error
       if (error.message && error.message.includes('PERMISSION_DENIED')) {
         handlePermissionError(error.message);
         return;
       }
-      
+
       // Handle other configuration errors
       showStatus(`Configuration Error: ${error.message}`, 'error');
     }
-    
+
     function handleConnectionTestError(error) {
       console.error('Connection test error:', error);
-      
+
       showStatus(`Connection test failed: ${error.message}`, 'error');
       resetConnectionStatus();
     }
-    
+
     // ========================================
     // UI HELPER FUNCTIONS
     // ========================================
-    
+
     function updateStepStatus(stepId, completed) {
       const step = document.getElementById(`step-${stepId}`);
       if (completed) {
@@ -1492,10 +1569,10 @@
       const statusCard = document.createElement('div');
       statusCard.className = `status-message status-${type} fade-in`;
       statusCard.textContent = message;
-      
+
       statusDiv.innerHTML = '';
       statusDiv.appendChild(statusCard);
-      
+
       if (type === 'success') {
         setTimeout(() => {
           statusCard.style.transition = 'opacity 0.3s ease';
@@ -1529,39 +1606,39 @@
     // ========================================
     // SUCCESS MODAL FUNCTIONS
     // ========================================
-    
+
     function showSuccessModal(stats) {
       // Update modal stats
       document.getElementById('modal-assets-count').textContent = stats.assetsCount;
       document.getElementById('modal-sheets-count').textContent = stats.sheetsCount;
       document.getElementById('modal-time').textContent = stats.executionTime + 's';
-      
+
       // Show modal
       const modal = document.getElementById('success-modal');
       modal.classList.add('show');
-      
+
       // Auto-close after 10 seconds
       setTimeout(() => {
         closeSuccessModal();
       }, 10000);
     }
-    
+
     function closeSuccessModal() {
       const modal = document.getElementById('success-modal');
       modal.classList.remove('show');
     }
-    
+
     function openDashboard() {
       closeSuccessModal();
-      
+
       // Try to open dashboard in current tab or new tab
       try {
         // For Google Sheets environment, try to create a new dashboard
         google.script.run
-          .withSuccessHandler(function() {
+          .withSuccessHandler(function () {
             showStatus('Dashboard opened successfully', 'success');
           })
-          .withFailureHandler(function() {
+          .withFailureHandler(function () {
             showStatus('Dashboard available in your spreadsheet', 'success');
           })
           .openDashboard();
@@ -1569,9 +1646,9 @@
         showStatus('Dashboard data is now available in your spreadsheet', 'success');
       }
     }
-    
+
     // Close modal when clicking outside
-    document.addEventListener('click', function(event) {
+    document.addEventListener('click', function (event) {
       const modal = document.getElementById('success-modal');
       if (event.target === modal) {
         closeSuccessModal();
@@ -1579,4 +1656,5 @@
     });
   </script>
 </body>
+
 </html>

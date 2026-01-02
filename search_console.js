@@ -1,0 +1,137 @@
+/**
+ * @fileoverview Google Search Console Synchronization Module.
+ */
+
+// =================================================================
+// MODULE CONSTANTS AND CONFIGURATION
+// =================================================================
+
+const GSC_SITES_HEADERS = [
+  'Site URL', 'Permission Level', 'Site Type', 'Notes'
+];
+
+const GSC_SITEMAPS_HEADERS = [
+  'Site URL', 'Sitemap Path', 'Type', 'Last Downloaded', 'Last Submitted',
+  'Total URLs', 'Errors', 'Warnings', 'Notes'
+];
+
+// =================================================================
+// SYNCHRONIZATION FUNCTIONS (EXECUTABLE FROM MENU)
+// =================================================================
+
+function syncSearchConsoleWithUI() {
+  const result = syncSearchConsoleCore();
+  const ui = SpreadsheetApp.getUi();
+  if (result.status === 'SUCCESS') {
+    const details = result.details;
+    const message = `✅ Search Console Synchronized Successfully\n\n` +
+      `🌐 Sites: ${details.sites}\n` +
+      `🗺️ Sitemaps: ${details.sitemaps}\n\n` +
+      `Total: ${result.records} elements\n` +
+      `Time: ${Math.round(result.duration / 1000)}s`;
+    ui.alert('🔍 Search Console Completed', message, ui.ButtonSet.OK);
+  } else {
+    ui.alert(
+      '❌ Search Console Error',
+      `Synchronization failed: ${result.error}\n\nCheck the LOGS sheet for more details.`,
+      ui.ButtonSet.OK
+    );
+  }
+}
+
+// =================================================================
+// CENTRAL SYNCHRONIZATION LOGIC
+// =================================================================
+
+function syncSearchConsoleCore() {
+  const startTime = Date.now();
+  const serviceName = 'searchConsole';
+  const results = { sites: 0, sitemaps: 0 };
+
+  try {
+    const auth = getAuthConfig(serviceName);
+    logSyncStart('GSC_Sync', auth.authUser);
+
+    // 1. GET SITES
+    logEvent('GSC', 'Phase 1: Extracting verified sites...');
+    const sites = listSearchConsoleSites();
+    results.sites = sites.length;
+    
+    const processedSites = sites.map(site => ({
+      'Site URL': site.siteUrl,
+      'Permission Level': site.permissionLevel,
+      'Site Type': site.siteUrl.startsWith('sc-domain:') ? 'Domain Property' : 'URL Prefix',
+      'Notes': `Permission: ${site.permissionLevel}`
+    }));
+    
+    writeDataToSheet('GSC_SITES', GSC_SITES_HEADERS, processedSites);
+
+    // 2. GET SITEMAPS
+    logEvent('GSC', 'Phase 2: Extracting sitemaps for verified sites...');
+    const allSitemaps = [];
+    for (const site of sites) {
+      try {
+        const sitemaps = getSearchConsoleSitemaps(site.siteUrl);
+        allSitemaps.push(...sitemaps.map(sm => ({
+          'Site URL': site.siteUrl,
+          'Sitemap Path': sm.path,
+          'Type': sm.type,
+          'Last Downloaded': formatDate(sm.lastDownloaded),
+          'Last Submitted': formatDate(sm.lastSubmitted),
+          'Total URLs': sm.contents ? sm.contents.reduce((sum, c) => sum + parseInt(c.count || 0), 0) : 0,
+          'Errors': sm.errors || 0,
+          'Warnings': sm.warnings || 0,
+          'Notes': `Type: ${sm.type} | Status: ${sm.errors > 0 ? '❌ Errors' : '✅ OK'}`
+        })));
+        Utilities.sleep(200); // Pause between sites
+      } catch (e) {
+        logWarning('GSC', `Could not get sitemaps for ${site.siteUrl}: ${e.message}`);
+      }
+    }
+    results.sitemaps = allSitemaps.length;
+    writeDataToSheet('GSC_SITEMAPS', GSC_SITEMAPS_HEADERS, allSitemaps);
+
+    const totalElements = results.sites + results.sitemaps;
+    const duration = Date.now() - startTime;
+    logSyncEnd('GSC_Sync', totalElements, duration, 'SUCCESS');
+
+    return {
+      records: totalElements,
+      status: 'SUCCESS',
+      duration: duration,
+      details: results
+    };
+
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    logSyncEnd('GSC_Sync', 0, duration, 'ERROR');
+    logError('GSC', `Synchronization failed: ${error.message}`);
+    return {
+      records: 0, status: 'ERROR', duration: duration, error: error.message
+    };
+  }
+}
+
+// =================================================================
+// DATA EXTRACTION FUNCTIONS (HELPERS)
+// =================================================================
+
+function listSearchConsoleSites() {
+  const auth = getAuthConfig('searchConsole');
+  const url = 'https://www.googleapis.com/webmasters/v3/sites';
+  const options = { method: 'GET', headers: auth.headers, muteHttpExceptions: true };
+  
+  const response = fetchWithRetry(url, options, 'GSC-Sites');
+  return response.siteEntry || [];
+}
+
+function getSearchConsoleSitemaps(siteUrl) {
+  const auth = getAuthConfig('searchConsole');
+  // Site URL must be encoded for the path parameter
+  const encodedSiteUrl = encodeURIComponent(siteUrl);
+  const url = `https://www.googleapis.com/webmasters/v3/sites/${encodedSiteUrl}/sitemaps`;
+  const options = { method: 'GET', headers: auth.headers, muteHttpExceptions: true };
+  
+  const response = fetchWithRetry(url, options, `GSC-Sitemaps-${siteUrl}`);
+  return response.sitemap || [];
+}

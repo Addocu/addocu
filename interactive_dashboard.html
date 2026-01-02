@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Addocu - Analytics Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.45.2/apexcharts.min.js"></script>
   <style>
     :root {
@@ -14,7 +17,7 @@
       --addocu-blue-light: #00AEEF;
       --addocu-green: #4CAF50;
       --addocu-green-light: #8BC34A;
-      
+
       /* Modern Design System - Light Mode */
       --bg-primary: #ffffff;
       --bg-secondary: #fafafa;
@@ -22,13 +25,13 @@
       --surface: #ffffff;
       --surface-elevated: #ffffff;
       --surface-hover: #f9fafb;
-      
+
       /* Text Colors */
       --text-primary: #18181b;
       --text-secondary: #71717a;
       --text-tertiary: #a1a1aa;
       --text-accent: var(--addocu-blue-primary);
-      
+
       /* Semantic Colors */
       --success: #22c55e;
       --success-bg: #f0fdf4;
@@ -38,7 +41,7 @@
       --error-bg: #fef2f2;
       --info: #3b82f6;
       --info-bg: #eff6ff;
-      
+
       /* Chart Colors */
       --chart-primary: var(--addocu-blue-primary);
       --chart-secondary: var(--success);
@@ -46,17 +49,17 @@
       --chart-quaternary: #8b5cf6;
       --chart-quinary: #ec4899;
       --chart-senary: #06b6d4;
-      
+
       /* Interactive Elements */
       --border-light: #e4e4e7;
       --border-medium: #d4d4d8;
       --border-dark: #a1a1aa;
-      
+
       /* Shadows */
       --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
       --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-      
+
       /* Spacing & Sizing */
       --radius-sm: 4px;
       --radius-md: 6px;
@@ -72,12 +75,12 @@
       --surface: #18181b;
       --surface-elevated: #27272a;
       --surface-hover: #3f3f46;
-      
+
       --text-primary: #fafafa;
       --text-secondary: #d4d4d8;
       --text-tertiary: #a1a1aa;
       --text-accent: #60a5fa;
-      
+
       --success: #22c55e;
       --success-bg: #14532d;
       --warning: #f59e0b;
@@ -86,18 +89,18 @@
       --error-bg: #450a0a;
       --info: #3b82f6;
       --info-bg: #1e3a8a;
-      
+
       --chart-primary: #60a5fa;
       --chart-secondary: #4ade80;
       --chart-tertiary: #fbbf24;
       --chart-quaternary: #a78bfa;
       --chart-quinary: #f472b6;
       --chart-senary: #22d3ee;
-      
+
       --border-light: #3f3f46;
       --border-medium: #52525b;
       --border-dark: #71717a;
-      
+
       --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
       --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
@@ -135,8 +138,15 @@
     }
 
     @keyframes loaderBreathing {
-      0%, 100% { background: var(--bg-primary); }
-      50% { background: var(--bg-secondary); }
+
+      0%,
+      100% {
+        background: var(--bg-primary);
+      }
+
+      50% {
+        background: var(--bg-secondary);
+      }
     }
 
     .loader-content {
@@ -145,13 +155,14 @@
     }
 
     @keyframes fadeInScale {
-      from { 
-        opacity: 0; 
-        transform: scale(0.96) translateY(4px); 
+      from {
+        opacity: 0;
+        transform: scale(0.96) translateY(4px);
       }
-      to { 
-        opacity: 1; 
-        transform: scale(1) translateY(0); 
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
       }
     }
 
@@ -184,8 +195,15 @@
     }
 
     @keyframes iconFloat {
-      0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-2px) scale(1.02); }
+
+      0%,
+      100% {
+        transform: translateY(0px) scale(1);
+      }
+
+      50% {
+        transform: translateY(-2px) scale(1.02);
+      }
     }
 
     .loader-icon::before {
@@ -195,39 +213,62 @@
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.2), 
-        transparent
-      );
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent);
       animation: shimmerWave 2.2s ease-in-out infinite;
     }
 
     @keyframes shimmerWave {
-      0% { left: -100%; opacity: 0; }
-      50% { opacity: 1; }
-      100% { left: 100%; opacity: 0; }
+      0% {
+        left: -100%;
+        opacity: 0;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        left: 100%;
+        opacity: 0;
+      }
     }
 
     .loader-icon::after {
-    content: '';
-    width: 128px;
-    height: 128px;
-    background: url('https://raw.githubusercontent.com/Addocu/addocu/main/docs/addocu_logo-removebg-preview-small.png') center/contain no-repeat;
-    filter: brightness(0) invert(1);
-    z-index: 1;
-    position: relative;
-    animation: letterPulse 1.8s ease-in-out infinite;
-}
+      content: '';
+      width: 128px;
+      height: 128px;
+      background: url('https://raw.githubusercontent.com/Addocu/addocu/main/docs/addocu_logo-removebg-preview-small.png') center/contain no-repeat;
+      filter: brightness(0) invert(1);
+      z-index: 1;
+      position: relative;
+      animation: letterPulse 1.8s ease-in-out infinite;
+    }
 
     @keyframes letterPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
     }
 
     @keyframes textFade {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .loader-subtext {
@@ -255,17 +296,35 @@
       animation: dotPulse 1.4s ease-in-out infinite;
     }
 
-    .progress-dot:nth-child(1) { animation-delay: 0s; }
-    .progress-dot:nth-child(2) { animation-delay: 0.2s; }
-    .progress-dot:nth-child(3) { animation-delay: 0.4s; }
-    .progress-dot:nth-child(4) { animation-delay: 0.6s; }
-    .progress-dot:nth-child(5) { animation-delay: 0.8s; }
+    .progress-dot:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .progress-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .progress-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    .progress-dot:nth-child(4) {
+      animation-delay: 0.6s;
+    }
+
+    .progress-dot:nth-child(5) {
+      animation-delay: 0.8s;
+    }
 
     @keyframes dotPulse {
-      0%, 80%, 100% {
+
+      0%,
+      80%,
+      100% {
         background: var(--border-medium);
         transform: scale(1);
       }
+
       40% {
         background: var(--chart-primary);
         transform: scale(1.2);
@@ -280,21 +339,23 @@
       transform: translateX(-50%);
       width: 200px;
       height: 2px;
-      background: linear-gradient(90deg, 
-        transparent,
-        var(--chart-primary),
-        transparent
-      );
+      background: linear-gradient(90deg,
+          transparent,
+          var(--chart-primary),
+          transparent);
       border-radius: 1px;
       animation: waveMove 3s ease-in-out infinite;
       opacity: 0.6;
     }
 
     @keyframes waveMove {
-      0%, 100% {
+
+      0%,
+      100% {
         transform: translateX(-50%) scaleX(0.5);
         opacity: 0.4;
       }
+
       50% {
         transform: translateX(-50%) scaleX(1);
         opacity: 0.8;
@@ -302,23 +363,30 @@
     }
 
     /* CLEAN HEADER - No shadows or effects */
-.header {
-  background: var(--bg-primary);
-  border: none;
-  border-bottom: none;
-  box-shadow: none;
-  padding: 16px 24px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  animation: slideDown 0.5s ease-out;
-}
+    .header {
+      background: var(--bg-primary);
+      border: none;
+      border-bottom: none;
+      box-shadow: none;
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      animation: slideDown 0.5s ease-out;
+    }
 
     @keyframes slideDown {
-      from { transform: translateY(-100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
 
     .header-content {
@@ -384,8 +452,15 @@
     }
 
     @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
     }
 
     .btn {
@@ -450,8 +525,15 @@
     }
 
     @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .dashboard-grid {
@@ -508,7 +590,10 @@
     }
 
     @keyframes cardSlideIn {
-      to { opacity: 1; transform: translateY(0); }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* KPI CARDS */
@@ -560,8 +645,15 @@
     }
 
     @keyframes countUp {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+      from {
+        transform: scale(0.9);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
 
     .kpi-trend {
@@ -573,9 +665,17 @@
       gap: 4px;
     }
 
-    .kpi-trend.success { color: var(--success); }
-    .kpi-trend.warning { color: var(--warning); }
-    .kpi-trend.error { color: var(--error); }
+    .kpi-trend.success {
+      color: var(--success);
+    }
+
+    .kpi-trend.warning {
+      color: var(--warning);
+    }
+
+    .kpi-trend.error {
+      color: var(--error);
+    }
 
     .trend-indicator {
       width: 4px;
@@ -678,9 +778,17 @@
       background: var(--success);
     }
 
-    .status-item.warning::before { background: var(--warning); }
-    .status-item.error::before { background: var(--error); }
-    .status-item.info::before { background: var(--info); }
+    .status-item.warning::before {
+      background: var(--warning);
+    }
+
+    .status-item.error::before {
+      background: var(--error);
+    }
+
+    .status-item.info::before {
+      background: var(--info);
+    }
 
     .status-header {
       display: flex;
@@ -704,9 +812,17 @@
       background: var(--success);
     }
 
-    .status-icon.warning { background: var(--warning); }
-    .status-icon.error { background: var(--error); }
-    .status-icon.info { background: var(--info); }
+    .status-icon.warning {
+      background: var(--warning);
+    }
+
+    .status-icon.error {
+      background: var(--error);
+    }
+
+    .status-icon.info {
+      background: var(--info);
+    }
 
     .status-value {
       font-size: 13px;
@@ -726,34 +842,34 @@
       #dashboard-wrapper {
         padding: 16px;
       }
-      
+
       .header {
         padding: 12px 16px;
       }
-      
+
       .header-content {
         flex-direction: column;
         gap: 12px;
         align-items: stretch;
       }
-      
+
       .header-controls {
         justify-content: space-between;
       }
-      
+
       .dashboard-grid {
         grid-template-columns: 1fr;
         gap: 12px;
       }
-      
+
       .card {
         padding: 16px;
       }
-      
+
       .kpi-value {
         font-size: 24px;
       }
-      
+
       .status-grid {
         grid-template-columns: 1fr;
       }
@@ -805,7 +921,7 @@
       color: #fafafa !important;
       fill: #fafafa !important;
     }
-    
+
     [data-theme="light"] .apexcharts-legend-text,
     [data-theme="light"] .apexcharts-legend-text tspan,
     [data-theme="light"] .apexcharts-xaxis-label,
@@ -817,15 +933,31 @@
     }
 
     /* UTILITY CLASSES */
-    .text-success { color: var(--success); }
-    .text-warning { color: var(--warning); }
-    .text-error { color: var(--error); }
-    .text-info { color: var(--info); }
+    .text-success {
+      color: var(--success);
+    }
+
+    .text-warning {
+      color: var(--warning);
+    }
+
+    .text-error {
+      color: var(--error);
+    }
+
+    .text-info {
+      color: var(--info);
+    }
 
     /* ANIMATIONS */
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     .loading-spin {
@@ -834,7 +966,10 @@
 
     /* ACCESSIBILITY */
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
+
+      *,
+      *::before,
+      *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
@@ -847,6 +982,7 @@
     }
   </style>
 </head>
+
 <body data-theme="light">
   <!-- ELEGANT LOADER - Vercel/Linear Style -->
   <div id="loader">
@@ -870,25 +1006,25 @@
       <div class="logo">
         <div class="logo-icon"></div>
       </div>
-      
+
       <div class="header-controls">
         <div class="sync-status">
           <span class="sync-dot"></span>
           <span id="last-sync-time">Synchronized</span>
         </div>
-        
+
         <button class="btn theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
           <span id="theme-icon">◐</span>
         </button>
-        
+
         <button class="btn" onclick="forceRefresh()">
           Refresh
         </button>
-        
+
         <button class="btn" onclick="runDiagnostic()">
           Diagnostic
         </button>
-        
+
         <button class="btn primary" onclick="triggerFullSync()">
           <span id="audit-status">Run Audit</span>
         </button>
@@ -964,6 +1100,51 @@
             <div class="progress-fill" id="progress-tags"></div>
           </div>
         </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">GSC Sites</div>
+            <div class="kpi-icon">🔍</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-gsc-sites">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            Search Console
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-gsc"></div>
+          </div>
+        </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">YT Channels</div>
+            <div class="kpi-icon">🎥</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-yt-channels">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            YouTube
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-youtube"></div>
+          </div>
+        </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">GBP Locations</div>
+            <div class="kpi-icon">🏪</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-gbp-locations">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            Business Profile
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-gbp"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1021,6 +1202,42 @@
             <span id="health-status">Calculating</span>
           </div>
         </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">GSC Sitemaps</div>
+            <div class="kpi-icon">🗺️</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-gsc-sitemaps">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            Sitemaps
+          </div>
+        </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">YT Playlists</div>
+            <div class="kpi-icon">📋</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-yt-playlists">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            Playlists
+          </div>
+        </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">GBP Accounts</div>
+            <div class="kpi-icon">🏢</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-gbp-accounts">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            GBP
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1038,7 +1255,7 @@
           </div>
           <div class="status-value" id="status-looker">Connected</div>
         </div>
-        
+
         <div class="status-item">
           <div class="status-header">
             <div class="status-text">Analytics 4</div>
@@ -1046,7 +1263,7 @@
           </div>
           <div class="status-value" id="status-ga4">Connected</div>
         </div>
-        
+
         <div class="status-item">
           <div class="status-header">
             <div class="status-text">Tag Manager</div>
@@ -1054,13 +1271,37 @@
           </div>
           <div class="status-value" id="status-gtm">Connected</div>
         </div>
-        
+
+        <div class="status-item">
+          <div class="status-header">
+            <div class="status-text">Search Console</div>
+            <div class="status-icon" id="status-gsc-icon"></div>
+          </div>
+          <div class="status-value" id="status-gsc">Connected</div>
+        </div>
+
+        <div class="status-item">
+          <div class="status-header">
+            <div class="status-text">YouTube</div>
+            <div class="status-icon" id="status-youtube-icon"></div>
+          </div>
+          <div class="status-value" id="status-youtube">Connected</div>
+        </div>
+
+        <div class="status-item">
+          <div class="status-header">
+            <div class="status-text">Business Profile</div>
+            <div class="status-icon" id="status-gbp-icon"></div>
+          </div>
+          <div class="status-value" id="status-gbp">Connected</div>
+        </div>
+
         <div class="status-item info">
           <div class="status-header">
             <div class="status-text">Coming Soon</div>
             <div class="status-icon info" id="status-coming-soon-icon"></div>
           </div>
-          <div class="status-value" id="status-coming-soon">BigQuery, Google Ads, Search Console</div>
+          <div class="status-value" id="status-coming-soon">BigQuery, Google Ads</div>
         </div>
       </div>
     </section>
@@ -1143,25 +1384,25 @@
     function toggleTheme() {
       currentTheme = currentTheme === 'light' ? 'dark' : 'light';
       document.body.setAttribute('data-theme', currentTheme);
-      
+
       const icon = document.getElementById('theme-icon');
       icon.textContent = currentTheme === 'light' ? '◐' : '◑';
-      
+
       // Update charts for new theme
       if (dashboardData) {
         setTimeout(() => {
           createCharts(dashboardData);
         }, 200);
       }
-      
+
       localStorage.setItem('addocu-theme', currentTheme);
       showNotification(`${currentTheme === 'light' ? 'Light' : 'Dark'} theme activated`, 'success');
     }
 
     // INITIALIZATION
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       console.log('Addocu - Initializing dashboard...');
-      
+
       // Load saved theme
       const savedTheme = localStorage.getItem('addocu-theme');
       if (savedTheme) {
@@ -1170,17 +1411,17 @@
         const icon = document.getElementById('theme-icon');
         icon.textContent = currentTheme === 'light' ? '◐' : '◑';
       }
-      
+
       initializeDashboard();
       setupAutoRefresh();
     });
 
     function initializeDashboard() {
       console.log('Checking for Google Apps Script...');
-      
+
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         console.log('Google Apps Script detected - Loading real data...');
-        
+
         const timeoutId = setTimeout(() => {
           console.log('Timeout - Starting demo mode');
           initializeDashboardDemo();
@@ -1206,7 +1447,7 @@
 
     function initializeDashboardDemo() {
       console.log('Starting clean demo mode - no placeholder data...');
-      
+
       // Completely empty state - no fake data
       const cleanEmptyData = {
         kpis: {
@@ -1217,9 +1458,12 @@
           totalVariables: 0,
           totalTriggers: 0,
           totalContainers: 0,
-          totalDimensions: 0,
           totalMetrics: 0,
-          totalStreams: 0
+          totalStreams: 0,
+          totalGSCSites: 0,
+          totalGSCSitemaps: 0,
+          totalYTChannels: 0,
+          totalYTPlaylists: 0
         },
         quality: {
           orphanTriggers: [],
@@ -1228,8 +1472,8 @@
         },
         charts: {
           elementsByTool: {
-            categories: ['Looker Studio', 'Google Analytics 4', 'Google Tag Manager'],
-            series: [{ name: 'Assets', data: [0, 0, 0] }]
+            categories: ['Looker Studio', 'Google Analytics 4', 'Google Tag Manager', 'Search Console', 'YouTube'],
+            series: [{ name: 'Assets', data: [0, 0, 0, 0, 0] }]
           },
           gtmTagBreakdown: {
             labels: ['No data available'],
@@ -1244,7 +1488,7 @@
         user: 'demo@addocu.com',
         hasRealData: false
       };
-      
+
       handleDashboardData(cleanEmptyData, true);
     }
 
@@ -1261,7 +1505,7 @@
       populateKPIs(data);
       createCharts(data);
       updateStatus();
-      
+
       if (isDemo) {
         showNotification('Dashboard initialized - No data available. Please run an audit first.', 'warning');
       } else {
@@ -1273,16 +1517,16 @@
       const loader = document.getElementById('loader');
       const header = document.getElementById('header');
       const wrapper = document.getElementById('dashboard-wrapper');
-      
+
       loader.style.transition = 'all 0.4s ease-out';
       loader.style.opacity = '0';
       loader.style.transform = 'scale(0.95)';
-      
+
       setTimeout(() => {
         loader.style.display = 'none';
         header.style.display = 'block';
         wrapper.style.display = 'block';
-        
+
         // Stagger card animations
         const cards = document.querySelectorAll('.card');
         cards.forEach((card, index) => {
@@ -1299,33 +1543,48 @@
 
     function populateKPIs(data) {
       console.log('Populating KPIs with data:', data.kpis);
-      
+
       // Main KPIs
       animateCounter('kpi-total-assets', data.kpis.totalAssets);
       animateCounter('kpi-total-reports', data.kpis.totalReports);
       animateCounter('kpi-total-properties', data.kpis.totalProperties);
       animateCounter('kpi-total-tags', data.kpis.totalTags);
-      
+
       // Detailed KPIs
       animateCounter('kpi-total-variables', data.kpis.totalVariables);
       animateCounter('kpi-total-triggers', data.kpis.totalTriggers);
       animateCounter('kpi-total-containers', data.kpis.totalContainers);
-      
+
+      // GSC KPIs
+      animateCounter('kpi-total-gsc-sites', data.kpis.totalGSCSites);
+      animateCounter('kpi-total-gsc-sitemaps', data.kpis.totalGSCSitemaps);
+
+      // YouTube KPIs
+      animateCounter('kpi-total-yt-channels', data.kpis.totalYTChannels);
+      animateCounter('kpi-total-yt-playlists', data.kpis.totalYTPlaylists);
+
+      // GBP KPIs
+      animateCounter('kpi-total-gbp-accounts', data.kpis.totalGBPAccounts);
+      animateCounter('kpi-total-gbp-locations', data.kpis.totalGBPLocations);
+
       // Health Score
       const healthScore = calculateHealthScore(data.quality, data.kpis);
       animateCounter('kpi-health-score', Math.round(healthScore), '%');
       updateHealthTrend(healthScore);
-      
+
       // Progress bars
       const totalAssets = data.kpis.totalAssets;
       setProgress('progress-assets', 100);
       setProgress('progress-reports', (data.kpis.totalReports / totalAssets) * 100);
       setProgress('progress-properties', (data.kpis.totalProperties / totalAssets) * 100);
       setProgress('progress-tags', (data.kpis.totalTags / totalAssets) * 100);
-      
+      setProgress('progress-gsc', (data.kpis.totalGSCSites / totalAssets) * 100);
+      setProgress('progress-youtube', (data.kpis.totalYTChannels / totalAssets) * 100);
+      setProgress('progress-gbp', (data.kpis.totalGBPLocations / totalAssets) * 100);
+
       // Update trends
       updateAssetsTrend(data.kpis);
-      
+
       // Update sync time
       document.getElementById('last-sync-time').textContent = new Date().toLocaleTimeString('en-US', {
         hour: '2-digit',
@@ -1335,7 +1594,7 @@
 
     function updateAssetsTrend(kpis) {
       const totalItemsElement = document.getElementById('kpi-total-items');
-      const breakdown = `${kpis.totalReports + kpis.totalProperties + kpis.totalTags} total items`;
+      const breakdown = `${kpis.totalReports + kpis.totalProperties + kpis.totalTags + kpis.totalGSCSites + kpis.totalYTChannels + kpis.totalGBPLocations} total items`;
       if (totalItemsElement) {
         totalItemsElement.textContent = breakdown;
       }
@@ -1369,7 +1628,7 @@
     function updateHealthTrend(score) {
       const trendElement = document.getElementById('health-trend');
       const statusElement = document.getElementById('health-status');
-      
+
       if (score >= 90) {
         if (statusElement) statusElement.textContent = 'Excellent';
         trendElement.className = 'kpi-trend success';
@@ -1387,23 +1646,23 @@
 
     function calculateHealthScore(quality, kpis) {
       let score = 100;
-      
+
       if (kpis.totalTriggers > 0 && quality.orphanTriggers) {
-        const orphanTriggers = Array.isArray(quality.orphanTriggers) 
-          ? quality.orphanTriggers.length 
+        const orphanTriggers = Array.isArray(quality.orphanTriggers)
+          ? quality.orphanTriggers.length
           : 0;
         const triggerPenalty = (orphanTriggers / kpis.totalTriggers) * 30;
         score -= triggerPenalty;
       }
-      
+
       if (kpis.totalTags > 0 && quality.tagsWithoutTriggers) {
-        const tagsWithoutTriggers = Array.isArray(quality.tagsWithoutTriggers) 
-          ? quality.tagsWithoutTriggers.length 
+        const tagsWithoutTriggers = Array.isArray(quality.tagsWithoutTriggers)
+          ? quality.tagsWithoutTriggers.length
           : 0;
         const tagPenalty = (tagsWithoutTriggers / kpis.totalTags) * 40;
         score -= tagPenalty;
       }
-      
+
       return Math.max(0, Math.min(100, score));
     }
 
@@ -1426,7 +1685,7 @@
     function getChartColors() {
       const isDark = currentTheme === 'dark';
       const computedStyle = getComputedStyle(document.documentElement);
-      
+
       return {
         primary: computedStyle.getPropertyValue('--chart-primary').trim(),
         secondary: computedStyle.getPropertyValue('--chart-secondary').trim(),
@@ -1442,7 +1701,7 @@
 
     function createToolsChart(data) {
       if (!data.charts.elementsByTool) return;
-      
+
       const colors = getChartColors();
       const options = {
         series: data.charts.elementsByTool.series,
@@ -1484,7 +1743,7 @@
             }
           }
         },
-        colors: [colors.primary, colors.secondary, colors.tertiary],
+        colors: [colors.primary, colors.secondary, colors.tertiary, colors.quaternary, colors.quinary, colors.senary],
         grid: {
           borderColor: colors.border,
           strokeDashArray: 2
@@ -1582,7 +1841,7 @@
     function createTimelineChart(data) {
       const timelineData = generateTimelineData();
       const colors = getChartColors();
-      
+
       const options = {
         series: [{
           name: 'Modifications',
@@ -1641,7 +1900,7 @@
     function createHeatmapChart(data) {
       const heatmapData = generateHeatmapData();
       const colors = getChartColors();
-      
+
       const options = {
         series: heatmapData,
         chart: {
@@ -1684,17 +1943,17 @@
       // Check if we have real historical data
       if (dashboardData && dashboardData.historicalData && dashboardData.historicalData.timeline) {
         const historical = dashboardData.historicalData.timeline;
-        
+
         // Use real historical data if available
         if (historical.dates.length > 0) {
           console.log('Using real historical timeline data:', historical.dates.length, 'days');
-          
+
           // Format dates for display
           const formattedDates = historical.dates.map(dateStr => {
             const date = new Date(dateStr);
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           });
-          
+
           return {
             dates: formattedDates,
             modifications: historical.modifications,
@@ -1702,35 +1961,35 @@
           };
         }
       }
-      
+
       // Fallback to generated data based on current assets
       const dates = [];
       const modifications = [];
       const newAssets = [];
-      
+
       console.log('Generating synthetic timeline data based on current assets');
-      
+
       // Generate dates for last 30 days
       for (let i = 29; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
         dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-        
+
         // If we have real data, generate realistic activity based on it
         if (dashboardData && dashboardData.hasRealData && dashboardData.kpis.totalAssets > 0) {
           // Generate realistic activity pattern based on total assets
           const baseActivity = Math.max(1, Math.floor(dashboardData.kpis.totalAssets / 30));
           const dayOfWeek = date.getDay();
-          
+
           // Higher activity on weekdays, lower on weekends
           const weekdayMultiplier = (dayOfWeek === 0 || dayOfWeek === 6) ? 0.3 : 1;
-          
+
           // Add some randomness but keep it realistic
           const variance = Math.random() * 0.6 + 0.7; // 0.7 to 1.3 multiplier
-          
+
           const dayModifications = Math.floor(baseActivity * weekdayMultiplier * variance);
           const dayNewAssets = Math.floor((baseActivity * 0.3) * weekdayMultiplier * variance);
-          
+
           modifications.push(dayModifications);
           newAssets.push(dayNewAssets);
         } else {
@@ -1739,55 +1998,55 @@
           newAssets.push(0);
         }
       }
-      
+
       return { dates, modifications, newAssets };
     }
 
     function generateHeatmapData() {
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      
+
       // Check if we have real historical data
       if (dashboardData && dashboardData.historicalData && dashboardData.historicalData.heatmap) {
         const historical = dashboardData.historicalData.heatmap;
-        
+
         // Use real historical heatmap data if available
         if (Object.keys(historical.byDayOfWeek).length > 0) {
           console.log('Using real historical heatmap data');
-          
+
           // Map day names to match our display format
           const dayMapping = {
             'Monday': 'Mon',
-            'Tuesday': 'Tue', 
+            'Tuesday': 'Tue',
             'Wednesday': 'Wed',
             'Thursday': 'Thu',
             'Friday': 'Fri',
             'Saturday': 'Sat',
             'Sunday': 'Sun'
           };
-          
+
           const containers = dashboardData.kpis.totalContainers || 1;
           const containerNames = [];
-          
+
           // Create realistic container names
           for (let i = 1; i <= Math.min(4, containers); i++) {
             const avgTags = Math.floor((dashboardData.kpis.totalTags || 0) / containers) || 5;
             containerNames.push(`Container ${i} (${avgTags + i - 1} tags)`);
           }
-          
+
           if (containerNames.length === 0) {
             containerNames.push('GTM Container 1');
           }
-          
+
           return containerNames.map((name, index) => {
             const multiplier = 1 - (index * 0.2); // Different activity levels per container
-            
+
             return {
               name: name,
               data: days.map(day => {
                 // Find the corresponding full day name
                 const fullDayName = Object.keys(dayMapping).find(fullDay => dayMapping[fullDay] === day);
                 const baseActivity = historical.byDayOfWeek[fullDayName] || 0;
-                
+
                 return {
                   x: day,
                   y: Math.floor(baseActivity * multiplier)
@@ -1797,10 +2056,10 @@
           });
         }
       }
-      
+
       // Fallback to generated data
       console.log('Generating synthetic heatmap data');
-      
+
       // If no real data, show meaningful empty state
       if (!dashboardData || !dashboardData.hasRealData || dashboardData.kpis.totalContainers === 0) {
         return [{
@@ -1808,16 +2067,16 @@
           data: days.map(day => ({ x: day, y: 0 }))
         }];
       }
-      
+
       // Generate realistic heatmap based on real container data
       const containerNames = [];
       const maxContainers = Math.min(5, dashboardData.kpis.totalContainers); // Show max 5 for readability
-      
+
       // Create container names based on real data
       if (dashboardData.kpis.totalTags > 0) {
         // If we have tag data, create container names with tag counts
         const avgTagsPerContainer = Math.floor(dashboardData.kpis.totalTags / dashboardData.kpis.totalContainers);
-        
+
         for (let i = 1; i <= maxContainers; i++) {
           const estimatedTags = avgTagsPerContainer + Math.floor(Math.random() * 10) - 5; // Add some variance
           containerNames.push(`Container ${i} (${Math.max(1, estimatedTags)} tags)`);
@@ -1828,30 +2087,30 @@
           containerNames.push(`GTM Container ${i}`);
         }
       }
-      
+
       // Generate realistic activity patterns
       return containerNames.map((containerName, containerIndex) => {
-        const baseActivity = dashboardData.kpis.totalTags > 0 
-          ? Math.floor(dashboardData.kpis.totalTags / dashboardData.kpis.totalContainers) 
+        const baseActivity = dashboardData.kpis.totalTags > 0
+          ? Math.floor(dashboardData.kpis.totalTags / dashboardData.kpis.totalContainers)
           : 5;
-        
+
         return {
           name: containerName,
           data: days.map((day, dayIndex) => {
             // Different containers have different activity patterns
             const containerMultiplier = 1 - (containerIndex * 0.15); // First container most active
-            
+
             // Weekend vs weekday activity
             const isWeekend = dayIndex === 0 || dayIndex === 6; // Sunday = 0, Saturday = 6
             const weekdayMultiplier = isWeekend ? 0.2 : 1;
-            
+
             // Some randomness but keep it realistic
             const variance = Math.random() * 0.5 + 0.75; // 0.75 to 1.25
-            
+
             const activity = Math.floor(
               baseActivity * containerMultiplier * weekdayMultiplier * variance
             );
-            
+
             return {
               x: day,
               y: Math.max(0, activity) // Ensure non-negative
@@ -1862,10 +2121,10 @@
     }
 
     function updateStatus() {
-      const services = ['looker', 'ga4', 'gtm'];
+      const services = ['looker', 'ga4', 'gtm', 'gsc', 'youtube', 'gbp'];
       services.forEach(service => {
         const statusElement = document.getElementById(`status-${service}`);
-        statusElement.textContent = 'Connected';
+        if (statusElement) statusElement.textContent = 'Connected';
       });
     }
 
@@ -1895,7 +2154,7 @@
 
     function forceRefresh() {
       showNotification('Refreshing data...', 'success');
-      
+
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler((data) => {
@@ -1914,14 +2173,14 @@
 
     function runDiagnostic() {
       showNotification('Running comprehensive diagnostic...', 'success');
-      
+
       const hasGoogleScript = typeof google !== 'undefined' && google.script && google.script.run;
-      
+
       if (!hasGoogleScript) {
         showNotification('Google Apps Script not available - Demo mode only', 'warning');
         return;
       }
-      
+
       google.script.run
         .withSuccessHandler((data) => {
           showNotification('Diagnostic successful - System functioning correctly', 'success');
@@ -1938,19 +2197,19 @@
     function triggerFullSync() {
       const button = document.querySelector('.btn.primary');
       const statusSpan = document.getElementById('audit-status');
-      
+
       showNotification('Starting comprehensive ecosystem audit...', 'success');
-      
+
       button.style.opacity = '0.7';
       button.style.pointerEvents = 'none';
       statusSpan.textContent = 'Running...';
-      
+
       const resetButton = () => {
         button.style.opacity = '1';
         button.style.pointerEvents = 'auto';
         statusSpan.textContent = 'Run Audit';
       };
-      
+
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(() => {
@@ -1978,13 +2237,13 @@
       const notification = document.createElement('div');
       notification.className = `notification ${type}`;
       notification.textContent = message;
-      
+
       container.appendChild(notification);
-      
+
       setTimeout(() => {
         notification.classList.add('show');
       }, 100);
-      
+
       setTimeout(() => {
         notification.classList.remove('show');
         setTimeout(() => {
@@ -2035,7 +2294,7 @@
           theme: currentTheme
         }
       };
-      
+
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2063,7 +2322,7 @@
     window.exportHeatmapData = exportHeatmapData;
 
     // Cleanup
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('beforeunload', function () {
       if (refreshTimer) {
         clearInterval(refreshTimer);
       }
@@ -2073,8 +2332,9 @@
         }
       });
     });
-    
+
     console.log('Addocu - System fully initialized');
   </script>
 </body>
+
 </html>

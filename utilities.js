@@ -9,7 +9,7 @@
 
 const ADDOCU_CONFIG = {
   services: {
-    available: ['ga4', 'gtm', 'looker', 'lookerStudio']
+    available: ['ga4', 'gtm', 'looker', 'lookerStudio', 'searchConsole', 'youtube', 'googleBusinessProfile']
   },
   apis: {
     ga4: {
@@ -31,6 +31,21 @@ const ADDOCU_CONFIG = {
       name: 'Looker Studio API',
       baseUrl: 'https://datastudio.googleapis.com/v1',
       testEndpoint: '/assets:search?assetTypes=REPORT&pageSize=1'
+    },
+    searchConsole: {
+      name: 'Google Search Console API',
+      baseUrl: 'https://www.googleapis.com/webmasters/v3',
+      testEndpoint: '/sites'
+    },
+    youtube: {
+      name: 'YouTube Data API',
+      baseUrl: 'https://www.googleapis.com/youtube/v3',
+      testEndpoint: '/channels?mine=true'
+    },
+    googleBusinessProfile: {
+      name: 'Google Business Profile API',
+      baseUrl: 'https://mybusinessaccountmanagement.googleapis.com/v1',
+      testEndpoint: '/accounts'
     }
   },
   limits: {
@@ -56,12 +71,12 @@ function getAPIKey() {
   if (!apiKey) {
     throw new Error('Looker Studio API Key not configured. Set it up in "⚙️ Configure Addocu".');
   }
-  
+
   // Basic format validation
   if (!apiKey.startsWith('AIza') || apiKey.length < 20) {
     throw new Error('Invalid API Key format. It should start with "AIza" and have at least 20 characters.');
   }
-  
+
   return apiKey;
 }
 
@@ -71,7 +86,7 @@ function getAPIKey() {
  */
 function getUserConfig() {
   const userProperties = PropertiesService.getUserProperties();
-  
+
   return {
     lookerApiKey: userProperties.getProperty('ADDOCU_LOOKER_API_KEY') || '',
     gtmFilter: userProperties.getProperty('ADDOCU_GTM_FILTER') || '',
@@ -91,21 +106,21 @@ function getUserConfig() {
 function getAuthConfig(serviceName) {
   try {
     const config = getUserConfig();
-    
+
     // Basic headers for Google APIs
     const headers = {
       'Content-Type': 'application/json',
       'User-Agent': 'Addocu/2.0 (Google Sheets Add-on)'
     };
-    
-    // GA4 and GTM require OAuth2 (REST API calls)
-    if (serviceName === 'ga4' || serviceName === 'gtm') {
+
+    // GA4, GTM, GSC, YouTube and GBP require OAuth2 (REST API calls)
+    if (serviceName === 'ga4' || serviceName === 'gtm' || serviceName === 'searchConsole' || serviceName === 'youtube' || serviceName === 'googleBusinessProfile') {
       const oauthToken = ScriptApp.getOAuthToken();
       if (!oauthToken) {
         throw new Error(`OAuth2 token required for ${serviceName}. Authorize the script first.`);
       }
       headers['Authorization'] = `Bearer ${oauthToken}`;
-      
+
       return {
         headers: headers,
         authUser: config.userEmail,
@@ -115,7 +130,7 @@ function getAuthConfig(serviceName) {
         oauthToken: oauthToken
       };
     }
-    
+
     // Looker Studio now requires OAuth2 (Google removed API Key support)
     if (serviceName === 'looker' || serviceName === 'lookerStudio') {
       // CRITICAL CHANGE: Looker Studio migrated to OAuth2 only
@@ -124,7 +139,7 @@ function getAuthConfig(serviceName) {
         throw new Error(`OAuth2 token required for ${serviceName}. Looker Studio no longer accepts API Keys.`);
       }
       headers['Authorization'] = `Bearer ${oauthToken}`;
-      
+
       return {
         headers: headers,
         authUser: config.userEmail,
@@ -134,9 +149,9 @@ function getAuthConfig(serviceName) {
         oauthToken: oauthToken
       };
     }
-    
+
     throw new Error(`Unsupported service: ${serviceName}`);
-    
+
   } catch (error) {
     logError('AUTH', `Authentication error for ${serviceName}: ${error.message}`);
     throw error;
@@ -166,13 +181,13 @@ function getTargetContainersFromConfig() {
       logEvent('GTM', 'No container filter defined. All accessible containers will be audited.');
       return []; // Empty array = all containers
     }
-    
+
     // Clean and validate GTM container format
     const containers = value.split(',')
       .map(id => id.trim())
       .filter(id => id.length > 0)
       .filter(id => id.startsWith('GTM-') || /^[0-9]+$/.test(id)); // GTM-XXXXXX or numbers only
-      
+
     logEvent('GTM', `Container filter configured: ${containers.join(', ')}`);
     return containers;
   } catch (e) {
@@ -198,12 +213,12 @@ function getTargetWorkspacesFromConfig() {
       logEvent('GTM', 'No workspace filter defined. Default workspace will be used.');
       return []; // Empty array = default workspace
     }
-    
+
     // Clean and validate workspace format
     const workspaces = value.split(',')
       .map(name => name.trim())
       .filter(name => name.length > 0);
-      
+
     logEvent('GTM', `Workspace filter configured: ${workspaces.join(', ')}`);
     return workspaces;
   } catch (e) {
@@ -229,12 +244,12 @@ function getTargetGA4PropertiesFromConfig() {
       logEvent('GA4', 'No property filter defined. All accessible properties will be audited.');
       return []; // Empty array = all properties
     }
-    
+
     // Clean and validate GA4 property format
     const properties = value.split(',')
       .map(id => id.trim())
       .filter(id => id.length > 0);
-      
+
     logEvent('GA4', `Property filter configured: ${properties.join(', ')}`);
     return properties;
   } catch (e) {
@@ -263,28 +278,28 @@ function fetchWithRetry(url, options = {}, serviceName = 'API', maxRetries = nul
   if (maxRetries === null) {
     maxRetries = ADDOCU_CONFIG.limits.maxRetries;
   }
-  
+
   let lastError = null;
   const startTime = Date.now();
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       logEvent('HTTP', `${serviceName}: Request ${attempt}/${maxRetries} to ${getUrlForLogging(url)}`);
-      
+
       // Configure default options
       const requestOptions = {
         method: 'GET',
         muteHttpExceptions: true,
         ...options
       };
-      
+
       // Apply timeout if configured
       const config = getUserConfig();
       if (config.requestTimeout && config.requestTimeout > 0) {
         // Apps Script doesn't support custom timeout, but we log it
         logEvent('HTTP', `${serviceName}: Timeout configured: ${config.requestTimeout}s`);
       }
-      
+
       const response = UrlFetchApp.fetch(url, requestOptions);
       const statusCode = response.getResponseCode();
       const responseText = response.getContentText();
@@ -299,11 +314,11 @@ function fetchWithRetry(url, options = {}, serviceName = 'API', maxRetries = nul
       // Successful responses
       if (statusCode >= 200 && statusCode < 300) {
         logEvent('HTTP', `${serviceName}: Success (${statusCode}) in ${duration}ms`);
-        
+
         if (!responseText || responseText.trim() === '') {
           return {}; // Valid empty response
         }
-        
+
         try {
           return JSON.parse(responseText);
         } catch (parseError) {
@@ -311,7 +326,7 @@ function fetchWithRetry(url, options = {}, serviceName = 'API', maxRetries = nul
           return { rawResponse: responseText };
         }
       }
-      
+
       // Rate limiting (429)
       if (statusCode === 429) {
         const waitTime = Math.pow(2, attempt) * ADDOCU_CONFIG.limits.retryDelay;
@@ -331,7 +346,7 @@ function fetchWithRetry(url, options = {}, serviceName = 'API', maxRetries = nul
           continue;
         }
       }
-      
+
       // Client errors (4xx) - don't retry
       let errorMessage = `API error ${statusCode}`;
       try {
@@ -342,20 +357,20 @@ function fetchWithRetry(url, options = {}, serviceName = 'API', maxRetries = nul
       } catch (e) {
         errorMessage += `: ${responseText.substring(0, 200)}`;
       }
-      
+
       throw new Error(errorMessage);
-      
+
     } catch (e) {
       lastError = e;
       const duration = Date.now() - startTime;
-      
+
       if (attempt === maxRetries) {
         logError('HTTP', `${serviceName}: Final failure after ${maxRetries} attempts in ${duration}ms: ${e.message}`);
         throw new Error(`Failure in ${serviceName} after ${maxRetries} attempts: ${e.message}`);
       }
-      
+
       logWarning('HTTP', `${serviceName}: Error in attempt ${attempt}/${maxRetries}: ${e.message}`);
-      
+
       // Wait before next attempt (except for the last one)
       if (attempt < maxRetries) {
         const waitTime = attempt * ADDOCU_CONFIG.limits.retryDelay;
@@ -363,7 +378,7 @@ function fetchWithRetry(url, options = {}, serviceName = 'API', maxRetries = nul
       }
     }
   }
-  
+
   throw lastError || new Error(`Unknown error in ${serviceName}`);
 }
 
@@ -377,20 +392,20 @@ function buildUrl(baseUrl, params = {}) {
   if (!params || Object.keys(params).length === 0) {
     return baseUrl;
   }
-  
+
   const queryParams = [];
-  
+
   Object.keys(params).forEach(key => {
     const value = params[key];
     if (value !== undefined && value !== null) {
       queryParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
     }
   });
-  
+
   if (queryParams.length === 0) {
     return baseUrl;
   }
-  
+
   const separator = baseUrl.includes('?') ? '&' : '?';
   return `${baseUrl}${separator}${queryParams.join('&')}`;
 }
@@ -404,14 +419,14 @@ function getUrlForLogging(url) {
   try {
     // Find and hide API key manually
     let sanitizedUrl = url;
-    
+
     // Find 'key=' parameter and replace it
     const keyPattern = /([?&])key=([^&]*)/g;
     sanitizedUrl = sanitizedUrl.replace(keyPattern, '$1key=AIza***HIDDEN***');
-    
+
     // Limit length for logs
     return sanitizedUrl.length > 100 ? sanitizedUrl.substring(0, 100) + '...' : sanitizedUrl;
-    
+
   } catch (e) {
     return url.substring(0, 100) + (url.length > 100 ? '...' : '');
   }
@@ -428,14 +443,14 @@ function getUrlForLogging(url) {
  */
 function formatDate(dateInput) {
   if (!dateInput) return 'N/A';
-  
+
   try {
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-    
+
     if (isNaN(date.getTime())) {
       return typeof dateInput === 'string' ? dateInput : 'Invalid date';
     }
-    
+
     return date.toLocaleString('en-US', {
       year: 'numeric',
       month: '2-digit',
@@ -472,9 +487,9 @@ function formatCellValue(value) {
  */
 function truncateText(text, maxLength = 1000) {
   if (!text || typeof text !== 'string') return '';
-  
+
   if (text.length <= maxLength) return text;
-  
+
   return text.substring(0, maxLength - 3) + '...';
 }
 
@@ -494,47 +509,47 @@ function writeToSheet(sheetName, headers, data, clearFirst = true, options = {})
   try {
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     let sheet = spreadsheet.getSheetByName(sheetName);
-    
+
     // Create sheet if it doesn't exist
     if (!sheet) {
       sheet = spreadsheet.insertSheet(sheetName);
       logEvent('SHEET', `Sheet "${sheetName}" created.`);
     }
-    
+
     // Clear sheet if requested
     if (clearFirst) {
       sheet.clear();
     }
-    
+
     // Write headers if provided
     if (headers && headers.length > 0) {
       const headerRange = sheet.getRange(1, 1, 1, headers.length);
       headerRange.setValues([headers]);
-      
+
       // Header formatting
       headerRange
         .setFontWeight('bold')
         .setBackground('#4285F4')
         .setFontColor('white')
         .setBorder(true, true, true, true, true, true);
-        
+
       sheet.setFrozenRows(1);
     }
-    
+
     // Write data if exists
     if (data && data.length > 0 && data[0].length > 0) {
       const startRow = clearFirst ? 2 : sheet.getLastRow() + 1;
       const numRows = data.length;
       const numColumns = data[0].length;
-      
+
       // Ensure all data are valid strings or numbers
-      const cleanData = data.map(row => 
+      const cleanData = data.map(row =>
         row.map(cell => formatCellValue(cell))
       );
-      
+
       const dataRange = sheet.getRange(startRow, 1, numRows, numColumns);
       dataRange.setValues(cleanData);
-      
+
       // Alternating colors for rows
       if (options.alternateColors !== false) {
         for (let i = 0; i < numRows; i++) {
@@ -544,16 +559,16 @@ function writeToSheet(sheetName, headers, data, clearFirst = true, options = {})
           }
         }
       }
-      
+
       // Auto-resize columns
       sheet.autoResizeColumns(1, numColumns);
-      
+
       // Apply borders
       if (options.borders !== false) {
         dataRange.setBorder(true, true, true, true, true, true);
       }
     }
-    
+
     // Sheet metadata
     if (options.addMetadata !== false) {
       addSheetMetadata(sheet, {
@@ -563,9 +578,9 @@ function writeToSheet(sheetName, headers, data, clearFirst = true, options = {})
         userEmail: Session.getActiveUser().getEmail()
       });
     }
-    
+
     logEvent('SHEET', `${data ? data.length : 0} records written to "${sheetName}".`);
-    
+
   } catch (error) {
     logError('SHEET', `Error writing to "${sheetName}": ${error.message}`);
     throw new Error(`Could not write to sheet "${sheetName}": ${error.message}`);
@@ -582,16 +597,16 @@ function addSheetMetadata(sheet, metadata) {
     // Use columns far to the right for metadata (columns ZZ, ZA, etc.)
     const metaStartCol = 26 * 26 + 26; // Column ZZ
     let row = 1;
-    
+
     Object.keys(metadata).forEach(key => {
       sheet.getRange(row, metaStartCol).setValue(key);
       sheet.getRange(row, metaStartCol + 1).setValue(metadata[key]);
       row++;
     });
-    
+
     // Hide these columns
     sheet.hideColumns(metaStartCol, 2);
-    
+
   } catch (e) {
     // Not critical if it fails
     logWarning('SHEET', `Could not add metadata: ${e.message}`);
@@ -607,10 +622,10 @@ function getSheetRecordCount(sheetName) {
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
     if (!sheet) return 0;
-    
+
     const lastRow = sheet.getLastRow();
     return Math.max(0, lastRow - 1); // -1 to exclude header
-    
+
   } catch (e) {
     return 0;
   }
@@ -627,18 +642,18 @@ function getSheetRecordCount(sheetName) {
  */
 function validateService(serviceName) {
   try {
-    
+
     const auth = getAuthConfig(serviceName);
     const apiConfig = ADDOCU_CONFIG.apis[serviceName];
-    
+
     if (!apiConfig) {
       throw new Error(`Configuration not found for service: ${serviceName}`);
     }
-    
+
     logEvent('VALIDATION', `Validating ${serviceName} with ${auth.authType}...`);
-    
+
     let testUrl, requestOptions;
-    
+
     if (auth.authType === 'oauth2') {
       // For GA4 and GTM: use OAuth2 only
       testUrl = apiConfig.baseUrl + apiConfig.testEndpoint;
@@ -661,24 +676,24 @@ function validateService(serviceName) {
     } else {
       throw new Error(`Unsupported authentication type: ${auth.authType}`);
     }
-    
+
     const response = UrlFetchApp.fetch(testUrl, requestOptions);
     const statusCode = response.getResponseCode();
     const responseText = response.getContentText();
-    
+
     let status = 'ERROR';
     let message = '';
     let account = 'N/A';
-    
+
     // Initialize account with more descriptive value for Looker Studio
     if (serviceName === 'looker' || serviceName === 'lookerStudio') {
       account = 'Pending';
     }
-    
+
     if (statusCode === 200) {
       status = 'OK';
       message = 'Connected successfully';
-      
+
       // Assign more descriptive account message based on authentication type
       if (serviceName === 'ga4') {
         account = 'OAuth2 authorized';
@@ -686,8 +701,14 @@ function validateService(serviceName) {
         account = 'OAuth2 authorized';
       } else if (serviceName === 'looker' || serviceName === 'lookerStudio') {
         account = 'OAuth2 connected';
+      } else if (serviceName === 'searchConsole') {
+        account = 'OAuth2 authorized';
+      } else if (serviceName === 'youtube') {
+        account = 'OAuth2 authorized';
+      } else if (serviceName === 'googleBusinessProfile') {
+        account = 'OAuth2 authorized';
       }
-      
+
       // Try to extract additional account information (optional)
       try {
         const data = JSON.parse(responseText);
@@ -695,6 +716,12 @@ function validateService(serviceName) {
           account = `OAuth2 authorized (${data.accounts.length} accounts)`;
         } else if (serviceName === 'gtm' && data.account) {
           account = `OAuth2 authorized (${data.account.length} accounts)`;
+        } else if (serviceName === 'searchConsole' && data.siteEntry) {
+          account = `OAuth2 authorized (${data.siteEntry.length} sites)`;
+        } else if (serviceName === 'youtube' && data.items) {
+          account = `OAuth2 authorized (${data.items.length} channels)`;
+        } else if (serviceName === 'googleBusinessProfile' && data.accounts) {
+          account = `OAuth2 authorized (${data.accounts.length} accounts)`;
         }
         // For debugging: log actual response structure
         logEvent('VALIDATION', `${serviceName} response structure: ${JSON.stringify(Object.keys(data)).substring(0, 200)}`);
@@ -702,7 +729,7 @@ function validateService(serviceName) {
         // Keep base message if can't parse
         logEvent('VALIDATION', `${serviceName} response parsing failed, using base message`);
       }
-      
+
     } else if (statusCode === 403) {
       status = 'PERMISSION_ERROR';
       if (auth.authType === 'oauth2') {
@@ -724,7 +751,7 @@ function validateService(serviceName) {
       status = `HTTP_${statusCode}`;
       message = `HTTP error ${statusCode}`;
     }
-    
+
     return {
       service: apiConfig.name,
       account: account,
@@ -733,10 +760,10 @@ function validateService(serviceName) {
       timestamp: new Date(),
       message: message
     };
-    
+
   } catch (error) {
     logError('VALIDATION', `Error validating ${serviceName}: ${error.message}`);
-    
+
     return {
       service: ADDOCU_CONFIG.apis[serviceName]?.name || serviceName,
       account: "N/A",
@@ -754,10 +781,10 @@ function validateService(serviceName) {
  */
 function runCompleteConnectivityDiagnostic() {
   logEvent('DIAGNOSTIC', 'Starting complete Addocu connectivity diagnostic.');
-  
-  const servicesToTest = ['ga4', 'gtm', 'lookerStudio'];
+
+  const servicesToTest = ['ga4', 'gtm', 'lookerStudio', 'searchConsole', 'youtube', 'googleBusinessProfile'];
   const results = [];
-  
+
   servicesToTest.forEach(service => {
     try {
       const result = validateService(service);
@@ -769,9 +796,9 @@ function runCompleteConnectivityDiagnostic() {
         result.user,
         formatDate(result.timestamp)
       ]);
-      
+
       logEvent('DIAGNOSTIC', `${service}: ${result.status} - ${result.message}`);
-      
+
     } catch (e) {
       logError('DIAGNOSTIC', `Error diagnosing ${service}: ${e.message}`);
       results.push([
@@ -784,17 +811,17 @@ function runCompleteConnectivityDiagnostic() {
       ]);
     }
   });
-  
+
   // Write results to sheet
   const headers = ['Service', 'Account', 'Status', 'Message', 'User', 'Timestamp'];
   writeToSheet('ADDOCU_DIAGNOSTIC', headers, results, true, {
     alternateColors: true,
     borders: true
   });
-  
+
   logEvent('DIAGNOSTIC', `Diagnostic completed for ${results.length} services.`);
   flushLogs();
-  
+
   return results;
 }
 
@@ -857,7 +884,7 @@ function fetchWithOAuth2(url, method = 'GET', payload = null) {
     if (!token) {
       throw new Error('Could not get OAuth2 token. Authorize the script first.');
     }
-    
+
     const options = {
       method: method,
       headers: {
@@ -867,13 +894,13 @@ function fetchWithOAuth2(url, method = 'GET', payload = null) {
       },
       muteHttpExceptions: true
     };
-    
+
     if (payload && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
       options.payload = JSON.stringify(payload);
     }
-    
+
     return fetchWithRetry(url, options, 'OAuth2-API');
-    
+
   } catch (error) {
     logError('OAuth2', `Error in OAuth2 call to ${url}: ${error.message}`);
     throw error;

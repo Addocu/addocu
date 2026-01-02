@@ -29,7 +29,10 @@
     "https://www.googleapis.com/auth/analytics.readonly",
     "https://www.googleapis.com/auth/tagmanager.readonly",
     "https://www.googleapis.com/auth/datastudio",
-    "https://www.googleapis.com/auth/script.container.ui"
+    "https://www.googleapis.com/auth/script.container.ui",
+    "https://www.googleapis.com/auth/webmasters.readonly",
+    "https://www.googleapis.com/auth/youtube.readonly",
+    "https://www.googleapis.com/auth/business.manage"
   ],
   "addOns": {
     "common": {
@@ -52,6 +55,10 @@
     "https://datastudio.googleapis.com/",
     "https://tagmanager.googleapis.com/",
     "https://www.googleapis.com/",
+    "https://www.googleapis.com/webmasters/v3/",
+    "https://www.googleapis.com/youtube/v3/",
+    "https://mybusinessaccountmanagement.googleapis.com/",
+    "https://mybusinessbusinessinformation.googleapis.com/",
     "https://fonts.googleapis.com/",
     "https://fonts.gstatic.com/",
     "https://cdnjs.cloudflare.com/",
