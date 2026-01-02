@@ -9,7 +9,7 @@
 
 const ADDOCU_CONFIG = {
   services: {
-    available: ['ga4', 'gtm', 'looker', 'lookerStudio', 'searchConsole', 'youtube', 'googleBusinessProfile']
+    available: ['ga4', 'gtm', 'looker', 'lookerStudio', 'searchConsole', 'youtube', 'googleBusinessProfile', 'googleAds']
   },
   apis: {
     ga4: {
@@ -46,6 +46,11 @@ const ADDOCU_CONFIG = {
       name: 'Google Business Profile API',
       baseUrl: 'https://mybusinessaccountmanagement.googleapis.com/v1',
       testEndpoint: '/accounts'
+    },
+    googleAds: {
+      name: 'Google Ads API',
+      baseUrl: 'https://googleads.googleapis.com/v18/customers:listAccessibleCustomers', // v22? Using accessible customers for test
+      testEndpoint: ''
     }
   },
   limits: {
@@ -94,6 +99,7 @@ function getUserConfig() {
     gtmWorkspaces: userProperties.getProperty('ADDOCU_GTM_WORKSPACES_FILTER') || '',
     requestTimeout: parseInt(userProperties.getProperty('ADDOCU_REQUEST_TIMEOUT')) || 60,
     logLevel: userProperties.getProperty('ADDOCU_LOG_LEVEL') || 'INFO',
+    googleAdsDevToken: userProperties.getProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN') || '',
     userEmail: Session.getActiveUser().getEmail()
   };
 }
@@ -113,13 +119,21 @@ function getAuthConfig(serviceName) {
       'User-Agent': 'Addocu/2.0 (Google Sheets Add-on)'
     };
 
-    // GA4, GTM, GSC, YouTube and GBP require OAuth2 (REST API calls)
-    if (serviceName === 'ga4' || serviceName === 'gtm' || serviceName === 'searchConsole' || serviceName === 'youtube' || serviceName === 'googleBusinessProfile') {
+    // GA4, GTM, GSC, YouTube, GBP and Google Ads require OAuth2 (REST API calls)
+    if (serviceName === 'ga4' || serviceName === 'gtm' || serviceName === 'searchConsole' || serviceName === 'youtube' || serviceName === 'googleBusinessProfile' || serviceName === 'googleAds') {
       const oauthToken = ScriptApp.getOAuthToken();
       if (!oauthToken) {
         throw new Error(`OAuth2 token required for ${serviceName}. Authorize the script first.`);
       }
       headers['Authorization'] = `Bearer ${oauthToken}`;
+
+      if (serviceName === 'googleAds') {
+        if (!config.googleAdsDevToken) {
+          throw new Error('Google Ads Developer Token is missing. Please configure it in the sidebar.');
+        }
+        headers['developer-token'] = config.googleAdsDevToken;
+        // logic to fetch login-customer-id might be needed later if we aren't just listing customers
+      }
 
       return {
         headers: headers,

@@ -32,7 +32,8 @@
     "https://www.googleapis.com/auth/script.container.ui",
     "https://www.googleapis.com/auth/webmasters.readonly",
     "https://www.googleapis.com/auth/youtube.readonly",
-    "https://www.googleapis.com/auth/business.manage"
+    "https://www.googleapis.com/auth/business.manage",
+    "https://www.googleapis.com/auth/adwords"
   ],
   "addOns": {
     "common": {
@@ -57,6 +58,7 @@
     "https://www.googleapis.com/",
     "https://www.googleapis.com/webmasters/v3/",
     "https://www.googleapis.com/youtube/v3/",
+    "https://googleads.googleapis.com/",
     "https://mybusinessaccountmanagement.googleapis.com/",
     "https://mybusinessbusinessinformation.googleapis.com/",
     "https://fonts.googleapis.com/",

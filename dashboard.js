@@ -66,6 +66,7 @@ function renderAdvancedDashboard(data) {
       ['Total GSC Sites', data.gsc.sites || 0],
       ['Total YouTube Channels', data.youtube ? data.youtube.channels : 0],
       ['Total GBP Locations', data.gbp ? data.gbp.locations : 0],
+      ['Total Ads Assets', data.ads ? data.ads.totalElements : 0],
       ['Health Score', `${data.healthScore || 0}%`]
     ];
 
@@ -90,7 +91,8 @@ function renderAdvancedDashboard(data) {
       ['Looker Studio', data.looker.status || '✅ Active', data.looker.totalElements || 0, data.looker.lastUpdate || 'Never', data.looker.qualityScore || 'N/A'],
       ['Search Console', data.gsc.status || '✅ Active', data.gsc.totalElements || 0, data.gsc.lastUpdate || 'Never', data.gsc.qualityScore || 'N/A'],
       ['YouTube', data.youtube ? data.youtube.status : '❌ Not Connected', data.youtube ? data.youtube.totalElements : 0, data.youtube ? data.youtube.lastUpdate : 'Never', '100%'],
-      ['Google Business Profile', data.gbp ? data.gbp.status : '❌ Not Connected', data.gbp ? data.gbp.totalElements : 0, data.gbp ? data.gbp.lastUpdate : 'Never', '100%']
+      ['Google Business Profile', data.gbp ? data.gbp.status : '❌ Not Connected', data.gbp ? data.gbp.totalElements : 0, data.gbp ? data.gbp.lastUpdate : 'Never', '100%'],
+      ['Google Ads', data.ads ? data.ads.status : '❌ Not Connected', data.ads ? data.ads.totalElements : 0, data.ads ? data.ads.lastUpdate : 'Never', '100%']
     ];
 
     dashboardSheet.getRange(currentRow, 1, serviceData.length, serviceData[0].length).setValues(serviceData);
@@ -128,6 +130,7 @@ function collectDashboardData() {
       gsc: getGSCStats(),
       youtube: getYouTubeStats(),
       gbp: getGBPStats(),
+      ads: getGoogleAdsStats(),
       quality: analyzeDataQuality(),
       timestamp: new Date().toISOString()
     };
@@ -549,6 +552,39 @@ function getYouTubeStats() {
     logWarning('DASHBOARD_V3', `Error getting YouTube stats: ${e.message}`);
     return {
       channels: 0, playlists: 0, totalElements: 0, status: '❌ Error', lastUpdate: 'N/A', qualityScore: '0%'
+    };
+  }
+}
+
+/**
+ * Collects statistics for Google Ads.
+ * @returns {Object} Google Ads statistics.
+ */
+function getGoogleAdsStats() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const campaignsSheet = ss.getSheetByName('GOOGLE_ADS_CAMPAIGNS');
+    const conversionsSheet = ss.getSheetByName('GOOGLE_ADS_CONVERSIONS');
+    const audiencesSheet = ss.getSheetByName('GOOGLE_ADS_AUDIENCES');
+
+    const totalCampaigns = campaignsSheet ? Math.max(0, campaignsSheet.getLastRow() - 1) : 0;
+    const totalConversions = conversionsSheet ? Math.max(0, conversionsSheet.getLastRow() - 1) : 0;
+    const totalAudiences = audiencesSheet ? Math.max(0, audiencesSheet.getLastRow() - 1) : 0;
+    const total = totalCampaigns + totalConversions + totalAudiences;
+
+    return {
+      campaigns: totalCampaigns,
+      conversions: totalConversions,
+      audiences: totalAudiences,
+      totalElements: total,
+      status: total > 0 ? '✅ Active' : '❌ Not Connected',
+      lastUpdate: getLastUpdate('googleAds'),
+      qualityScore: "100%"
+    };
+  } catch (e) {
+    logWarning('DASHBOARD_V3', `Error getting Ads stats: ${e.message}`);
+    return {
+      campaigns: 0, conversions: 0, audiences: 0, totalElements: 0, status: '❌ Error', lastUpdate: 'N/A', qualityScore: '0%'
     };
   }
 }

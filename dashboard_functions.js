@@ -33,7 +33,10 @@ function getHtmlDashboardData() {
       totalYTChannels: 0,
       totalYTPlaylists: 0,
       totalGBPAccounts: 0,
-      totalGBPLocations: 0
+      totalGBPLocations: 0,
+      totalAdsCampaigns: 0,
+      totalAdsConversions: 0,
+      totalAdsAudiences: 0
     };
 
     // Count elements from each service ONLY IF THERE IS REAL DATA
@@ -166,6 +169,33 @@ function getHtmlDashboardData() {
       }
     }
 
+    // Google Ads - Campaigns
+    const adsCampaignsSheet = ss.getSheetByName('GOOGLE_ADS_CAMPAIGNS');
+    if (adsCampaignsSheet && adsCampaignsSheet.getLastRow() > 1) {
+      const data = adsCampaignsSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalAdsCampaigns = adsCampaignsSheet.getLastRow() - 1;
+      }
+    }
+
+    // Google Ads - Conversions
+    const adsConversionsSheet = ss.getSheetByName('GOOGLE_ADS_CONVERSIONS');
+    if (adsConversionsSheet && adsConversionsSheet.getLastRow() > 1) {
+      const data = adsConversionsSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalAdsConversions = adsConversionsSheet.getLastRow() - 1;
+      }
+    }
+
+    // Google Ads - Audiences
+    const adsAudiencesSheet = ss.getSheetByName('GOOGLE_ADS_AUDIENCES');
+    if (adsAudiencesSheet && adsAudiencesSheet.getLastRow() > 1) {
+      const data = adsAudiencesSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalAdsAudiences = adsAudiencesSheet.getLastRow() - 1;
+      }
+    }
+
     // Count unique containers ONLY IF THERE ARE REAL TAGS
     kpis.totalContainers = kpis.totalTags > 0 ? countUniqueContainers() : 0;
 
@@ -175,7 +205,8 @@ function getHtmlDashboardData() {
       kpis.totalVariables + kpis.totalTriggers +
       kpis.totalGSCSites + kpis.totalGSCSitemaps +
       kpis.totalYTChannels + kpis.totalYTPlaylists +
-      kpis.totalGBPAccounts + kpis.totalGBPLocations;
+      kpis.totalGBPAccounts + kpis.totalGBPLocations +
+      kpis.totalAdsCampaigns + kpis.totalAdsConversions + kpis.totalAdsAudiences;
 
     // Quality analysis ONLY IF THERE IS DATA
     const quality = kpis.totalAssets > 0 ? analyzeQualityForDashboard() : {
@@ -187,7 +218,7 @@ function getHtmlDashboardData() {
     // Chart data (based ONLY on real data)
     const charts = {
       elementsByTool: {
-        categories: ['Looker Studio', 'Google Analytics 4', 'Google Tag Manager', 'Search Console', 'YouTube', 'GBP'],
+        categories: ['Looker Studio', 'Google Analytics 4', 'Google Tag Manager', 'Search Console', 'YouTube', 'GBP', 'Google Ads'],
         series: [{
           name: 'Assets',
           data: [
@@ -196,7 +227,8 @@ function getHtmlDashboardData() {
             kpis.totalTags + kpis.totalVariables + kpis.totalTriggers,
             kpis.totalGSCSites + kpis.totalGSCSitemaps,
             kpis.totalYTChannels + kpis.totalYTPlaylists,
-            kpis.totalGBPAccounts + kpis.totalGBPLocations
+            kpis.totalGBPAccounts + kpis.totalGBPLocations,
+            kpis.totalAdsCampaigns + kpis.totalAdsConversions + kpis.totalAdsAudiences
           ]
         }]
       },

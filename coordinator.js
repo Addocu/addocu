@@ -37,6 +37,7 @@ function onOpen(e) {
       .addItem('🔍 Audit Search Console', 'syncSearchConsoleWithUI')
       .addItem('🎥 Audit YouTube', 'syncYouTubeWithUI')
       .addItem('🏪 Audit Google Business Profile', 'syncGBPWithUI')
+      .addItem('💰 Audit Google Ads', 'syncGoogleAdsWithUI')
       .addItem('📋 Interactive Dashboard', 'openHtmlDashboard')
       .addSubMenu(SpreadsheetApp.getUi().createMenu('🔧 Tools')
         .addItem('🔌 Test Connections', 'diagnoseConnections')
@@ -541,6 +542,17 @@ function executeAuditWithFilters(auditConfig) {
       }
     }
 
+    // Audit Google Ads
+    if (services.includes('googleAds') || services.includes('ads')) {
+      logEvent('AUDIT_FILTERED', 'Starting Google Ads audit');
+      const adsResult = syncGoogleAdsCore();
+      results.googleAds = adsResult;
+      if (adsResult.status === 'SUCCESS' || adsResult.success) {
+        totalRecords += adsResult.records || 0;
+        sheetsCreated += 3; // Ads creates 3 sheets (campaigns, conversions, audiences)
+      }
+    }
+
     // Generate executive dashboard
     generateExecutiveDashboard(results);
     sheetsCreated += 1; // Dashboard sheet
@@ -632,6 +644,14 @@ function executeCompleteAudit(services) {
       const gbpResult = syncGBPCore();
       results.googleBusinessProfile = gbpResult;
       totalRecords += gbpResult.records || 0;
+    }
+
+    // Audit Google Ads
+    if (services.includes('googleAds')) {
+      logEvent('AUDIT', 'Starting Google Ads audit');
+      const adsResult = syncGoogleAdsCore();
+      results.googleAds = adsResult;
+      totalRecords += adsResult.records || 0;
     }
 
     // Generate executive dashboard

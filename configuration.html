@@ -940,6 +940,13 @@
               <div class="connection-details" id="gbp-status">Waiting for API key...</div>
             </div>
           </div>
+          <div class="connection-item">
+            <div class="connection-indicator indicator-pending" id="ads-indicator"></div>
+            <div>
+              <div class="connection-name">Google Ads</div>
+              <div class="connection-details" id="ads-status">Waiting for API key & Token...</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1021,6 +1028,17 @@
             </div>
             <label class="toggle">
               <input type="checkbox" id="service-gbp" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">Google Ads</div>
+              <div class="service-description">Campaigns, budgets and conversion actions</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-ads" checked>
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -1148,13 +1166,15 @@
 
     let appState = {
       apiKey: '',
+      devToken: '',
       isConfigured: false,
       connectionStatus: {
         ga4: 'pending',
         gtm: 'pending',
         gsc: 'pending',
         youtube: 'pending',
-        gbp: 'pending'
+        gbp: 'pending',
+        ads: 'pending'
       },
       services: {
         ga4: true,
@@ -1162,7 +1182,8 @@
         looker: true,
         gsc: true,
         youtube: true,
-        gbp: true
+        gbp: true,
+        ads: true
       },
       filters: {
         ga4Properties: '',
@@ -1187,6 +1208,7 @@
       document.getElementById('service-gsc').addEventListener('change', updateServices);
       document.getElementById('service-youtube').addEventListener('change', updateServices);
       document.getElementById('service-gbp').addEventListener('change', updateServices);
+      document.getElementById('service-ads').addEventListener('change', updateServices);
 
       // Filter inputs
       document.getElementById('ga4-properties').addEventListener('input', updateFilters);
@@ -1226,6 +1248,11 @@
             // Update UI
             document.getElementById('api-key').value = config.lookerApiKey;
             updateStepStatus('apikey', true);
+          }
+
+          if (config && config.googleAdsDevToken) {
+            appState.devToken = config.googleAdsDevToken;
+            document.getElementById('dev-token').value = config.googleAdsDevToken;
           }
 
           // Load saved filters
@@ -1287,6 +1314,7 @@
 
     function saveConfiguration() {
       const apiKey = document.getElementById('api-key').value.trim();
+      const devToken = document.getElementById('dev-token').value.trim();
 
       if (!apiKey) {
         showStatus('Please enter your Google Cloud API Key', 'error');
@@ -1301,18 +1329,20 @@
       showButtonLoading('save-btn', 'Saving...');
 
       const configObject = {
-        lookerApiKey: apiKey
+        lookerApiKey: apiKey,
+        googleAdsDevToken: devToken
       };
 
       google.script.run
         .withSuccessHandler(function (result) {
           appState.apiKey = apiKey;
+          appState.devToken = devToken;
           appState.isConfigured = true;
 
           updateStepStatus('apikey', true);
           hideButtonLoading('save-btn', 'Save API Key');
 
-          showStatus('✅ API Key saved successfully!', 'success');
+          showStatus('✅ Credentials saved successfully!', 'success');
 
           // Auto-test connections
           setTimeout(() => {
@@ -1369,8 +1399,8 @@
     }
 
     function resetConnectionStatus() {
-      const indicators = ['ga4-indicator', 'gtm-indicator', 'looker-indicator', 'gsc-indicator', 'youtube-indicator', 'gbp-indicator'];
-      const statuses = ['ga4-status', 'gtm-status', 'looker-status', 'gsc-status', 'youtube-status', 'gbp-status'];
+      const indicators = ['ga4-indicator', 'gtm-indicator', 'looker-indicator', 'gsc-indicator', 'youtube-indicator', 'gbp-indicator', 'ads-indicator'];
+      const statuses = ['ga4-status', 'gtm-status', 'looker-status', 'gsc-status', 'youtube-status', 'gbp-status', 'ads-status'];
 
       indicators.forEach(id => {
         document.getElementById(id).className = 'connection-indicator indicator-pending';
@@ -1389,7 +1419,8 @@
         'Looker Studio API': 'looker',
         'Google Search Console API': 'gsc',
         'YouTube Data API': 'youtube',
-        'Google Business Profile API': 'gbp'
+        'Google Business Profile API': 'gbp',
+        'Google Ads API': 'ads'
       };
 
       const formattedResults = results.map(result => {
@@ -1441,6 +1472,7 @@
       appState.services.gsc = document.getElementById('service-gsc').checked;
       appState.services.youtube = document.getElementById('service-youtube').checked;
       appState.services.gbp = document.getElementById('service-gbp').checked;
+      appState.services.ads = document.getElementById('service-ads').checked;
     }
 
     // ========================================

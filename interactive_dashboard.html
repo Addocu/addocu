@@ -1145,6 +1145,21 @@
             <div class="progress-fill" id="progress-gbp"></div>
           </div>
         </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">Ads Campaigns</div>
+            <div class="kpi-icon">💰</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-ads-campaigns">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            Google Ads
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-ads"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1238,6 +1253,30 @@
             GBP
           </div>
         </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">Ads Conversions</div>
+            <div class="kpi-icon">🎯</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-ads-conversions">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            Conversions
+          </div>
+        </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">Ads Audiences</div>
+            <div class="kpi-icon">👥</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-ads-audiences">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            Audiences
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1296,12 +1335,20 @@
           <div class="status-value" id="status-gbp">Connected</div>
         </div>
 
+        <div class="status-item">
+          <div class="status-header">
+            <div class="status-text">Google Ads</div>
+            <div class="status-icon" id="status-ads-icon"></div>
+          </div>
+          <div class="status-value" id="status-ads">Connected</div>
+        </div>
+
         <div class="status-item info">
           <div class="status-header">
             <div class="status-text">Coming Soon</div>
             <div class="status-icon info" id="status-coming-soon-icon"></div>
           </div>
-          <div class="status-value" id="status-coming-soon">BigQuery, Google Ads</div>
+          <div class="status-value" id="status-coming-soon">BigQuery, DV360</div>
         </div>
       </div>
     </section>
@@ -1472,8 +1519,8 @@
         },
         charts: {
           elementsByTool: {
-            categories: ['Looker Studio', 'Google Analytics 4', 'Google Tag Manager', 'Search Console', 'YouTube'],
-            series: [{ name: 'Assets', data: [0, 0, 0, 0, 0] }]
+            categories: ['Looker Studio', 'Google Analytics 4', 'Google Tag Manager', 'Search Console', 'YouTube', 'GBP', 'Google Ads'],
+            series: [{ name: 'Assets', data: [0, 0, 0, 0, 0, 0, 0] }]
           },
           gtmTagBreakdown: {
             labels: ['No data available'],
@@ -1567,6 +1614,11 @@
       animateCounter('kpi-total-gbp-accounts', data.kpis.totalGBPAccounts);
       animateCounter('kpi-total-gbp-locations', data.kpis.totalGBPLocations);
 
+      // Ads KPIs
+      animateCounter('kpi-total-ads-campaigns', data.kpis.totalAdsCampaigns);
+      animateCounter('kpi-total-ads-conversions', data.kpis.totalAdsConversions);
+      animateCounter('kpi-total-ads-audiences', data.kpis.totalAdsAudiences);
+
       // Health Score
       const healthScore = calculateHealthScore(data.quality, data.kpis);
       animateCounter('kpi-health-score', Math.round(healthScore), '%');
@@ -1581,6 +1633,7 @@
       setProgress('progress-gsc', (data.kpis.totalGSCSites / totalAssets) * 100);
       setProgress('progress-youtube', (data.kpis.totalYTChannels / totalAssets) * 100);
       setProgress('progress-gbp', (data.kpis.totalGBPLocations / totalAssets) * 100);
+      setProgress('progress-ads', (data.kpis.totalAdsCampaigns / totalAssets) * 100);
 
       // Update trends
       updateAssetsTrend(data.kpis);
@@ -1594,7 +1647,7 @@
 
     function updateAssetsTrend(kpis) {
       const totalItemsElement = document.getElementById('kpi-total-items');
-      const breakdown = `${kpis.totalReports + kpis.totalProperties + kpis.totalTags + kpis.totalGSCSites + kpis.totalYTChannels + kpis.totalGBPLocations} total items`;
+      const breakdown = `${kpis.totalReports + kpis.totalProperties + kpis.totalTags + kpis.totalGSCSites + kpis.totalYTChannels + kpis.totalGBPLocations + kpis.totalAdsCampaigns} total items`;
       if (totalItemsElement) {
         totalItemsElement.textContent = breakdown;
       }

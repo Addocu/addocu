@@ -1,0 +1,17 @@
+
+# Valid setup
+**/**
+!appsscript.json
+!*.js
+!*.html
+!README.md
+!LICENSE
+
+# Ignore
+.git/
+node_modules/
+tests/
+.clasp.json
+.claspignore
+logs/
+.vscode/
