@@ -89,6 +89,9 @@ appsscript.json.backup
 .vscode/
 .vscode-test/
 
+# Zed Editor
+.zed/
+
 # IntelliJ / WebStorm
 .idea/
 *.iml
