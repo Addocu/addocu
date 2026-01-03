@@ -986,11 +986,30 @@ function startCompleteAudit() {
   }
 
   const ui = SpreadsheetApp.getUi();
+
+  // Format service list with proper names
+  const serviceNames = {
+    'ga4': 'Google Analytics 4',
+    'gtm': 'Google Tag Manager',
+    'lookerstudio': 'Looker Studio',
+    'looker': 'Looker Studio',
+    'searchconsole': 'Search Console',
+    'youtube': 'YouTube',
+    'googlebusinessprofile': 'Google Business Profile',
+    'googleads': 'Google Ads',
+    'googlemerchantcenter': 'Merchant Center',
+    'bigquery': 'BigQuery',
+    'adsense': 'AdSense'
+  };
+
+  const formattedServices = services.map(s => serviceNames[s.toLowerCase()] || s).join('\n• ');
+
   ui.alert(
-    'Marketing Stack Audit',
-    `Starting audit of: ${services.map(s => s.toUpperCase()).join(', ')}\n\n` +
-    'This process may take several minutes depending on your setup size.\n\n' +
-    'All features available for free!',
+    'Full Stack Audit',
+    `Starting audit of:\n• ${formattedServices}\n\n` +
+    'Processing your marketing stack configuration...\n\n' +
+    'This may take a few minutes depending on your account size.\n\n' +
+    'Audit logs will be saved to the LOGS sheet.',
     ui.ButtonSet.OK
   );
 
