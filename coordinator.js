@@ -1167,7 +1167,7 @@ function generateManualDashboard() {
 }
 
 /**
- * Generates and updates the DASHBOARD sheet with an executive summary.
+ * Generates and updates the DASHBOARD sheet with an executive summary of all 10 integrations.
  */
 function generateExecutiveDashboard(results) {
   try {
@@ -1180,7 +1180,7 @@ function generateExecutiveDashboard(results) {
 
     dashboardSheet.clear();
 
-    // Dashboard header - Write row by row to avoid dimension errors
+    // Dashboard header
     dashboardSheet.getRange(1, 1).setValue('ADDOCU - EXECUTIVE DASHBOARD');
     dashboardSheet.getRange(2, 1).setValue(`Generated: ${new Date().toLocaleString('en-US')}`);
     dashboardSheet.getRange(3, 1).setValue('');
@@ -1190,12 +1190,18 @@ function generateExecutiveDashboard(results) {
     const tableHeaders = ['Service', 'Status', 'Elements', 'Last Update'];
     dashboardSheet.getRange(5, 1, 1, 4).setValues([tableHeaders]);
 
-    // Service data
+    // Service data - All 10 integrations
     const servicesData = [
       ['Google Analytics 4', getServiceStatus('GA4'), countGA4Elements(), getLastUpdate('GA4')],
       ['Google Tag Manager', getServiceStatus('GTM'), countGTMElements(), getLastUpdate('GTM')],
       ['Looker Studio', getServiceStatus('LOOKER'), countLookerElements(), getLastUpdate('LOOKER')],
-      ['Search Console', getServiceStatus('GSC'), countGSCElements(), getLastUpdate('GSC')]
+      ['Search Console', getServiceStatus('GSC'), countGSCElements(), getLastUpdate('GSC')],
+      ['YouTube', getServiceStatus('YOUTUBE'), countYouTubeElements(), getLastUpdate('YOUTUBE')],
+      ['Google Ads', getServiceStatus('ADS'), countGoogleAdsElements(), getLastUpdate('GOOGLE_ADS')],
+      ['Google Business Profile', getServiceStatus('GBP'), countGBPElements(), getLastUpdate('GOOGLE_BUSINESS_PROFILE')],
+      ['Merchant Center', getServiceStatus('GMC'), countGMCElements(), getLastUpdate('GOOGLE_MERCHANT_CENTER')],
+      ['BigQuery', getServiceStatus('BIGQUERY'), countBigQueryElements(), getLastUpdate('BIGQUERY')],
+      ['AdSense', getServiceStatus('ADSENSE'), countAdSenseElements(), getLastUpdate('ADSENSE')]
     ];
 
     dashboardSheet.getRange(6, 1, servicesData.length, 4).setValues(servicesData);
@@ -1208,7 +1214,7 @@ function generateExecutiveDashboard(results) {
     // Auto-resize columns
     dashboardSheet.autoResizeColumns(1, 4);
 
-    logEvent('DASHBOARD', 'Executive dashboard updated');
+    logEvent('DASHBOARD', 'Executive dashboard updated with all 10 integrations');
 
   } catch (e) {
     logError('DASHBOARD', `Error generating executive dashboard: ${e.message}`);
@@ -1230,6 +1236,18 @@ function getServiceStatus(service) {
     case 'LOOKER':
       return 'Available (OAuth2) - API Keys deprecated';
     case 'GSC':
+      return 'Available (OAuth2)';
+    case 'YOUTUBE':
+      return 'Available (OAuth2)';
+    case 'ADS':
+      return 'Available (OAuth2)';
+    case 'GBP':
+      return 'Available (OAuth2)';
+    case 'GMC':
+      return 'Available (OAuth2)';
+    case 'BIGQUERY':
+      return 'Available (OAuth2)';
+    case 'ADSENSE':
       return 'Available (OAuth2)';
     default:
       return 'Unknown';
@@ -1335,6 +1353,98 @@ function countGBPElements() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheets = ['GBP_ACCOUNTS', 'GBP_LOCATIONS'];
+
+    let total = 0;
+    sheets.forEach(sheetName => {
+      const sheet = ss.getSheetByName(sheetName);
+      if (sheet) {
+        total += Math.max(0, sheet.getLastRow() - 1);
+      }
+    });
+
+    return total;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Counts the number of Google Ads elements inventoried.
+ * @returns {number} Total number of Google Ads elements.
+ */
+function countGoogleAdsElements() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = ['GOOGLE_ADS_CAMPAIGNS', 'GOOGLE_ADS_CONVERSIONS', 'GOOGLE_ADS_AUDIENCES'];
+
+    let total = 0;
+    sheets.forEach(sheetName => {
+      const sheet = ss.getSheetByName(sheetName);
+      if (sheet) {
+        total += Math.max(0, sheet.getLastRow() - 1);
+      }
+    });
+
+    return total;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Counts the number of Google Merchant Center elements inventoried.
+ * @returns {number} Total number of Merchant Center elements.
+ */
+function countGMCElements() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = ['GMC_ACCOUNTS', 'GMC_DATA_SOURCES', 'GMC_PRODUCTS'];
+
+    let total = 0;
+    sheets.forEach(sheetName => {
+      const sheet = ss.getSheetByName(sheetName);
+      if (sheet) {
+        total += Math.max(0, sheet.getLastRow() - 1);
+      }
+    });
+
+    return total;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Counts the number of BigQuery elements inventoried.
+ * @returns {number} Total number of BigQuery elements.
+ */
+function countBigQueryElements() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = ['BQ_DATASETS', 'BQ_GA4_TABLES', 'BQ_GA4_EXPORT_LINKS'];
+
+    let total = 0;
+    sheets.forEach(sheetName => {
+      const sheet = ss.getSheetByName(sheetName);
+      if (sheet) {
+        total += Math.max(0, sheet.getLastRow() - 1);
+      }
+    });
+
+    return total;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Counts the number of AdSense elements inventoried.
+ * @returns {number} Total number of AdSense elements.
+ */
+function countAdSenseElements() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = ['ADSENSE_ACCOUNTS', 'ADSENSE_ADUNITS', 'ADSENSE_SITES'];
 
     let total = 0;
     sheets.forEach(sheetName => {
