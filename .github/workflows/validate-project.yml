@@ -224,7 +224,7 @@ jobs:
           
           if [ -f "$file" ]; then
             echo "✅ Found: $description"
-            ((found_templates++))
+            ((found_templates += 1))
           else
             echo "⚠️ Missing: $description"
           fi
