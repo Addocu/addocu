@@ -161,10 +161,20 @@ function getAPIKey() {
 
 /**
  * Gets the complete user configuration.
+ * Includes diagnostic logging for troubleshooting configuration issues.
  * @returns {Object} User configuration.
  */
 function getUserConfig() {
   const userProperties = PropertiesService.getUserProperties();
+
+  const devToken = userProperties.getProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN') || '';
+
+  // Diagnostic logging for Dev Token (best practice: log configuration retrieval)
+  if (devToken) {
+    logEvent('CONFIG', 'Google Ads Dev Token retrieved from UserProperties');
+  } else {
+    logWarning('CONFIG', 'Google Ads Dev Token not found in UserProperties');
+  }
 
   return {
     lookerApiKey: userProperties.getProperty('ADDOCU_LOOKER_API_KEY') || '',
@@ -173,7 +183,7 @@ function getUserConfig() {
     gtmWorkspaces: userProperties.getProperty('ADDOCU_GTM_WORKSPACES_FILTER') || '',
     requestTimeout: parseInt(userProperties.getProperty('ADDOCU_REQUEST_TIMEOUT')) || 60,
     logLevel: userProperties.getProperty('ADDOCU_LOG_LEVEL') || 'INFO',
-    googleAdsDevToken: userProperties.getProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN') || '',
+    googleAdsDevToken: devToken,
     bqProjectId: userProperties.getProperty('ADDOCU_BQ_PROJECT_ID') || '',
     userEmail: Session.getActiveUser().getEmail()
   };
@@ -181,54 +191,76 @@ function getUserConfig() {
 
 /**
  * Prepares credentials for an API call.
- * @param {string} serviceName - The service name ('ga4', 'gtm', 'looker').
+ * Normalizes service names to handle both camelCase and lowercase variations.
+ * @param {string} serviceName - The service name (e.g., 'ga4', 'gtm', 'bigquery', 'adsense').
  * @returns {Object} An object with headers and authentication data.
  */
 function getAuthConfig(serviceName) {
   try {
+    // Normalize service names to handle case variations (best practice: handle input validation)
+    // This follows Google Apps Script best practices for robust error handling
+    const serviceNameMap = {
+      'bigquery': 'bigQuery',
+      'adsense': 'adSense',
+      'googleads': 'googleAds',
+      'googlemerchantcenter': 'googleMerchantCenter',
+      'googlebusinessprofile': 'googleBusinessProfile',
+      'searchconsole': 'searchConsole',
+      'lookerstudio': 'lookerStudio',
+      'looker': 'lookerStudio'
+    };
+
+    const normalizedService = serviceNameMap[serviceName.toLowerCase()] || serviceName;
+
     const config = getUserConfig();
 
     // Basic headers for Google APIs
     const headers = {
       'Content-Type': 'application/json',
-      'User-Agent': 'Addocu/2.0 (Google Sheets Add-on)'
+      'User-Agent': 'Addocu/3.0 (Google Sheets Add-on)'
     };
 
     // GA4, GTM, GSC, YouTube, GBP, Ads, GMC, BigQuery, and AdSense require OAuth2
-    if (serviceName === 'ga4' || serviceName === 'gtm' || serviceName === 'searchConsole' ||
-      serviceName === 'youtube' || serviceName === 'googleBusinessProfile' ||
-      serviceName === 'googleAds' || serviceName === 'googleMerchantCenter' ||
-      serviceName === 'bigQuery' || serviceName === 'adSense') {
+    if (normalizedService === 'ga4' || normalizedService === 'gtm' || normalizedService === 'searchConsole' ||
+      normalizedService === 'youtube' || normalizedService === 'googleBusinessProfile' ||
+      normalizedService === 'googleAds' || normalizedService === 'googleMerchantCenter' ||
+      normalizedService === 'bigQuery' || normalizedService === 'adSense') {
       const oauthToken = ScriptApp.getOAuthToken();
       if (!oauthToken) {
-        throw new Error(`OAuth2 token required for ${serviceName}. Authorize the script first.`);
+        throw new Error(`OAuth2 token required for ${normalizedService}. Authorize the script first.`);
       }
       headers['Authorization'] = `Bearer ${oauthToken}`;
 
-      if (serviceName === 'googleAds') {
+      if (normalizedService === 'googleAds') {
         if (!config.googleAdsDevToken) {
-          throw new Error('Google Ads Developer Token is missing. Please configure it in the sidebar.');
+          const diagMsg = 'Google Ads Developer Token is missing.\n\n' +
+            'Troubleshooting steps:\n' +
+            '1. Extensions > Addocu > Configuration\n' +
+            '2. Enter your Developer Token and click Save\n' +
+            '3. Verify Chrome and Sheets use the SAME Google account\n' +
+            '4. Try: Extensions > Addocu > Troubleshooting > Reauthorize Permissions\n' +
+            '5. Check LOGS sheet for detailed error information';
+          throw new Error(diagMsg);
         }
         headers['developer-token'] = config.googleAdsDevToken;
-        // logic to fetch login-customer-id might be needed later if we aren't just listing customers
       }
 
       return {
         headers: headers,
         authUser: config.userEmail,
         timeout: config.requestTimeout * 1000,
-        serviceName: serviceName,
+        serviceName: normalizedService,
         authType: 'oauth2',
         oauthToken: oauthToken
       };
     }
 
     // Looker Studio now requires OAuth2 (Google removed API Key support)
-    if (serviceName === 'looker' || serviceName === 'lookerStudio') {
+    if (normalizedService === 'lookerStudio') {
       // CRITICAL CHANGE: Looker Studio migrated to OAuth2 only
       const oauthToken = ScriptApp.getOAuthToken();
       if (!oauthToken) {
-        throw new Error(`OAuth2 token required for ${serviceName}. Looker Studio no longer accepts API Keys.`);
+        throw new Error(`OAuth2 token required for Looker Studio. Looker Studio no longer accepts API Keys.`);
       }
       headers['Authorization'] = `Bearer ${oauthToken}`;
 
@@ -236,13 +268,13 @@ function getAuthConfig(serviceName) {
         headers: headers,
         authUser: config.userEmail,
         timeout: config.requestTimeout * 1000,
-        serviceName: serviceName,
+        serviceName: normalizedService,
         authType: 'oauth2',
         oauthToken: oauthToken
       };
     }
 
-    throw new Error(`Unsupported service: ${serviceName}`);
+    throw new Error(`Unsupported service: ${serviceName} (normalized to: ${normalizedService})`);
 
   } catch (error) {
     logError('AUTH', `Authentication error for ${serviceName}: ${error.message}`);

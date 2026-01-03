@@ -309,10 +309,35 @@ function saveUserConfiguration(config) {
     }
 
     if (config.googleAdsDevToken !== undefined) {
-      if (config.googleAdsDevToken.trim()) {
-        userProperties.setProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN', config.googleAdsDevToken.trim());
-      } else {
-        userProperties.deleteProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN');
+      try {
+        if (config.googleAdsDevToken.trim()) {
+          const tokenValue = config.googleAdsDevToken.trim();
+          userProperties.setProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN', tokenValue);
+
+          // Verify persistence (best practice: verify after write)
+          const verifyToken = userProperties.getProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN');
+          if (verifyToken !== tokenValue) {
+            logError('CONFIG', 'Google Ads Dev Token verification failed - value not persisted');
+            return {
+              success: false,
+              error: 'Dev Token failed to persist to UserProperties. Check if Chrome and Sheets use the same Google account.',
+              field: 'googleAdsDevToken',
+              requiresPermissionRecovery: true
+            };
+          }
+          logEvent('CONFIG', `Google Ads Dev Token saved and verified: ${tokenValue.substring(0, 10)}...`);
+        } else {
+          userProperties.deleteProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN');
+          logEvent('CONFIG', 'Google Ads Dev Token removed (empty value)');
+        }
+      } catch (tokenError) {
+        logError('CONFIG', `Failed to save Google Ads Dev Token: ${tokenError.message}`);
+        return {
+          success: false,
+          error: `Dev Token save failed: ${tokenError.message}`,
+          field: 'googleAdsDevToken',
+          requiresPermissionRecovery: tokenError.message.includes('PERMISSION_DENIED')
+        };
       }
     }
 
