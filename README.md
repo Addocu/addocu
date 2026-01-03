@@ -250,11 +250,12 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 ## 🗺️ Roadmap & Future
 
 ### **📍 Current Status: v2.3.0 (Full Stack Edition)**
-- ✅ Complete integration of 10 Google Marketing platforms
-- ✅ GA4, GTM, Looker Studio, Ads, GSC, YT, GBP, GMC, BQ, AdSense
-- ✅ Interactive dashboard with real-time connectivity diagnostics
-- ✅ Open source codebase with community-driven license
-- ✅ Automatic OAuth2 authentication across all services
+- ✅ Complete integration of 10 Google Marketing platforms.
+- ✅ GA4, GTM, Looker Studio, Ads, GSC, YT, GBP, GMC, BQ, AdSense.
+- ✅ **Zero-Data Handling**: Smart detection and reporting for empty platforms.
+- ✅ Interactive dashboard with real-time connectivity diagnostics.
+- ✅ Open source codebase with community-driven license.
+- ✅ Automatic OAuth2 authentication across all services.
 
 ### **🔮 Roadmap & Future**
 - 📋 **DV360 & SA360** integration
