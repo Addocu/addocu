@@ -1,6 +1,6 @@
 /**
  * @fileoverview Addocu Main Coordinator v2.0 - Google Workspace Add-on
- * @version 3.0 - Complete Open Source Model
+ * @version 3.0
  */
 
 // =================================================================
@@ -252,7 +252,7 @@ function readUserConfiguration() {
       logLevel: userProperties.getProperty('ADDOCU_LOG_LEVEL') || 'INFO',
       logRetention: parseInt(userProperties.getProperty('ADDOCU_LOG_RETENTION')) || 30,
 
-      // User Status - Open Source
+      // User Status
       isFirstTime: userProperties.getProperty('ADDOCU_FIRST_TIME') !== 'false',
       isPro: true // All users have complete access
     };
@@ -942,7 +942,7 @@ function sortSheetsAlphabetically() {
 function startCompleteAudit() {
   const config = readUserConfiguration();
 
-  // ALL services enabled by default in Open Source
+  // ALL services enabled by default
   const services = ['ga4', 'gtm']; // GA4 and GTM always included
 
   // Looker Studio only if enabled (requires OAuth2)
@@ -987,7 +987,7 @@ function startCompleteAudit() {
 
   const ui = SpreadsheetApp.getUi();
   ui.alert(
-    'Marketing Stack Audit (Open Source)',
+    'Marketing Stack Audit',
     `Starting audit of: ${services.map(s => s.toUpperCase()).join(', ')}\n\n` +
     'This process may take several minutes depending on your setup size.\n\n' +
     'All features available for free!',
@@ -1162,7 +1162,7 @@ function generateExecutiveDashboard(results) {
     dashboardSheet.clear();
 
     // Dashboard header - Write row by row to avoid dimension errors
-    dashboardSheet.getRange(1, 1).setValue('ADDOCU - EXECUTIVE DASHBOARD (OPEN SOURCE)');
+    dashboardSheet.getRange(1, 1).setValue('ADDOCU - EXECUTIVE DASHBOARD');
     dashboardSheet.getRange(2, 1).setValue(`Generated: ${new Date().toLocaleString('en-US')}`);
     dashboardSheet.getRange(3, 1).setValue('');
     dashboardSheet.getRange(4, 1).setValue('AUDIT SUMMARY');

@@ -41,7 +41,7 @@ function onFileScopeGranted(e) {
         '• Audit GTM\n' +
         '• Audit Looker Studio\n\n' +
         'Go to Extensions > Addocu > Configure to customize your experience.\n\n' +
-        'Open Source Project - Thank you for using it!';
+        'Thank you for using Addocu!';
 
       ui.alert('Addocu Configured', message, ui.ButtonSet.OK);
     } catch (uiError) {

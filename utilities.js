@@ -1,6 +1,6 @@
 /**
  * @fileoverview Central Utilities Module for Addocu v3.0
- * @version 3.0 - Complete open source model
+ * @version 3.0
  *
  * BETA API MONITORING NOTES (January 2026):
  * ==========================================
@@ -367,7 +367,7 @@ function handleAuthError(serviceName, error) {
  * @returns {boolean} True if the service is available.
  */
 function isServiceAvailable(serviceName) {
-  // All services available in the open source model
+  // All services available
   return ADDOCU_CONFIG.services.available.includes(serviceName);
 }
 
