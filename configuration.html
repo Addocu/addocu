@@ -1292,10 +1292,33 @@
       apiKeyInput.addEventListener('input', function () {
         const hasValue = this.value.trim().length > 0;
         updateStepStatus('apikey', hasValue);
+        // Save to localStorage for quick access
+        if (hasValue) {
+          localStorage.setItem('addocu_api_key_cache', this.value);
+        }
       });
 
       // Auto-save on Enter key
       apiKeyInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveConfiguration();
+        }
+      });
+
+      // Dev Token input with auto-persistence
+      const devTokenInput = document.getElementById('dev-token');
+      devTokenInput.addEventListener('input', function () {
+        // Save to localStorage for quick access
+        if (this.value.trim().length > 0) {
+          localStorage.setItem('addocu_dev_token_cache', this.value);
+        } else {
+          localStorage.removeItem('addocu_dev_token_cache');
+        }
+      });
+
+      // Auto-save on Enter key for Dev Token
+      devTokenInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
           e.preventDefault();
           saveConfiguration();
@@ -1321,11 +1344,31 @@
             // Update UI
             document.getElementById('api-key').value = config.lookerApiKey;
             updateStepStatus('apikey', true);
+            // Also cache in localStorage
+            localStorage.setItem('addocu_api_key_cache', config.lookerApiKey);
+          } else {
+            // Fallback to localStorage cache if no backend config
+            const cachedApiKey = localStorage.getItem('addocu_api_key_cache');
+            if (cachedApiKey) {
+              appState.apiKey = cachedApiKey;
+              appState.isConfigured = true;
+              document.getElementById('api-key').value = cachedApiKey;
+              updateStepStatus('apikey', true);
+            }
           }
 
           if (config && config.googleAdsDevToken) {
             appState.devToken = config.googleAdsDevToken;
             document.getElementById('dev-token').value = config.googleAdsDevToken;
+            // Also cache in localStorage
+            localStorage.setItem('addocu_dev_token_cache', config.googleAdsDevToken);
+          } else {
+            // Fallback to localStorage cache if no backend config
+            const cachedDevToken = localStorage.getItem('addocu_dev_token_cache');
+            if (cachedDevToken) {
+              appState.devToken = cachedDevToken;
+              document.getElementById('dev-token').value = cachedDevToken;
+            }
           }
 
           // Load saved filters
@@ -1352,7 +1395,26 @@
           }
         })
         .withFailureHandler(function (error) {
-          handleConfigurationError(error);
+          // On backend error, try to recover from localStorage
+          const cachedApiKey = localStorage.getItem('addocu_api_key_cache');
+          const cachedDevToken = localStorage.getItem('addocu_dev_token_cache');
+
+          if (cachedApiKey) {
+            appState.apiKey = cachedApiKey;
+            appState.isConfigured = true;
+            document.getElementById('api-key').value = cachedApiKey;
+            updateStepStatus('apikey', true);
+          }
+
+          if (cachedDevToken) {
+            appState.devToken = cachedDevToken;
+            document.getElementById('dev-token').value = cachedDevToken;
+          }
+
+          hideStatus();
+          if (!cachedApiKey) {
+            handleConfigurationError(error);
+          }
         })
         .getUserConfig(); // Using the correct function name
     }
