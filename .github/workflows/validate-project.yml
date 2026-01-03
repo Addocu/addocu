@@ -165,27 +165,27 @@ jobs:
         
         if grep -qi -E "(feature|functionality|what.*do)" README.md; then
           echo "✅ Found features/functionality section"
-          ((sections_found++))
+          ((sections_found += 1))
         fi
         
         if grep -qi -E "(install|setup|getting.*start|quick.*start)" README.md; then
           echo "✅ Found installation/setup section"
-          ((sections_found++))
+          ((sections_found += 1))
         fi
         
         if grep -qi -E "(licen|legal|term)" README.md; then
           echo "✅ Found license section"
-          ((sections_found++))
+          ((sections_found += 1))
         fi
         
         if grep -qi -E "(contribut|help|develop)" README.md; then
           echo "✅ Found contributing section"
-          ((sections_found++))
+          ((sections_found += 1))
         fi
         
         if grep -qi -E "(support|help|contact|issue)" README.md; then
           echo "✅ Found support section"
-          ((sections_found++))
+          ((sections_found += 1))
         fi
         
         echo "Found $sections_found/5 expected content areas"
