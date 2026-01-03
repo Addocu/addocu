@@ -234,6 +234,7 @@ function readUserConfiguration() {
       syncYouTube: userProperties.getProperty('ADDOCU_SYNC_YOUTUBE') !== 'false', // Default true
       syncGBP: userProperties.getProperty('ADDOCU_SYNC_GBP') !== 'false', // Default true
       syncGoogleAds: userProperties.getProperty('ADDOCU_SYNC_ADS') !== 'false', // Default true
+      googleAdsDevToken: userProperties.getProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN') || '',
 
       // OAuth2 Information
       oauth2Ready: true, // OAuth2 always available
@@ -304,6 +305,14 @@ function saveUserConfiguration(config) {
         userProperties.setProperty('ADDOCU_LOOKER_API_KEY', config.lookerApiKey.trim());
       } else {
         userProperties.deleteProperty('ADDOCU_LOOKER_API_KEY');
+      }
+    }
+
+    if (config.googleAdsDevToken !== undefined) {
+      if (config.googleAdsDevToken.trim()) {
+        userProperties.setProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN', config.googleAdsDevToken.trim());
+      } else {
+        userProperties.deleteProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN');
       }
     }
 
@@ -483,34 +492,49 @@ function executeAuditWithFilters(auditConfig) {
 
     // Audit GA4 with filters
     if (services.includes('ga4')) {
-      logEvent('AUDIT_FILTERED', 'Starting GA4 audit with property filters');
-      const ga4Result = syncGA4Core();
-      results.ga4 = ga4Result;
-      if (ga4Result.status === 'SUCCESS') {
-        totalRecords += ga4Result.records || 0;
-        sheetsCreated += ga4Result.details ? Object.keys(ga4Result.details).length : 4; // GA4 creates ~4 sheets
+      try {
+        logEvent('AUDIT_FILTERED', 'Starting GA4 audit with property filters');
+        const ga4Result = syncGA4Core();
+        results.ga4 = ga4Result;
+        if (ga4Result.status === 'SUCCESS') {
+          totalRecords += ga4Result.records || 0;
+          sheetsCreated += ga4Result.details ? Object.keys(ga4Result.details).length : 4; // GA4 creates ~4 sheets
+        }
+      } catch (e) {
+        logError('AUDIT_FILTERED', `Error in GA4 audit: ${e.message}`);
+        results.ga4 = { success: false, error: e.message };
       }
     }
 
     // Audit GTM with filters
     if (services.includes('gtm')) {
-      logEvent('AUDIT_FILTERED', 'Starting GTM audit with workspace filters');
-      const gtmResult = syncGTMCore();
-      results.gtm = gtmResult;
-      if (gtmResult.status === 'SUCCESS') {
-        totalRecords += gtmResult.records || 0;
-        sheetsCreated += 3; // GTM creates 3 sheets (tags, triggers, variables)
+      try {
+        logEvent('AUDIT_FILTERED', 'Starting GTM audit with workspace filters');
+        const gtmResult = syncGTMCore();
+        results.gtm = gtmResult;
+        if (gtmResult.status === 'SUCCESS') {
+          totalRecords += gtmResult.records || 0;
+          sheetsCreated += 3; // GTM creates 3 sheets (tags, triggers, variables)
+        }
+      } catch (e) {
+        logError('AUDIT_FILTERED', `Error in GTM audit: ${e.message}`);
+        results.gtm = { success: false, error: e.message };
       }
     }
 
     // Audit Looker Studio
     if (services.includes('looker')) {
-      logEvent('AUDIT_FILTERED', 'Starting Looker Studio audit');
-      const lookerResult = syncLookerStudioCore();
-      results.looker = lookerResult;
-      if (lookerResult.status === 'SUCCESS') {
-        totalRecords += lookerResult.records || 0;
-        sheetsCreated += 1; // Looker creates 1 sheet
+      try {
+        logEvent('AUDIT_FILTERED', 'Starting Looker Studio audit');
+        const lookerResult = syncLookerStudioCore();
+        results.looker = lookerResult;
+        if (lookerResult.status === 'SUCCESS') {
+          totalRecords += lookerResult.records || 0;
+          sheetsCreated += 1; // Looker creates 1 sheet
+        }
+      } catch (e) {
+        logError('AUDIT_FILTERED', `Error in Looker Studio audit: ${e.message}`);
+        results.looker = { success: false, error: e.message };
       }
     }
 
