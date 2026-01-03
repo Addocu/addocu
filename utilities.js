@@ -977,15 +977,28 @@ function getSheetRecordCount(sheetName) {
  */
 function validateService(serviceName) {
   try {
+    // Normalize service names (same as getAuthConfig)
+    const serviceNameMap = {
+      'bigquery': 'bigQuery',
+      'adsense': 'adSense',
+      'googleads': 'googleAds',
+      'googlemerchantcenter': 'googleMerchantCenter',
+      'googlebusinessprofile': 'googleBusinessProfile',
+      'searchconsole': 'searchConsole',
+      'lookerstudio': 'lookerStudio',
+      'looker': 'lookerStudio'
+    };
 
-    const auth = getAuthConfig(serviceName);
-    const apiConfig = ADDOCU_CONFIG.apis[serviceName];
+    const normalizedService = serviceNameMap[serviceName.toLowerCase()] || serviceName;
+
+    const auth = getAuthConfig(normalizedService);
+    const apiConfig = ADDOCU_CONFIG.apis[normalizedService];
 
     if (!apiConfig) {
-      throw new Error(`Configuration not found for service: ${serviceName}`);
+      throw new Error(`Configuration not found for service: ${normalizedService}`);
     }
 
-    logEvent('VALIDATION', `Validating ${serviceName} with ${auth.authType}...`);
+    logEvent('VALIDATION', `Validating ${normalizedService} with ${auth.authType}...`);
 
     let testUrl, requestOptions;
 
@@ -1021,7 +1034,7 @@ function validateService(serviceName) {
     let account = 'N/A';
 
     // Initialize account with more descriptive value for Looker Studio
-    if (serviceName === 'looker' || serviceName === 'lookerStudio') {
+    if (normalizedService === 'lookerStudio') {
       account = 'Pending';
     }
 
@@ -1030,45 +1043,45 @@ function validateService(serviceName) {
       message = 'Connected successfully';
 
       // Assign more descriptive account message based on authentication type
-      if (serviceName === 'ga4') {
+      if (normalizedService === 'ga4') {
         account = 'OAuth2 authorized';
-      } else if (serviceName === 'gtm') {
+      } else if (normalizedService === 'gtm') {
         account = 'OAuth2 authorized';
-      } else if (serviceName === 'looker' || serviceName === 'lookerStudio') {
+      } else if (normalizedService === 'lookerStudio') {
         account = 'OAuth2 connected';
-      } else if (serviceName === 'searchConsole') {
+      } else if (normalizedService === 'searchConsole') {
         account = 'OAuth2 authorized';
-      } else if (serviceName === 'youtube') {
+      } else if (normalizedService === 'youtube') {
         account = 'OAuth2 authorized';
-      } else if (serviceName === 'googleBusinessProfile') {
+      } else if (normalizedService === 'googleBusinessProfile') {
         account = 'OAuth2 authorized';
-      } else if (serviceName === 'googleMerchantCenter') {
+      } else if (normalizedService === 'googleMerchantCenter') {
         account = 'OAuth2 connected';
-      } else if (serviceName === 'bigQuery') {
+      } else if (normalizedService === 'bigQuery') {
         account = 'OAuth2 authorized';
-      } else if (serviceName === 'adSense') {
+      } else if (normalizedService === 'adSense') {
         account = 'OAuth2 connected';
       }
 
       // Try to extract additional account information (optional)
       try {
         const data = JSON.parse(responseText);
-        if (serviceName === 'ga4' && data.accounts) {
+        if (normalizedService === 'ga4' && data.accounts) {
           account = `OAuth2 authorized (${data.accounts.length} accounts)`;
-        } else if (serviceName === 'gtm' && data.account) {
+        } else if (normalizedService === 'gtm' && data.account) {
           account = `OAuth2 authorized (${data.account.length} accounts)`;
-        } else if (serviceName === 'searchConsole' && data.siteEntry) {
+        } else if (normalizedService === 'searchConsole' && data.siteEntry) {
           account = `OAuth2 authorized (${data.siteEntry.length} sites)`;
-        } else if (serviceName === 'youtube' && data.items) {
+        } else if (normalizedService === 'youtube' && data.items) {
           account = `OAuth2 authorized (${data.items.length} channels)`;
-        } else if (serviceName === 'googleBusinessProfile' && data.accounts) {
+        } else if (normalizedService === 'googleBusinessProfile' && data.accounts) {
           account = `OAuth2 authorized (${data.accounts.length} accounts)`;
         }
         // For debugging: log actual response structure
-        logEvent('VALIDATION', `${serviceName} response structure: ${JSON.stringify(Object.keys(data)).substring(0, 200)}`);
+        logEvent('VALIDATION', `${normalizedService} response structure: ${JSON.stringify(Object.keys(data)).substring(0, 200)}`);
       } catch (e) {
         // Keep base message if can't parse
-        logEvent('VALIDATION', `${serviceName} response parsing failed, using base message`);
+        logEvent('VALIDATION', `${normalizedService} response parsing failed, using base message`);
       }
 
     } else if (statusCode === 403) {
