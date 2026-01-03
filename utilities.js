@@ -549,6 +549,11 @@ function writeToSheet(sheetName, headers, data, clearFirst = true, options = {})
       logEvent('SHEET', `Sheet "${sheetName}" created.`);
     }
 
+    // Apply tab color if provided in options or derived from name
+    if (options.tabColor) {
+      sheet.setTabColor(options.tabColor);
+    }
+
     // Clear sheet if requested
     if (clearFirst) {
       sheet.clear();
@@ -653,7 +658,9 @@ function writeDataToSheet(sheetName, headers, data, platformName = 'this platfor
 
   // Detect data format
   let dataAsArrays;
-  if (Array.isArray(data[0])) {
+  if (!data || data.length === 0) {
+    dataAsArrays = [];
+  } else if (Array.isArray(data[0])) {
     // Already Array of Arrays
     dataAsArrays = data;
   } else {
@@ -661,7 +668,32 @@ function writeDataToSheet(sheetName, headers, data, platformName = 'this platfor
     dataAsArrays = data.map(obj => headers.map(header => obj[header] !== undefined ? obj[header] : ''));
   }
 
-  writeToSheet(sheetName, headers, dataAsArrays, true);
+  // Determine tab color based on platform name
+  const platformColors = {
+    'GA4': '#E37400',       // Orange
+    'GTM': '#00838F',       // Teal
+    'YouTube': '#FF0000',   // Red
+    'Google Ads': '#FBBC05', // Yellow
+    'AdSense': '#34A853',   // Green
+    'Merchant': '#F9AB00',  // Orange/Yellow
+    'Search Console': '#4285F4', // Blue
+    'Looker': '#4285F4',    // Blue
+    'GBP': '#4285F4',       // Blue
+    'BigQuery': '#4285F4'   // Blue
+  };
+
+  // Find a matching color
+  let tabColor = null;
+  if (platformName) {
+    for (const key in platformColors) {
+      if (platformName.includes(key)) {
+        tabColor = platformColors[key];
+        break;
+      }
+    }
+  }
+
+  writeToSheet(sheetName, headers, dataAsArrays, true, { tabColor: tabColor });
 }
 
 /**
