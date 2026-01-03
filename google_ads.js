@@ -43,7 +43,7 @@ function syncGoogleAdsCore() {
         const customers = listAccessibleCustomers(authConfig);
         if (!customers || customers.length === 0) {
             logEvent('GOOGLE_ADS', 'No accessible Google Ads customers found.');
-            return { success: true, status: 'SUCCESS', message: 'No accounts found', records: 0 };
+            // Continue to write empty sheets for feedback
         }
 
         let allCampaigns = [];
@@ -206,42 +206,13 @@ function getGoogleAdsCampaigns(customerId, authConfig) {
 function writeGoogleAdsToSheet(campaigns) {
     if (!campaigns || campaigns.length === 0) return;
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheetName = 'GOOGLE_ADS_CAMPAIGNS';
-    let sheet = ss.getSheetByName(sheetName);
+    const headers = [
+        'Customer ID', 'Campaign ID', 'Campaign Name', 'Status', 'Advertising Channel',
+        'Budget Type', 'Budget Amount (Micros)', 'Budget ID', 'Start Date', 'End Date',
+        'Target CPA (Micros)', 'Target ROAS', 'Strategy Type', 'Sync Date'
+    ];
 
-    if (!sheet) {
-        sheet = ss.insertSheet(sheetName);
-        const header = ['Account Name', 'Account ID', 'Campaign Name', 'Campaign ID', 'Status', 'Type', 'Start Date', 'End Date', 'Last Audit'];
-        sheet.getRange(1, 1, 1, header.length).setValues([header])
-            .setFontWeight('bold')
-            .setBackground('#E8F0FE')
-            .setBorder(true, true, true, true, true, true);
-        sheet.setFrozenRows(1);
-    } else {
-        // preserve header
-        if (sheet.getLastRow() > 1) {
-            sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).clearContent();
-        }
-    }
-
-    const lastAudit = new Date();
-    const rows = campaigns.map(c => [
-        c.accountName,
-        c.accountId,
-        c.campaignName,
-        c.campaignId,
-        c.status,
-        c.type,
-        c.startDate,
-        c.endDate,
-        lastAudit
-    ]);
-
-    if (rows.length > 0) {
-        sheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
-        sheet.autoResizeColumns(1, 9);
-    }
+    writeDataToSheet('ADS_CAMPAIGNS', headers, campaigns, 'Google Ads');
 }
 
 /**
@@ -357,43 +328,13 @@ function getGoogleAdsAudiences(customerId, authConfig) {
  * @param {Array<Object>} conversions - List of conversions.
  */
 function writeGoogleAdsConversionsToSheet(conversions) {
-    if (!conversions || conversions.length === 0) return;
+    const headers = [
+        'Customer ID', 'Conversion ID', 'Name', 'Type', 'Status', 'Category',
+        'Origin', 'Count Type', 'Value Format', 'View-through Lookback',
+        'Attribution Model', 'Sync Date'
+    ];
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheetName = 'GOOGLE_ADS_CONVERSIONS';
-    let sheet = ss.getSheetByName(sheetName);
-
-    if (!sheet) {
-        sheet = ss.insertSheet(sheetName);
-        const header = ['Account Name', 'Account ID', 'Conversion Name', 'Conversion ID', 'Status', 'Type', 'Category', 'Last Audit'];
-        sheet.getRange(1, 1, 1, header.length).setValues([header])
-            .setFontWeight('bold')
-            .setBackground('#E8F0FE')
-            .setBorder(true, true, true, true, true, true);
-        sheet.setFrozenRows(1);
-    } else {
-        // preserve header
-        if (sheet.getLastRow() > 1) {
-            sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).clearContent();
-        }
-    }
-
-    const lastAudit = new Date();
-    const rows = conversions.map(c => [
-        c.accountName,
-        c.accountId,
-        c.conversionName,
-        c.conversionId,
-        c.status,
-        c.type,
-        c.category,
-        lastAudit
-    ]);
-
-    if (rows.length > 0) {
-        sheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
-        sheet.autoResizeColumns(1, 8);
-    }
+    writeDataToSheet('ADS_CONVERSIONS', headers, conversions, 'Google Ads');
 }
 
 /**
@@ -401,42 +342,10 @@ function writeGoogleAdsConversionsToSheet(conversions) {
  * @param {Array<Object>} audiences - List of audiences.
  */
 function writeGoogleAdsAudiencesToSheet(audiences) {
-    if (!audiences || audiences.length === 0) return;
+    const headers = [
+        'Customer ID', 'Audience ID', 'Name', 'Resource Name', 'Description',
+        'Type', 'Size', 'Status', 'Notes', 'Sync Date'
+    ];
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheetName = 'GOOGLE_ADS_AUDIENCES';
-    let sheet = ss.getSheetByName(sheetName);
-
-    if (!sheet) {
-        sheet = ss.insertSheet(sheetName);
-        const header = ['Account Name', 'Account ID', 'List Name', 'List ID', 'Type', 'Membership Status', 'Size (Search)', 'Size (Display)', 'Last Audit'];
-        sheet.getRange(1, 1, 1, header.length).setValues([header])
-            .setFontWeight('bold')
-            .setBackground('#E8F0FE')
-            .setBorder(true, true, true, true, true, true);
-        sheet.setFrozenRows(1);
-    } else {
-        // preserve header
-        if (sheet.getLastRow() > 1) {
-            sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).clearContent();
-        }
-    }
-
-    const lastAudit = new Date();
-    const rows = audiences.map(a => [
-        a.accountName,
-        a.accountId,
-        a.listName,
-        a.listId,
-        a.type,
-        a.status,
-        a.sizeSearch,
-        a.sizeDisplay,
-        lastAudit
-    ]);
-
-    if (rows.length > 0) {
-        sheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
-        sheet.autoResizeColumns(1, 9);
-    }
+    writeDataToSheet('ADS_AUDIENCES', headers, audiences, 'Google Ads');
 }

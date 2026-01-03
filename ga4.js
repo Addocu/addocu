@@ -71,23 +71,23 @@ function syncGA4Core() {
     logEvent('GA4', 'Phase 1: Extracting all accounts and properties...');
     const properties = getGA4AccountsAndProperties();
     results.properties = properties.length;
-    writeDataToSheet('GA4_PROPERTIES', GA4_PROPERTIES_HEADERS, properties.map(p => processGA4Property(p.property, p.account)));
+    writeDataToSheet('GA4_PROPERTIES', GA4_PROPERTIES_HEADERS, properties.map(p => processGA4Property(p.property, p.account)), 'GA4');
 
     // 2. GET SUB-RESOURCES REUSING THE PROPERTIES LIST
     logEvent('GA4', 'Phase 2: Extracting custom dimensions...');
     const dimensions = getGA4SubResources(properties, 'customDimensions', processGA4Dimension);
     results.dimensions = dimensions.length;
-    writeDataToSheet('GA4_CUSTOM_DIMENSIONS', GA4_DIMENSIONS_HEADERS, dimensions);
+    writeDataToSheet('GA4_CUSTOM_DIMENSIONS', GA4_DIMENSIONS_HEADERS, dimensions, 'GA4');
 
     logEvent('GA4', 'Phase 3: Extracting custom metrics...');
     const metrics = getGA4SubResources(properties, 'customMetrics', processGA4Metric);
     results.metrics = metrics.length;
-    writeDataToSheet('GA4_CUSTOM_METRICS', GA4_METRICS_HEADERS, metrics);
+    writeDataToSheet('GA4_CUSTOM_METRICS', GA4_METRICS_HEADERS, metrics, 'GA4');
 
     logEvent('GA4', 'Phase 4: Extracting data streams...');
     const streams = getGA4SubResources(properties, 'dataStreams', processGA4Stream);
     results.streams = streams.length;
-    writeDataToSheet('GA4_DATA_STREAMS', GA4_STREAMS_HEADERS, streams);
+    writeDataToSheet('GA4_DATA_STREAMS', GA4_STREAMS_HEADERS, streams, 'GA4');
 
     const totalElements = Object.values(results).reduce((sum, count) => sum + count, 0);
     const duration = Date.now() - startTime;
@@ -123,23 +123,23 @@ function getGA4AccountsAndProperties() {
   try {
     const auth = getAuthConfig('ga4');
     const options = { method: 'GET', headers: auth.headers, muteHttpExceptions: true };
-    
+
     // Get property filters from configuration
     const userProperties = PropertiesService.getUserProperties();
     const propertyFilters = userProperties.getProperty('ADDOCU_GA4_PROPERTIES_FILTER') || '';
-    const targetProperties = propertyFilters ? 
+    const targetProperties = propertyFilters ?
       propertyFilters.split(',').map(p => p.trim()).filter(p => p.length > 0) : [];
-    
+
     if (targetProperties.length > 0) {
       logEvent('GA4', `Applying property filter: ${targetProperties.join(', ')}`);
     } else {
       logEvent('GA4', 'No property filters - getting all accessible properties');
     }
-    
+
     // Get accounts using REST API
     const accountsUrl = 'https://analyticsadmin.googleapis.com/v1alpha/accounts?pageSize=200';
     const accountsResponse = fetchWithRetry(accountsUrl, options, 'GA4-Accounts');
-    
+
     if (!accountsResponse.accounts || accountsResponse.accounts.length === 0) {
       logWarning('GA4', 'No accessible GA4 accounts found.');
       return [];
@@ -151,21 +151,21 @@ function getGA4AccountsAndProperties() {
         // Get properties using REST API
         const propertiesUrl = `https://analyticsadmin.googleapis.com/v1alpha/properties?filter=parent:${account.name}&pageSize=200`;
         const propertiesResponse = fetchWithRetry(propertiesUrl, options, 'GA4-Properties');
-        
+
         if (propertiesResponse.properties) {
           for (const property of propertiesResponse.properties) {
             // Apply filter if exists
             if (targetProperties.length > 0) {
               const propertyId = property.name.split('/').pop();
               const fullPropertyName = `properties/${propertyId}`;
-              
+
               // Check if this property is in the filter list
-              const isInFilter = targetProperties.some(filter => 
-                filter === fullPropertyName || 
-                filter === propertyId || 
+              const isInFilter = targetProperties.some(filter =>
+                filter === fullPropertyName ||
+                filter === propertyId ||
                 filter === property.name
               );
-              
+
               if (isInFilter) {
                 allProperties.push({ property, account });
                 logEvent('GA4', `Property included by filter: ${property.displayName} (${fullPropertyName})`);
@@ -176,20 +176,20 @@ function getGA4AccountsAndProperties() {
             }
           }
         }
-        
+
         Utilities.sleep(300); // Pause between accounts
-        
+
       } catch (e) {
         logWarning('GA4', `Could not get properties for account ${account.displayName}: ${e.message}`);
       }
     }
-    
+
     if (targetProperties.length > 0) {
       logEvent('GA4', `Filter applied: ${allProperties.length} properties from ${targetProperties.length} specified`);
     } else {
       logEvent('GA4', `No filters: ${allProperties.length} properties found`);
     }
-    
+
     return allProperties;
   } catch (error) {
     logError('GA4', `Error getting GA4 accounts and properties: ${error.message}`);
@@ -201,11 +201,11 @@ function getGA4SubResources(properties, resourceType, processor) {
   const allResources = [];
   const auth = getAuthConfig('ga4');
   const options = { method: 'GET', headers: auth.headers, muteHttpExceptions: true };
-  
+
   for (const { property, account } of properties) {
     try {
       let url, resourceKey;
-      
+
       // Determine URL and resource key based on type
       switch (resourceType) {
         case 'customDimensions':
@@ -223,17 +223,17 @@ function getGA4SubResources(properties, resourceType, processor) {
         default:
           throw new Error(`Unsupported resource type: ${resourceType}`);
       }
-      
+
       const response = fetchWithRetry(url, options, `GA4-${resourceType}`);
-      
+
       if (response[resourceKey]) {
         for (const item of response[resourceKey]) {
           allResources.push(processor(item, property, account));
         }
       }
-      
+
       Utilities.sleep(200); // Pause between properties
-      
+
     } catch (e) {
       logWarning('GA4', `Could not get '${resourceType}' for property ${property.displayName}: ${e.message}`);
     }
@@ -314,20 +314,7 @@ function processGA4Stream(stream, property) {
     'Stream Updated': formatDate(stream.updateTime),
     'Property Created': formatDate(property.createTime),
     'Property Updated': formatDate(property.updateTime),
+    'Sync Date': syncDate,
     'Notes': `Type: ${stream.type} | Created: ${formatDate(stream.createTime)}`
   };
-}
-
-// =================================================================
-// DATA WRITING FUNCTION
-// =================================================================
-
-function writeDataToSheet(sheetName, headers, dataObjects) {
-  if (!dataObjects || dataObjects.length === 0) {
-    logWarning('GA4', `No data to write to sheet ${sheetName}.`);
-    writeToSheet(sheetName, headers, [], true); // Write only headers
-    return;
-  }
-  const dataAsArrays = dataObjects.map(obj => headers.map(header => obj[header] || ''));
-  writeToSheet(sheetName, headers, dataAsArrays, true);
 }

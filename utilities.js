@@ -9,7 +9,7 @@
 
 const ADDOCU_CONFIG = {
   services: {
-    available: ['ga4', 'gtm', 'looker', 'lookerStudio', 'searchConsole', 'youtube', 'googleBusinessProfile', 'googleAds']
+    available: ['ga4', 'gtm', 'looker', 'lookerStudio', 'searchConsole', 'youtube', 'googleBusinessProfile', 'googleAds', 'googleMerchantCenter', 'bigquery', 'adsense']
   },
   apis: {
     ga4: {
@@ -49,8 +49,23 @@ const ADDOCU_CONFIG = {
     },
     googleAds: {
       name: 'Google Ads API',
-      baseUrl: 'https://googleads.googleapis.com/v18/customers:listAccessibleCustomers', // v22? Using accessible customers for test
+      baseUrl: 'https://googleads.googleapis.com/v18/customers:listAccessibleCustomers',
       testEndpoint: ''
+    },
+    googleMerchantCenter: {
+      name: 'Google Merchant API',
+      baseUrl: 'https://merchantapi.googleapis.com/accounts/v1',
+      testEndpoint: '/accounts'
+    },
+    bigquery: {
+      name: 'BigQuery API',
+      baseUrl: 'https://bigquery.googleapis.com/bigquery/v2',
+      testEndpoint: '/projects'
+    },
+    adsense: {
+      name: 'AdSense Management API',
+      baseUrl: 'https://adsense.googleapis.com/v2',
+      testEndpoint: '/accounts'
     }
   },
   limits: {
@@ -100,6 +115,7 @@ function getUserConfig() {
     requestTimeout: parseInt(userProperties.getProperty('ADDOCU_REQUEST_TIMEOUT')) || 60,
     logLevel: userProperties.getProperty('ADDOCU_LOG_LEVEL') || 'INFO',
     googleAdsDevToken: userProperties.getProperty('ADDOCU_GOOGLE_ADS_DEV_TOKEN') || '',
+    bqProjectId: userProperties.getProperty('ADDOCU_BQ_PROJECT_ID') || '',
     userEmail: Session.getActiveUser().getEmail()
   };
 }
@@ -119,8 +135,11 @@ function getAuthConfig(serviceName) {
       'User-Agent': 'Addocu/2.0 (Google Sheets Add-on)'
     };
 
-    // GA4, GTM, GSC, YouTube, GBP and Google Ads require OAuth2 (REST API calls)
-    if (serviceName === 'ga4' || serviceName === 'gtm' || serviceName === 'searchConsole' || serviceName === 'youtube' || serviceName === 'googleBusinessProfile' || serviceName === 'googleAds') {
+    // GA4, GTM, GSC, YouTube, GBP, Ads, GMC, BigQuery, and AdSense require OAuth2
+    if (serviceName === 'ga4' || serviceName === 'gtm' || serviceName === 'searchConsole' ||
+      serviceName === 'youtube' || serviceName === 'googleBusinessProfile' ||
+      serviceName === 'googleAds' || serviceName === 'googleMerchantCenter' ||
+      serviceName === 'bigquery' || serviceName === 'adsense') {
       const oauthToken = ScriptApp.getOAuthToken();
       if (!oauthToken) {
         throw new Error(`OAuth2 token required for ${serviceName}. Authorize the script first.`);
@@ -602,6 +621,50 @@ function writeToSheet(sheetName, headers, data, clearFirst = true, options = {})
 }
 
 /**
+ * High-level utility to write structured data to a sheet.
+ * Handles both Array of Objects and Array of Arrays.
+ * If data is empty, it writes a "No account found" message.
+ * 
+ * @param {string} sheetName - Target sheet name
+ * @param {Array} headers - Column headers
+ * @param {Array} data - The data (Array of Objects or Arrays)
+ * @param {string} platformName - Optional platform name for empty message
+ */
+function writeDataToSheet(sheetName, headers, data, platformName = 'this platform') {
+  if (!data || data.length === 0) {
+    logWarning('SHEET', `No data to write to sheet ${sheetName}.`);
+
+    // Clear sheet and write headers
+    writeToSheet(sheetName, headers, [], true);
+
+    // Write "No account found" message in the second row
+    try {
+      const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+      if (sheet) {
+        const message = `No account or assets found associated with ${platformName}.`;
+        sheet.getRange(2, 1).setValue(message);
+        sheet.getRange(2, 1, 1, Math.max(1, headers.length)).merge().setFontStyle('italic').setFontColor('#666666');
+      }
+    } catch (e) {
+      logError('SHEET', `Error writing empty message to ${sheetName}: ${e.message}`);
+    }
+    return;
+  }
+
+  // Detect data format
+  let dataAsArrays;
+  if (Array.isArray(data[0])) {
+    // Already Array of Arrays
+    dataAsArrays = data;
+  } else {
+    // Array of Objects - map to headers
+    dataAsArrays = data.map(obj => headers.map(header => obj[header] !== undefined ? obj[header] : ''));
+  }
+
+  writeToSheet(sheetName, headers, dataAsArrays, true);
+}
+
+/**
  * Adds metadata to a sheet in hidden cells.
  * @param {Sheet} sheet - Spreadsheet sheet.
  * @param {Object} metadata - Metadata to add.
@@ -638,7 +701,15 @@ function getSheetRecordCount(sheetName) {
     if (!sheet) return 0;
 
     const lastRow = sheet.getLastRow();
-    return Math.max(0, lastRow - 1); // -1 to exclude header
+    if (lastRow <= 1) return 0;
+
+    // Check for "No account found" message in the first row of data
+    const firstCell = sheet.getRange(2, 1).getValue();
+    if (typeof firstCell === 'string' && firstCell.includes('No account')) {
+      return 0;
+    }
+
+    return lastRow - 1; // -1 to exclude header
 
   } catch (e) {
     return 0;

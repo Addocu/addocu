@@ -38,6 +38,9 @@ function onOpen(e) {
       .addItem('🎥 Audit YouTube', 'syncYouTubeWithUI')
       .addItem('🏪 Audit Google Business Profile', 'syncGBPWithUI')
       .addItem('💰 Audit Google Ads', 'syncGoogleAdsWithUI')
+      .addItem('🛍️ Audit Merchant Center', 'syncGMCWithUI')
+      .addItem('🗄️ Audit BigQuery', 'syncBigQueryWithUI')
+      .addItem('📰 Audit AdSense', 'syncAdSenseWithUI')
       .addItem('📋 Interactive Dashboard', 'openHtmlDashboard')
       .addSubMenu(SpreadsheetApp.getUi().createMenu('🔧 Tools')
         .addItem('🔌 Test Connections', 'diagnoseConnections')
@@ -559,6 +562,22 @@ function executeAuditWithFilters(auditConfig) {
       }
     }
 
+    // Audit Merchant Center
+    if (services.includes('googleMerchantCenter') || services.includes('gmc')) {
+      logEvent('AUDIT_FILTERED', 'Starting Merchant Center audit');
+      try {
+        const gmcResult = syncGMCCore();
+        results.googleMerchantCenter = gmcResult;
+        if (gmcResult.status === 'SUCCESS' || gmcResult.success) {
+          totalRecords += gmcResult.records || 0;
+          sheetsCreated += 3; // GMC creates 3 sheets (accounts, data sources, products)
+        }
+      } catch (e) {
+        logError('AUDIT_FILTERED', `Error in Merchant Center audit: ${e.message}`);
+        results.googleMerchantCenter = { success: false, error: e.message };
+      }
+    }
+
     // Audit Google Ads
     if (services.includes('googleAds') || services.includes('ads')) {
       logEvent('AUDIT_FILTERED', 'Starting Google Ads audit');
@@ -572,6 +591,38 @@ function executeAuditWithFilters(auditConfig) {
       } catch (e) {
         logError('AUDIT_FILTERED', `Error in Google Ads audit: ${e.message}`);
         results.googleAds = { success: false, error: e.message };
+      }
+    }
+
+    // Audit BigQuery
+    if (services.includes('bigquery')) {
+      logEvent('AUDIT_FILTERED', 'Starting BigQuery audit');
+      try {
+        const bqResult = syncBigQueryCore();
+        results.bigquery = bqResult;
+        if (bqResult.status === 'SUCCESS' || bqResult.success) {
+          totalRecords += bqResult.records || 0;
+          sheetsCreated += 3; // BQ creates 3 sheets
+        }
+      } catch (e) {
+        logError('AUDIT_FILTERED', `Error in BigQuery audit: ${e.message}`);
+        results.bigquery = { success: false, error: e.message };
+      }
+    }
+
+    // Audit AdSense
+    if (services.includes('adsense')) {
+      logEvent('AUDIT_FILTERED', 'Starting AdSense audit');
+      try {
+        const adsenseResult = syncAdSenseCore();
+        results.adsense = adsenseResult;
+        if (adsenseResult.status === 'SUCCESS' || adsenseResult.success) {
+          totalRecords += adsenseResult.records || 0;
+          sheetsCreated += 4; // AdSense creates 4 sheets
+        }
+      } catch (e) {
+        logError('AUDIT_FILTERED', `Error in AdSense audit: ${e.message}`);
+        results.adsense = { success: false, error: e.message };
       }
     }
 
@@ -676,6 +727,30 @@ function executeCompleteAudit(services) {
       totalRecords += adsResult.records || 0;
     }
 
+    // Audit Merchant Center
+    if (services.includes('googleMerchantCenter')) {
+      logEvent('AUDIT', 'Starting Merchant Center audit');
+      const gmcResult = syncGMCCore();
+      results.googleMerchantCenter = gmcResult;
+      totalRecords += gmcResult.records || 0;
+    }
+
+    // Audit BigQuery
+    if (services.includes('bigquery')) {
+      logEvent('AUDIT', 'Starting BigQuery audit');
+      const bqResult = syncBigQueryCore();
+      results.bigquery = bqResult;
+      totalRecords += bqResult.records || 0;
+    }
+
+    // Audit AdSense
+    if (services.includes('adsense')) {
+      logEvent('AUDIT', 'Starting AdSense audit');
+      const adSenseResult = syncAdSenseCore();
+      results.adsense = adSenseResult;
+      totalRecords += adSenseResult.records || 0;
+    }
+
     // Generate executive dashboard
     generateExecutiveDashboard(results);
 
@@ -741,6 +816,11 @@ function startCompleteAudit() {
   // Google Ads only if enabled
   if (config.syncGoogleAds) {
     services.push('googleAds');
+  }
+
+  // Merchant Center only if enabled
+  if (config.syncGMC || config.syncMerchantCenter) {
+    services.push('googleMerchantCenter');
   }
 
   const ui = SpreadsheetApp.getUi();

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-01-02
+
+### Added
+- **🛍️ Google Merchant Center (GMC)**: Complete audit of Feeds and Product health.
+- **🗄️ Google BigQuery**: GA4 Export monitoring and enterprise dataset inventory.
+- **📰 Google AdSense**: Monetization audit for publishers (Accounts, Sites, Ad Units).
+- **🚀 10-Platform Suite**: Unified orchestration for GA4, GTM, Looker Studio, GSC, YT, GBP, Ads, GMC, BQ, and AdSense.
+- **📊 Advanced Analytics Dashboard**: Complete KPI coverage and asset distribution for all services.
+- **🔧 Unified Diagnostics**: Single-click connectivity test for the entire marketing stack.
+
+### Changed
+- **🎨 UI Refinement**: Modernized `configuration.html` for a more intuitive setup flow.
+- **📈 Reporting Layer**: Enhanced `dashboard_functions.js` to support multi-platform data.
+
+### Fixed
+- **🐛 Orchestration**: Fixed cross-platform error logging and UI refresh bugs.
+- **🔍 Connection Indicators**: Corrected real-time status reporting for all APIs.
+
 ### Added
 - **🔧 Permission Recovery System**: Enhanced error handling for PERMISSION_DENIED issues
 - **⚡ Auto-Recovery Functions**: Automatic permission detection and recovery mechanisms

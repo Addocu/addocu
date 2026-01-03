@@ -68,7 +68,7 @@ function syncSearchConsoleCore() {
       'Notes': `Permission: ${site.permissionLevel}`
     }));
 
-    writeDataToSheet('GSC_SITES', GSC_SITES_HEADERS, processedSites);
+    writeDataToSheet('GSC_SITES', GSC_SITES_HEADERS, processedSites, 'Search Console');
 
     // 2. GET SITEMAPS
     logEvent('GSC', 'Phase 2: Extracting sitemaps for verified sites...');
@@ -93,7 +93,7 @@ function syncSearchConsoleCore() {
       }
     }
     results.sitemaps = allSitemaps.length;
-    writeDataToSheet('GSC_SITEMAPS', GSC_SITEMAPS_HEADERS, allSitemaps);
+    writeDataToSheet('GSC_SITEMAPS', GSC_SITEMAPS_HEADERS, allSitemaps, 'Search Console');
 
     // 3. GET SEARCH APPEARANCE DATA
     logEvent('GSC', 'Phase 3: Extracting search appearance data...');
@@ -108,7 +108,7 @@ function syncSearchConsoleCore() {
       }
     }
     results.appearances = allAppearances.length;
-    writeDataToSheet('GSC_SEARCH_APPEARANCE', GSC_SEARCH_APPEARANCE_HEADERS, allAppearances);
+    writeDataToSheet('GSC_SEARCH_APPEARANCE', GSC_SEARCH_APPEARANCE_HEADERS, allAppearances, 'Search Console');
 
     const totalElements = results.sites + results.sitemaps + (results.appearances || 0);
     const duration = Date.now() - startTime;

@@ -67,6 +67,7 @@ function renderAdvancedDashboard(data) {
       ['Total YouTube Channels', data.youtube ? data.youtube.channels : 0],
       ['Total GBP Locations', data.gbp ? data.gbp.locations : 0],
       ['Total Ads Assets', data.ads ? data.ads.totalElements : 0],
+      ['Total Merchant Center Assets', data.gmc ? data.gmc.totalElements : 0],
       ['Health Score', `${data.healthScore || 0}%`]
     ];
 
@@ -92,7 +93,10 @@ function renderAdvancedDashboard(data) {
       ['Search Console', data.gsc.status || '✅ Active', data.gsc.totalElements || 0, data.gsc.lastUpdate || 'Never', data.gsc.qualityScore || 'N/A'],
       ['YouTube', data.youtube ? data.youtube.status : '❌ Not Connected', data.youtube ? data.youtube.totalElements : 0, data.youtube ? data.youtube.lastUpdate : 'Never', '100%'],
       ['Google Business Profile', data.gbp ? data.gbp.status : '❌ Not Connected', data.gbp ? data.gbp.totalElements : 0, data.gbp ? data.gbp.lastUpdate : 'Never', '100%'],
-      ['Google Ads', data.ads ? data.ads.status : '❌ Not Connected', data.ads ? data.ads.totalElements : 0, data.ads ? data.ads.lastUpdate : 'Never', '100%']
+      ['Google Ads', data.ads ? data.ads.status : '❌ Not Connected', data.ads ? data.ads.totalElements : 0, data.ads ? data.ads.lastUpdate : 'Never', '100%'],
+      ['Merchant Center', data.gmc ? data.gmc.status : '❌ Not Connected', data.gmc ? data.gmc.totalElements : 0, data.gmc ? data.gmc.lastUpdate : 'Never', '100%'],
+      ['BigQuery', data.bigquery ? data.bigquery.status : '❌ Not Connected', data.bigquery ? data.bigquery.totalElements : 0, data.bigquery ? data.bigquery.lastUpdate : 'Never', '100%'],
+      ['AdSense', data.adsense ? data.adsense.status : '❌ Not Connected', data.adsense ? data.adsense.totalElements : 0, data.adsense ? data.adsense.lastUpdate : 'Never', '100%']
     ];
 
     dashboardSheet.getRange(currentRow, 1, serviceData.length, serviceData[0].length).setValues(serviceData);
@@ -131,6 +135,9 @@ function collectDashboardData() {
       youtube: getYouTubeStats(),
       gbp: getGBPStats(),
       ads: getGoogleAdsStats(),
+      gmc: getGMCStats(),
+      bigquery: getBigQueryStats(),
+      adsense: getAdSenseStats(),
       quality: analyzeDataQuality(),
       timestamp: new Date().toISOString()
     };
@@ -614,6 +621,39 @@ function getGBPStats() {
     logWarning('DASHBOARD_V3', `Error getting GBP stats: ${e.message}`);
     return {
       accounts: 0, locations: 0, totalElements: 0, status: '❌ Error', lastUpdate: 'N/A', qualityScore: '0%'
+    };
+  }
+}
+
+/**
+ * Collects statistics for Google Merchant Center.
+ * @returns {Object} GMC statistics.
+ */
+function getGMCStats() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const accountsSheet = ss.getSheetByName('GMC_ACCOUNTS');
+    const sourcesSheet = ss.getSheetByName('GMC_DATA_SOURCES');
+    const productsSheet = ss.getSheetByName('GMC_PRODUCTS');
+
+    const totalAccounts = accountsSheet ? Math.max(0, accountsSheet.getLastRow() - 1) : 0;
+    const totalSources = sourcesSheet ? Math.max(0, sourcesSheet.getLastRow() - 1) : 0;
+    const totalProducts = productsSheet ? Math.max(0, productsSheet.getLastRow() - 1) : 0;
+    const total = totalAccounts + totalSources + totalProducts;
+
+    return {
+      accounts: totalAccounts,
+      sources: totalSources,
+      products: totalProducts,
+      totalElements: total,
+      status: totalAccounts > 0 ? '✅ Active' : '❌ Not Connected',
+      lastUpdate: getLastUpdate('googleMerchantCenter'),
+      qualityScore: "100%"
+    };
+  } catch (e) {
+    logWarning('DASHBOARD_V3', `Error getting GMC stats: ${e.message}`);
+    return {
+      accounts: 0, sources: 0, products: 0, totalElements: 0, status: '❌ Error', lastUpdate: 'N/A', qualityScore: '0%'
     };
   }
 }

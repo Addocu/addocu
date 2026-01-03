@@ -34,7 +34,9 @@ function syncGBPCore() {
         const accounts = listGBPAccounts();
         if (!accounts || accounts.length === 0) {
             logWarning('GBP_CORE', 'No GBP accounts found');
-            return { success: true, records: 0, sheets: 0 };
+            writeGBPAccountsToSheet([]); // Notification via utility
+            writeGBPLocationsToSheet([]); // Notification via utility
+            return { success: true, records: 0, sheets: 2, duration: Date.now() - startTime };
         }
 
         writeGBPAccountsToSheet(accounts);
@@ -148,17 +150,20 @@ function listGBPLocations(accountName) {
  * @param {Array} accounts - Accounts list.
  */
 function writeGBPAccountsToSheet(accounts) {
-    const headers = ['Account ID', 'Display Name', 'Type', 'Verification Status', 'Role', 'Sync Date'];
-    const data = accounts.map(acc => [
-        acc.name,
-        acc.accountName,
-        acc.type,
-        acc.verificationStatus,
-        acc.role,
-        new Date()
+    const headers = [
+        'Account ID', 'Account Name', 'Type', 'Verification State', 'Sync Date'
+    ];
+
+    const syncDate = formatDate(new Date());
+    const data = accounts.map(a => [
+        a.name,
+        a.accountName,
+        a.type,
+        a.verificationState,
+        syncDate
     ]);
 
-    writeToSheet('GBP_ACCOUNTS', headers, data, true);
+    writeDataToSheet('GBP_ACCOUNTS', headers, data, 'Google Business Profile');
 }
 
 /**
@@ -166,18 +171,27 @@ function writeGBPAccountsToSheet(accounts) {
  * @param {Array} locations - Locations list.
  */
 function writeGBPLocationsToSheet(locations) {
-    const headers = ['Location Name', 'Title', 'Category', 'Store Code', 'Status', 'Account', 'Account Type', 'Maps URL', 'Sync Date'];
+    const headers = [
+        'Account Name', 'Account Type', 'Location Name', 'Location ID',
+        'Address', 'Phone', 'Website', 'Primary Category', 'Latitude',
+        'Longitude', 'Verification State', 'Last Audit'
+    ];
+
+    const lastAudit = formatDate(new Date());
     const data = locations.map(loc => [
-        loc.name,
-        loc.title,
-        loc.category,
-        loc.storeCode,
-        loc.status,
         loc.accountName,
         loc.accountType,
-        loc.mapsUri,
-        new Date()
+        loc.title,
+        loc.name,
+        loc.storefrontAddress?.addressLines?.join(', ') || '',
+        loc.phoneNumbers?.primaryPhone || '',
+        loc.websiteUri || '',
+        loc.categories?.primaryCategory?.displayName || '',
+        loc.latlng?.latitude || '',
+        loc.latlng?.longitude || '',
+        loc.metadata?.verificationState || '',
+        lastAudit
     ]);
 
-    writeToSheet('GBP_LOCATIONS', headers, data, true);
+    writeDataToSheet('GBP_LOCATIONS', headers, data, 'Google Business Profile');
 }

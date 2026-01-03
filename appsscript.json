@@ -33,7 +33,10 @@
     "https://www.googleapis.com/auth/webmasters.readonly",
     "https://www.googleapis.com/auth/youtube.readonly",
     "https://www.googleapis.com/auth/business.manage",
-    "https://www.googleapis.com/auth/adwords"
+    "https://www.googleapis.com/auth/adwords",
+    "https://www.googleapis.com/auth/content",
+    "https://www.googleapis.com/auth/bigquery.readonly",
+    "https://www.googleapis.com/auth/adsense.readonly"
   ],
   "addOns": {
     "common": {
@@ -61,6 +64,9 @@
     "https://googleads.googleapis.com/",
     "https://mybusinessaccountmanagement.googleapis.com/",
     "https://mybusinessbusinessinformation.googleapis.com/",
+    "https://merchantapi.googleapis.com/",
+    "https://bigquery.googleapis.com/",
+    "https://adsense.googleapis.com/",
     "https://fonts.googleapis.com/",
     "https://fonts.gstatic.com/",
     "https://cdnjs.cloudflare.com/",

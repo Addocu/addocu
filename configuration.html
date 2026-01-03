@@ -965,6 +965,27 @@
               <div class="connection-details" id="ads-status">Waiting for API key & Token...</div>
             </div>
           </div>
+          <div class="connection-item">
+            <div class="connection-indicator indicator-pending" id="gmc-indicator"></div>
+            <div>
+              <div class="connection-name">Merchant Center</div>
+              <div class="connection-details" id="gmc-status">Waiting for API key...</div>
+            </div>
+          </div>
+          <div class="connection-item">
+            <div class="connection-indicator indicator-pending" id="bigquery-indicator"></div>
+            <div>
+              <div class="connection-name">BigQuery</div>
+              <div class="connection-details" id="bigquery-status">Waiting for Project ID...</div>
+            </div>
+          </div>
+          <div class="connection-item">
+            <div class="connection-indicator indicator-pending" id="adsense-indicator"></div>
+            <div>
+              <div class="connection-name">AdSense</div>
+              <div class="connection-details" id="adsense-status">Waiting for API key...</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1060,6 +1081,50 @@
               <span class="toggle-slider"></span>
             </label>
           </div>
+
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">Merchant Center</div>
+              <div class="service-description">Feeds, product health and configurations</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-gmc" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">Merchant Center</div>
+              <div class="service-description">Feeds, product health and configurations</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-gmc" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">BigQuery</div>
+              <div class="service-description">GA4 export monitoring and dataset inventory</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-bigquery" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="service-item">
+            <div class="service-info">
+              <div class="service-name">AdSense</div>
+              <div class="service-description">Ad units, sites, and custom channels</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="service-adsense" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
         </div>
 
         <!-- Advanced Filters -->
@@ -1095,6 +1160,19 @@
                 </div>
                 <div class="filter-example">
                   Example: Default Workspace, Marketing Team, Development
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">BigQuery Project ID (Optional)</label>
+                <div class="input-field">
+                  <input type="text" id="bq-project-id" placeholder="my-gcp-project-123">
+                </div>
+                <div class="input-help">
+                  GCP Project ID for BigQuery audit. Leave empty to skip BigQuery analysis.
+                </div>
+                <div class="filter-example">
+                  Example: my-analytics-project
                 </div>
               </div>
             </div>
@@ -1192,7 +1270,10 @@
         gsc: 'pending',
         youtube: 'pending',
         gbp: 'pending',
-        ads: 'pending'
+        ads: 'pending',
+        gmc: 'pending',
+        bigquery: 'pending',
+        adsense: 'pending'
       },
       services: {
         ga4: true,
@@ -1201,7 +1282,10 @@
         gsc: true,
         youtube: true,
         gbp: true,
-        ads: true
+        ads: true,
+        gmc: true,
+        bigquery: true,
+        adsense: true
       },
       filters: {
         ga4Properties: '',
@@ -1227,6 +1311,9 @@
       document.getElementById('service-youtube').addEventListener('change', updateServices);
       document.getElementById('service-gbp').addEventListener('change', updateServices);
       document.getElementById('service-ads').addEventListener('change', updateServices);
+      document.getElementById('service-gmc').addEventListener('change', updateServices);
+      document.getElementById('service-bigquery').addEventListener('change', updateServices);
+      document.getElementById('service-adsense').addEventListener('change', updateServices);
 
       // Filter inputs
       document.getElementById('ga4-properties').addEventListener('input', updateFilters);
@@ -1284,6 +1371,11 @@
             document.getElementById('gtm-workspaces').value = config.gtmWorkspaces;
           }
 
+          if (config && config.bqProjectId) {
+            appState.filters.bqProjectId = config.bqProjectId;
+            document.getElementById('bq-project-id').value = config.bqProjectId;
+          }
+
           hideStatus();
 
           // Auto-test connection if API key is configured
@@ -1317,6 +1409,7 @@
     function updateFilters() {
       appState.filters.ga4Properties = document.getElementById('ga4-properties').value.trim();
       appState.filters.gtmWorkspaces = document.getElementById('gtm-workspaces').value.trim();
+      appState.filters.bqProjectId = document.getElementById('bq-project-id').value.trim();
     }
 
     function parseCommaSeparatedValues(input) {
@@ -1417,8 +1510,8 @@
     }
 
     function resetConnectionStatus() {
-      const indicators = ['ga4-indicator', 'gtm-indicator', 'looker-indicator', 'gsc-indicator', 'youtube-indicator', 'gbp-indicator', 'ads-indicator'];
-      const statuses = ['ga4-status', 'gtm-status', 'looker-status', 'gsc-status', 'youtube-status', 'gbp-status', 'ads-status'];
+      const indicators = ['ga4-indicator', 'gtm-indicator', 'looker-indicator', 'gsc-indicator', 'youtube-indicator', 'gbp-indicator', 'ads-indicator', 'gmc-indicator'];
+      const statuses = ['ga4-status', 'gtm-status', 'looker-status', 'gsc-status', 'youtube-status', 'gbp-status', 'ads-status', 'gmc-status'];
 
       indicators.forEach(id => {
         document.getElementById(id).className = 'connection-indicator indicator-pending';
@@ -1438,7 +1531,10 @@
         'Google Search Console API': 'gsc',
         'YouTube Data API': 'youtube',
         'Google Business Profile API': 'gbp',
-        'Google Ads API': 'ads'
+        'Google Ads API': 'ads',
+        'Google Merchant API': 'gmc',
+        'BigQuery API': 'bigquery',
+        'AdSense Management API': 'adsense'
       };
 
       const formattedResults = results.map(result => {
@@ -1491,6 +1587,9 @@
       appState.services.youtube = document.getElementById('service-youtube').checked;
       appState.services.gbp = document.getElementById('service-gbp').checked;
       appState.services.ads = document.getElementById('service-ads').checked;
+      appState.services.gmc = document.getElementById('service-gmc').checked;
+      appState.services.bigquery = document.getElementById('service-bigquery').checked;
+      appState.services.adsense = document.getElementById('service-adsense').checked;
     }
 
     // ========================================

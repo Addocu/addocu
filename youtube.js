@@ -46,11 +46,9 @@ function syncYouTubeCore() {
 
         // 1. Get YouTube Channels
         const channels = listYouTubeChannels();
-        if (!channels || channels.length === 0) {
-            logWarning('YOUTUBE_SYNC', 'No YouTube channels found for this account.');
-        } else {
-            writeYouTubeChannelsToSheet(channels);
-            result.records += channels.length;
+        writeYouTubeChannelsToSheet(channels);
+        result.records += channels.length;
+        if (channels.length > 0) {
             logEvent('YOUTUBE_SYNC', `Successfully inventoried ${channels.length} channels.`);
         }
 
@@ -70,9 +68,9 @@ function syncYouTubeCore() {
             });
         }
 
+        writeYouTubePlaylistsToSheet(playlists);
+        result.records += playlists.length;
         if (playlists.length > 0) {
-            writeYouTubePlaylistsToSheet(playlists);
-            result.records += playlists.length;
             logEvent('YOUTUBE_SYNC', `Successfully inventoried ${playlists.length} playlists.`);
         }
 
@@ -92,9 +90,9 @@ function syncYouTubeCore() {
             });
         }
 
+        writeYouTubeVideosToSheet(videos);
+        result.records += videos.length;
         if (videos.length > 0) {
-            writeYouTubeVideosToSheet(videos);
-            result.records += videos.length;
             logEvent('YOUTUBE_SYNC', `Successfully inventoried ${videos.length} videos.`);
         }
 
@@ -268,7 +266,7 @@ function writeYouTubeChannelsToSheet(channels) {
         c.thumbnailUrl, syncDate
     ]);
 
-    writeToSheet('YOUTUBE_CHANNELS', YOUTUBE_CHANNELS_HEADERS, data);
+    writeDataToSheet('YOUTUBE_CHANNELS', YOUTUBE_CHANNELS_HEADERS, data, 'YouTube');
 }
 
 /**
@@ -283,7 +281,7 @@ function writeYouTubePlaylistsToSheet(playlists) {
         p.thumbnailUrl, syncDate
     ]);
 
-    writeToSheet('YOUTUBE_PLAYLISTS', YOUTUBE_PLAYLISTS_HEADERS, data);
+    writeDataToSheet('YOUTUBE_PLAYLISTS', YOUTUBE_PLAYLISTS_HEADERS, data, 'YouTube');
 }
 
 /**
@@ -299,5 +297,5 @@ function writeYouTubeVideosToSheet(videos) {
         v.tags, v.thumbnailUrl, v.embeddable, v.license, syncDate
     ]);
 
-    writeToSheet('YOUTUBE_VIDEOS', YOUTUBE_VIDEOS_HEADERS, data);
+    writeDataToSheet('YOUTUBE_VIDEOS', YOUTUBE_VIDEOS_HEADERS, data, 'YouTube');
 }

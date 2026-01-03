@@ -32,23 +32,23 @@ function syncLookerStudioWithUI() {
 function syncLookerStudioCore() {
   const startTime = Date.now();
   const serviceName = 'lookerStudio';
-  
+
   try {
     logSyncStart(serviceName, Session.getActiveUser().getEmail());
-    
+
     // USE OAUTH2 ONLY (like GA4 and GTM)
     const reports = listLookerStudioReports();
     writeReportsToSheet(reports);
-    
+
     const duration = Date.now() - startTime;
     logSyncEnd(serviceName, reports.length, duration, 'SUCCESS');
-    
+
     return {
       records: reports.length,
       status: 'SUCCESS',
       duration: duration
     };
-    
+
   } catch (error) {
     const duration = Date.now() - startTime;
     logSyncEnd(serviceName, 0, duration, 'ERROR');
@@ -64,13 +64,13 @@ function syncLookerStudioCore() {
 
 function listLookerStudioReports() {
   logEvent('LOOKER', 'Starting extraction with automatic OAuth2');
-  
+
   // AUTOMATIC OAUTH2 (same as GA4 and GTM)
   const oauthToken = ScriptApp.getOAuthToken();
   if (!oauthToken) {
     throw new Error('OAuth2 token required. User must authorize the script.');
   }
-  
+
   let pageToken = null;
   const allReports = [];
   let totalPages = 0;
@@ -78,15 +78,15 @@ function listLookerStudioReports() {
   do {
     totalPages++;
     logEvent('LOOKER', `Processing page ${totalPages}...`);
-    
+
     // OFFICIAL URL without API Key
     const url = 'https://datastudio.googleapis.com/v1/assets:search' +
-                `?assetTypes=REPORT&pageSize=100` +
-                (pageToken ? `&pageToken=${pageToken}` : '');
-    
+      `?assetTypes=REPORT&pageSize=100` +
+      (pageToken ? `&pageToken=${pageToken}` : '');
+
     // OAUTH2 headers (same as GA4/GTM)
-    const options = { 
-      method: 'GET', 
+    const options = {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${oauthToken}`,
         'Content-Type': 'application/json',
@@ -94,16 +94,16 @@ function listLookerStudioReports() {
       },
       muteHttpExceptions: true
     };
-    
+
     const response = UrlFetchApp.fetch(url, options);
     const statusCode = response.getResponseCode();
     const responseText = response.getContentText();
-    
+
     if (statusCode !== 200) {
       logError('LOOKER', `HTTP Error ${statusCode}: ${responseText.substring(0, 200)}`);
       throw new Error(`Error ${statusCode}: ${responseText}`);
     }
-    
+
     let data;
     try {
       data = JSON.parse(responseText);
@@ -117,10 +117,10 @@ function listLookerStudioReports() {
       const processedReports = data.assets.map(asset => processReportAsset(asset));
       allReports.push(...processedReports);
     }
-    
+
     pageToken = data.nextPageToken;
     if (pageToken) Utilities.sleep(500);
-    
+
   } while (pageToken && totalPages < 50);
 
   logEvent('LOOKER', `Extraction completed: ${allReports.length} reports.`);
@@ -130,7 +130,7 @@ function listLookerStudioReports() {
 function processReportAsset(asset) {
   try {
     const ownerInfo = (typeof asset.owner === 'object') ? asset.owner : { email: asset.owner, displayName: asset.owner?.split('@')[0] };
-    
+
     return {
       'Name': asset.title || 'Untitled',
       'Asset ID': asset.name || '',
@@ -171,15 +171,5 @@ function buildReportObservations(asset) {
 }
 
 function writeReportsToSheet(reports) {
-  if (!reports || reports.length === 0) {
-    logWarning('LOOKER', 'No reports found to write to sheet.');
-    writeToSheet('LOOKER_STUDIO', LOOKER_STUDIO_HEADERS, [], true);
-    return;
-  }
-  
-  const dataForSheet = reports.map(report => 
-    LOOKER_STUDIO_HEADERS.map(header => report[header] || '')
-  );
-  
-  writeToSheet('LOOKER_STUDIO', LOOKER_STUDIO_HEADERS, dataForSheet, true);
+  writeDataToSheet('LOOKER_STUDIO', LOOKER_STUDIO_HEADERS, reports, 'Looker Studio');
 }

@@ -36,7 +36,16 @@ function getHtmlDashboardData() {
       totalGBPLocations: 0,
       totalAdsCampaigns: 0,
       totalAdsConversions: 0,
-      totalAdsAudiences: 0
+      totalAdsAudiences: 0,
+      totalGMCAccounts: 0,
+      totalGMCDataSources: 0,
+      totalGMCProducts: 0,
+      totalBQDatasets: 0,
+      totalBQGA4Tables: 0,
+      totalBQLinks: 0,
+      totalAdSenseAccounts: 0,
+      totalAdSenseAdUnits: 0,
+      totalAdSenseSites: 0
     };
 
     // Count elements from each service ONLY IF THERE IS REAL DATA
@@ -196,6 +205,87 @@ function getHtmlDashboardData() {
       }
     }
 
+    // Google Merchant Center - Accounts
+    const gmcAccountsSheet = ss.getSheetByName('GMC_ACCOUNTS');
+    if (gmcAccountsSheet && gmcAccountsSheet.getLastRow() > 1) {
+      const data = gmcAccountsSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalGMCAccounts = gmcAccountsSheet.getLastRow() - 1;
+      }
+    }
+
+    // Google Merchant Center - Data Sources
+    const gmcDataSourcesSheet = ss.getSheetByName('GMC_DATA_SOURCES');
+    if (gmcDataSourcesSheet && gmcDataSourcesSheet.getLastRow() > 1) {
+      const data = gmcDataSourcesSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalGMCDataSources = gmcDataSourcesSheet.getLastRow() - 1;
+      }
+    }
+
+    // Google Merchant Center - Products
+    const gmcProductsSheet = ss.getSheetByName('GMC_PRODUCTS');
+    if (gmcProductsSheet && gmcProductsSheet.getLastRow() > 1) {
+      const data = gmcProductsSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalGMCProducts = gmcProductsSheet.getLastRow() - 1;
+      }
+    }
+
+    // AdSense - Sites
+    const adsenseSitesSheet = ss.getSheetByName('ADSENSE_SITES');
+    if (adsenseSitesSheet && adsenseSitesSheet.getLastRow() > 1) {
+      const data = adsenseSitesSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalAdSenseSites = adsenseSitesSheet.getLastRow() - 1;
+      }
+    }
+
+    // BigQuery - Datasets
+    const bqDatasetsSheet = ss.getSheetByName('BQ_DATASETS');
+    if (bqDatasetsSheet && bqDatasetsSheet.getLastRow() > 1) {
+      const data = bqDatasetsSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalBQDatasets = bqDatasetsSheet.getLastRow() - 1;
+      }
+    }
+
+    // BigQuery - GA4 Tables
+    const bqTablesSheet = ss.getSheetByName('BQ_GA4_TABLES');
+    if (bqTablesSheet && bqTablesSheet.getLastRow() > 1) {
+      const data = bqTablesSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalBQGA4Tables = bqTablesSheet.getLastRow() - 1;
+      }
+    }
+
+    // BigQuery - Export Links
+    const bqLinksSheet = ss.getSheetByName('BQ_GA4_EXPORT_LINKS');
+    if (bqLinksSheet && bqLinksSheet.getLastRow() > 1) {
+      const data = bqLinksSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalBQLinks = bqLinksSheet.getLastRow() - 1;
+      }
+    }
+
+    // AdSense - Accounts
+    const adsenseAccountsSheet = ss.getSheetByName('ADSENSE_ACCOUNTS');
+    if (adsenseAccountsSheet && adsenseAccountsSheet.getLastRow() > 1) {
+      const data = adsenseAccountsSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalAdSenseAccounts = adsenseAccountsSheet.getLastRow() - 1;
+      }
+    }
+
+    // AdSense - Ad Units
+    const adsenseAdUnitsSheet = ss.getSheetByName('ADSENSE_ADUNITS');
+    if (adsenseAdUnitsSheet && adsenseAdUnitsSheet.getLastRow() > 1) {
+      const data = adsenseAdUnitsSheet.getDataRange().getValues();
+      if (data.length > 1 && data[1].some(cell => cell && cell.toString().trim() !== '')) {
+        kpis.totalAdSenseAdUnits = adsenseAdUnitsSheet.getLastRow() - 1;
+      }
+    }
+
     // Count unique containers ONLY IF THERE ARE REAL TAGS
     kpis.totalContainers = kpis.totalTags > 0 ? countUniqueContainers() : 0;
 
@@ -206,7 +296,10 @@ function getHtmlDashboardData() {
       kpis.totalGSCSites + kpis.totalGSCSitemaps +
       kpis.totalYTChannels + kpis.totalYTPlaylists +
       kpis.totalGBPAccounts + kpis.totalGBPLocations +
-      kpis.totalAdsCampaigns + kpis.totalAdsConversions + kpis.totalAdsAudiences;
+      kpis.totalAdsCampaigns + kpis.totalAdsConversions + kpis.totalAdsAudiences +
+      kpis.totalGMCAccounts + kpis.totalGMCDataSources + kpis.totalGMCProducts +
+      kpis.totalBQDatasets + kpis.totalBQGA4Tables + kpis.totalBQLinks +
+      kpis.totalAdSenseAccounts + kpis.totalAdSenseAdUnits + kpis.totalAdSenseSites;
 
     // Quality analysis ONLY IF THERE IS DATA
     const quality = kpis.totalAssets > 0 ? analyzeQualityForDashboard() : {
@@ -218,7 +311,7 @@ function getHtmlDashboardData() {
     // Chart data (based ONLY on real data)
     const charts = {
       elementsByTool: {
-        categories: ['Looker Studio', 'Google Analytics 4', 'Google Tag Manager', 'Search Console', 'YouTube', 'GBP', 'Google Ads'],
+        categories: ['Looker Studio', 'GA4', 'GTM', 'GSC', 'YouTube', 'GBP', 'Ads', 'GMC', 'BigQuery', 'AdSense'],
         series: [{
           name: 'Assets',
           data: [
@@ -228,7 +321,10 @@ function getHtmlDashboardData() {
             kpis.totalGSCSites + kpis.totalGSCSitemaps,
             kpis.totalYTChannels + kpis.totalYTPlaylists,
             kpis.totalGBPAccounts + kpis.totalGBPLocations,
-            kpis.totalAdsCampaigns + kpis.totalAdsConversions + kpis.totalAdsAudiences
+            kpis.totalAdsCampaigns + kpis.totalAdsConversions + kpis.totalAdsAudiences,
+            kpis.totalGMCAccounts + kpis.totalGMCDataSources + kpis.totalGMCProducts,
+            kpis.totalBQDatasets + kpis.totalBQGA4Tables + kpis.totalBQLinks,
+            kpis.totalAdSenseAccounts + kpis.totalAdSenseAdUnits + kpis.totalAdSenseSites
           ]
         }]
       },

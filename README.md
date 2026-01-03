@@ -29,7 +29,7 @@
 
 ## ✨ What is Addocu?
 
-Addocu automates the painful process of documenting and auditing your entire Google ecosystem, pulling detailed metadata from **Google Analytics 4**, **Google Tag Manager**, and **Looker Studio** directly into your spreadsheet.
+Addocu automates the painful process of documenting and auditing your entire Google ecosystem, pulling detailed metadata from **GA4**, **GTM**, **Looker Studio**, **Google Ads**, **BigQuery**, **Merchant Center**, **Search Console**, **YouTube**, **AdSense**, and **G. Business Profile** directly into your spreadsheet.
 
 **Born from countless hours** spent on manual documentation and a belief that there had to be a better way. We're sharing it with the community to give back and to build, together, the best auditing tool possible.
 
@@ -54,7 +54,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 <td>
 
 ### ⚡ **One-Click Auditing**
-- Complete GA4, GTM & Looker Studio audit in seconds
+- Complete audit of 10 Google platforms in seconds
 - No manual data collection or documentation
 - Interactive dashboard with executive summary
 
@@ -101,15 +101,26 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - **Data Sources:** Complete mapping of connections and refresh status
 - **Performance Metrics:** Usage statistics and data freshness indicators
 - **Permissions Audit:** Who has access to what reports across your organization
-104: 
-105: ### 💰 **Google Ads Comprehensive Audit**
-106: - **Campaigns:** Status, type, startDate, and endDate for all campaigns
-107: - **Conversion Actions:** Detailed inventory of tracking events and categories
-108: - **Audiences:** User lists and remarketing segments with size estimates
-109: 
-110: ### 🏪 **Google Business Profile (GBP)**
-111: - **Accounts:** Inventory of all business accounts/groups managed
-112: - **Locations:** Complete list of physical storefronts and verification status
+
+### 💰 **Google Ads Comprehensive Audit**
+- **Campaigns:** Status, type, startDate, and endDate for all campaigns
+- **Conversion Actions:** Detailed inventory of tracking events and categories
+- **Audiences:** User lists and remarketing segments with size estimates
+
+### 🏪 **Google Business Profile (GBP)**
+- **Accounts:** Inventory of all business accounts/groups managed
+- **Locations:** Complete list of physical storefronts and verification status
+
+### 🛍️ **Merchant Center & Shopping**
+- **Feeds:** Data source health and configurations
+- **Products:** Sampling and health of your merchant products
+
+### 🗄️ **BigQuery (Cloud Data)**
+- **Datasets:** Enterprise data storage inventory
+- **GA4 Backups:** Monitoring the health of real-time exports
+
+### 📰 **AdSense (Publishing)**
+- **Monetization:** Audit of ad units, sites, and channels
 
 ### 🎯 **Interactive Dashboard**
 - **Visual Summary:** Bird's eye view of your entire marketing stack health
@@ -149,6 +160,9 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - `LOOKER_STUDIO` - Report catalog
 - `GOOGLE_ADS_CAMPAIGNS` - Paid media campaigns
 - `GBP_LOCATIONS` - Business locations
+- `GMC_PRODUCTS` - Merchant Center sample
+- `BQ_DATASETS` - BigQuery inventory
+- `ADSENSE_SITES` - AdSense properties
 - `LOGS` - Detailed operation logs
 
 ## 📋 Prerequisites
@@ -235,18 +249,18 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 
 ## 🗺️ Roadmap & Future
 
-### **📍 Current Status: v2.1.0**
-- ✅ Complete GA4, GTM, and Looker Studio integration
-- ✅ Interactive dashboard and reporting
-- ✅ Open source codebase with community license
-- ✅ Google Workspace Marketplace distribution
-- ✅ Fully automatic OAuth2 authentication for all services
+### **📍 Current Status: v2.3.0 (Full Stack Edition)**
+- ✅ Complete integration of 10 Google Marketing platforms
+- ✅ GA4, GTM, Looker Studio, Ads, GSC, YT, GBP, GMC, BQ, AdSense
+- ✅ Interactive dashboard with real-time connectivity diagnostics
+- ✅ Open source codebase with community-driven license
+- ✅ Automatic OAuth2 authentication across all services
 
-### **🔮 Coming Soon to the Community Edition**
-- 📋 **Google Search Console** (Enhanced Support)
-- 📋 **BigQuery** data source analysis
-- 📋 Enhanced error detection and recommendations
-- 📋 Multi-language support
+### **🔮 Roadmap & Future**
+- 📋 **DV360 & SA360** integration
+- 📋 AI-driven error detection and optimization recommendations
+- 📋 Multi-language support (ES, FR, PT, IT)
+- 📋 Automated scheduling and historical monitoring
 
 ### **🚀 The Future: Addocu Pro**
 We're planning a separate, commercial **Addocu Pro** version with advanced features for teams and agencies:

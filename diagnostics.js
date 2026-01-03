@@ -149,7 +149,11 @@ function simplifiedConnectionDiagnostics() {
       { id: 'looker', name: 'Looker Studio API' },
       { id: 'searchConsole', name: 'Google Search Console API' },
       { id: 'youtube', name: 'YouTube Data API' },
-      { id: 'googleBusinessProfile', name: 'Google Business Profile API' }
+      { id: 'googleBusinessProfile', name: 'Google Business Profile API' },
+      { id: 'googleAds', name: 'Google Ads API' },
+      { id: 'googleMerchantCenter', name: 'Google Merchant API' },
+      { id: 'bigquery', name: 'BigQuery API' },
+      { id: 'adsense', name: 'AdSense Management API' }
     ];
 
     // First check basic permissions
@@ -166,7 +170,11 @@ function simplifiedConnectionDiagnostics() {
         ['Looker Studio API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
         ['Google Search Console API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
         ['YouTube Data API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
-        ['Google Business Profile API', 'Pending Authorization', 'PENDING', 'OAuth2 pending']
+        ['Google Business Profile API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
+        ['Google Ads API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
+        ['Google Merchant API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
+        ['BigQuery API', 'Pending Authorization', 'PENDING', 'OAuth2 pending'],
+        ['AdSense Management API', 'Pending Authorization', 'PENDING', 'OAuth2 pending']
       ];
     }
 

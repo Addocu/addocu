@@ -49,6 +49,8 @@
       --chart-quaternary: #8b5cf6;
       --chart-quinary: #ec4899;
       --chart-senary: #06b6d4;
+      --chart-septenary: #f97316;
+      --chart-octonary: #6366f1;
 
       /* Interactive Elements */
       --border-light: #e4e4e7;
@@ -96,6 +98,8 @@
       --chart-quaternary: #a78bfa;
       --chart-quinary: #f472b6;
       --chart-senary: #22d3ee;
+      --chart-septenary: #fb923c;
+      --chart-octonary: #818cf8;
 
       --border-light: #3f3f46;
       --border-medium: #52525b;
@@ -1160,6 +1164,21 @@
             <div class="progress-fill" id="progress-ads"></div>
           </div>
         </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">GMC Products</div>
+            <div class="kpi-icon">🛍️</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-gmc-products">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            Merchant Center
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-gmc"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1277,6 +1296,18 @@
             Audiences
           </div>
         </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-title">GMC Feeds</div>
+            <div class="kpi-icon">📊</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-gmc-sources">0</div>
+          <div class="kpi-trend">
+            <span class="trend-indicator"></span>
+            Data Sources
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1343,12 +1374,28 @@
           <div class="status-value" id="status-ads">Connected</div>
         </div>
 
-        <div class="status-item info">
+        <div class="status-item">
           <div class="status-header">
-            <div class="status-text">Coming Soon</div>
-            <div class="status-icon info" id="status-coming-soon-icon"></div>
+            <div class="status-text">Merchant Center</div>
+            <div class="status-icon" id="status-gmc-icon"></div>
           </div>
-          <div class="status-value" id="status-coming-soon">BigQuery, DV360</div>
+          <div class="status-value" id="status-gmc">Connected</div>
+        </div>
+
+        <div class="status-item">
+          <div class="status-header">
+            <div class="status-text">BigQuery</div>
+            <div class="status-icon" id="status-bigquery-icon"></div>
+          </div>
+          <div class="status-value" id="status-bigquery">Connected</div>
+        </div>
+
+        <div class="status-item">
+          <div class="status-header">
+            <div class="status-text">AdSense</div>
+            <div class="status-icon" id="status-adsense-icon"></div>
+          </div>
+          <div class="status-value" id="status-adsense">Connected</div>
         </div>
       </div>
     </section>
@@ -1619,6 +1666,10 @@
       animateCounter('kpi-total-ads-conversions', data.kpis.totalAdsConversions);
       animateCounter('kpi-total-ads-audiences', data.kpis.totalAdsAudiences);
 
+      // GMC KPIs
+      animateCounter('kpi-total-gmc-products', data.kpis.totalGMCProducts);
+      animateCounter('kpi-total-gmc-sources', data.kpis.totalGMCDataSources);
+
       // Health Score
       const healthScore = calculateHealthScore(data.quality, data.kpis);
       animateCounter('kpi-health-score', Math.round(healthScore), '%');
@@ -1634,6 +1685,7 @@
       setProgress('progress-youtube', (data.kpis.totalYTChannels / totalAssets) * 100);
       setProgress('progress-gbp', (data.kpis.totalGBPLocations / totalAssets) * 100);
       setProgress('progress-ads', (data.kpis.totalAdsCampaigns / totalAssets) * 100);
+      setProgress('progress-gmc', (data.kpis.totalGMCProducts / totalAssets) * 100);
 
       // Update trends
       updateAssetsTrend(data.kpis);
@@ -1647,7 +1699,7 @@
 
     function updateAssetsTrend(kpis) {
       const totalItemsElement = document.getElementById('kpi-total-items');
-      const breakdown = `${kpis.totalReports + kpis.totalProperties + kpis.totalTags + kpis.totalGSCSites + kpis.totalYTChannels + kpis.totalGBPLocations + kpis.totalAdsCampaigns} total items`;
+      const breakdown = `${kpis.totalReports + kpis.totalProperties + kpis.totalTags + kpis.totalGSCSites + kpis.totalYTChannels + kpis.totalGBPLocations + kpis.totalAdsCampaigns + kpis.totalGMCProducts} total items`;
       if (totalItemsElement) {
         totalItemsElement.textContent = breakdown;
       }
@@ -1746,6 +1798,8 @@
         quaternary: computedStyle.getPropertyValue('--chart-quaternary').trim(),
         quinary: computedStyle.getPropertyValue('--chart-quinary').trim(),
         senary: computedStyle.getPropertyValue('--chart-senary').trim(),
+        septenary: computedStyle.getPropertyValue('--chart-septenary').trim(),
+        octonary: computedStyle.getPropertyValue('--chart-octonary').trim(),
         text: isDark ? '#fafafa' : '#18181b',
         textSecondary: isDark ? '#d4d4d8' : '#71717a',
         border: computedStyle.getPropertyValue('--border-light').trim()
@@ -1796,7 +1850,7 @@
             }
           }
         },
-        colors: [colors.primary, colors.secondary, colors.tertiary, colors.quaternary, colors.quinary, colors.senary],
+        colors: [colors.primary, colors.secondary, colors.tertiary, colors.quaternary, colors.quinary, colors.senary, colors.septenary, colors.octonary],
         grid: {
           borderColor: colors.border,
           strokeDashArray: 2
@@ -1823,7 +1877,7 @@
           fontFamily: 'Inter, sans-serif'
         },
         labels: data.charts.gtmTagBreakdown.labels,
-        colors: [colors.primary, colors.secondary, colors.tertiary, colors.quaternary, colors.quinary, colors.senary],
+        colors: [colors.primary, colors.secondary, colors.tertiary, colors.quaternary, colors.quinary, colors.senary, colors.septenary, colors.octonary],
         legend: {
           position: 'bottom',
           labels: {
