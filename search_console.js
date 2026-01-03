@@ -28,18 +28,15 @@ function syncSearchConsoleWithUI() {
   const ui = SpreadsheetApp.getUi();
   if (result.status === 'SUCCESS') {
     const details = result.details;
-    const message = `✅ Search Console Synchronized Successfully\n\n` +
-      `🌐 Sites: ${details.sites}\n` +
-      `🗺️ Sitemaps: ${details.sitemaps}\n\n` +
-      `Total: ${result.records} elements\n` +
-      `Time: ${Math.round(result.duration / 1000)}s`;
-    ui.alert('🔍 Search Console Completed', message, ui.ButtonSet.OK);
+    const body = `Sites: ${details.sites} | Sitemaps: ${details.sitemaps} | Search Appearance: ${details.appearances || 0}\n\n` +
+      `Total: ${result.records} elements | Time: ${Math.round(result.duration / 1000)}s\n\n` +
+      `Data written to GSC_SITES, GSC_SITEMAPS, GSC_SEARCH_APPEARANCE.`;
+    ui.alert('Search Console Synchronized', body, ui.ButtonSet.OK);
   } else {
-    ui.alert(
-      '❌ Search Console Error',
-      `Synchronization failed: ${result.error}\n\nCheck the LOGS sheet for more details.`,
-      ui.ButtonSet.OK
-    );
+    const body = `Synchronization failed: ${result.error}\n\n` +
+      `Action: Verify that you have verified sites in Google Search Console and that the script has been authorized.\n\n` +
+      `Details: Check LOGS sheet for more information.`;
+    ui.alert('Search Console Error', body, ui.ButtonSet.OK);
   }
 }
 
@@ -85,7 +82,7 @@ function syncSearchConsoleCore() {
           'Total URLs': sm.contents ? sm.contents.reduce((sum, c) => sum + parseInt(c.count || 0), 0) : 0,
           'Errors': sm.errors || 0,
           'Warnings': sm.warnings || 0,
-          'Notes': `Type: ${sm.type} | Status: ${sm.errors > 0 ? '❌ Errors' : '✅ OK'}`
+          'Notes': `Type: ${sm.type} | Status: ${sm.errors > 0 ? 'Errors' : 'OK'}`
         })));
         Utilities.sleep(200); // Pause between sites
       } catch (e) {
@@ -141,22 +138,24 @@ function syncSearchConsoleCore() {
 
 function listSearchConsoleSites() {
   const auth = getAuthConfig('searchConsole');
-  const url = 'https://www.googleapis.com/webmasters/v3/sites';
+  const url = 'https://searchconsole.googleapis.com/v1/sites';
   const options = { method: 'GET', headers: auth.headers, muteHttpExceptions: true };
 
   const response = fetchWithRetry(url, options, 'GSC-Sites');
-  return response.siteEntry || [];
+  // API v1 response structure: returns 'sites' array instead of 'siteEntry'
+  return response.sites || [];
 }
 
 function getSearchConsoleSitemaps(siteUrl) {
   const auth = getAuthConfig('searchConsole');
   // Site URL must be encoded for the path parameter
   const encodedSiteUrl = encodeURIComponent(siteUrl);
-  const url = `https://www.googleapis.com/webmasters/v3/sites/${encodedSiteUrl}/sitemaps`;
+  const url = `https://searchconsole.googleapis.com/v1/sites/${encodedSiteUrl}/sitemaps`;
   const options = { method: 'GET', headers: auth.headers, muteHttpExceptions: true };
 
   const response = fetchWithRetry(url, options, `GSC-Sitemaps-${siteUrl}`);
-  return response.sitemap || [];
+  // API v1 response structure: returns 'sitemaps' array instead of 'sitemap'
+  return response.sitemaps || [];
 }
 
 /**
@@ -173,7 +172,7 @@ function getSearchAppearanceData(siteUrl) {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - 28);
 
-  const url = `https://www.googleapis.com/webmasters/v3/sites/${encodedSiteUrl}/searchAnalytics/query`;
+  const url = `https://searchconsole.googleapis.com/v1/sites/${encodedSiteUrl}/searchAnalytics/query`;
   const payload = {
     startDate: startDate.toISOString().split('T')[0],
     endDate: endDate.toISOString().split('T')[0],

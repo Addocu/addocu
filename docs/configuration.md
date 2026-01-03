@@ -1,6 +1,6 @@
 # Configuration Guide ⚙️
 
-This guide walks you through configuring Addocu after installation, focusing on API key setup and platform connections.
+This guide walks you through configuring Addocu after installation. Addocu v3.0+ uses **automatic OAuth2 authentication** - no API keys needed!
 
 ## 🚀 Quick Start Configuration
 
@@ -9,79 +9,57 @@ This guide walks you through configuring Addocu after installation, focusing on 
 2. Go to **Extensions** → **Addocu** → **⚙️ Configure**
 3. The configuration sidebar will appear on the right
 
-### Step 2: Enter API Key
-1. Paste your **Google Cloud API Key** in the text field
-2. Click **"Save Configuration"**
-3. Wait for the **"Configuration saved successfully"** message
+### Step 2: OAuth2 Authorization (Automatic)
+- Addocu automatically handles OAuth2 authentication
+- **You do NOT need to provide an API key**
+- All 10 platforms are pre-configured and ready to use
+- Your Google account permissions control access to each platform
 
 ### Step 3: Test Connection
-1. Click **"Test API Connection"** button
-2. Verify all services show **✅ Connected** status:
+1. Click **"Test All Connections"** button
+2. Verify services show **Connected** status:
    - Google Analytics Admin API
    - Google Tag Manager API
    - Looker Studio API
+   - Search Console API
+   - YouTube Data API
+   - Google Business Profile API
+   - Google Ads API
+   - Merchant Center API
+   - BigQuery API
+   - AdSense API
 
-## 🔑 API Key Management
+## 🔐 OAuth2 Authentication (v3.0+)
 
-### Creating Your API Key
+All Addocu services use **automatic OAuth2 authentication**. You don't need to create or manage any API keys.
 
-If you haven't created an API key yet, follow these steps:
+### How OAuth2 Works
+- **Automatic**: Addocu handles authentication automatically via `ScriptApp.getOAuthToken()`
+- **Secure**: Uses your Google account's existing permissions
+- **No key management**: Nothing to copy or store
+- **Platform-specific**: Your access is controlled by your permissions in each platform (GA4, GTM, etc.)
 
-#### Google Cloud Console Setup
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. **Create or select a project**
-3. **Enable billing** (required, but usage stays within free limits)
+### OAuth Scopes Required
+Addocu requests 15 OAuth scopes to access the 10 platforms:
+- `analytics.readonly` - Google Analytics 4
+- `tagmanager.readonly` - Google Tag Manager
+- `datastudio` - Looker Studio
+- `webmasters.readonly` - Search Console
+- `youtube.readonly` - YouTube
+- `business.manage` - Google Business Profile
+- `adwords` - Google Ads
+- `content` - Merchant Center
+- `bigquery.readonly` - BigQuery
+- `adsense.readonly` - AdSense
 
-#### Enable Required APIs
-```
-✅ Google Analytics Admin API (analyticsadmin.googleapis.com)
-✅ Google Tag Manager API (tagmanager.googleapis.com)  
-✅ Looker Studio API (datastudio.googleapis.com)
-```
+**Why these scopes?** Each scope gives Addocu read-only access to the corresponding platform. You can see and approve all requested scopes when you first authorize Addocu.
 
-#### Create API Key
-1. Navigate to **"APIs & Services"** → **"Credentials"**
-2. Click **"Create Credentials"** → **"API Key"**
-3. **Copy the key** immediately
-4. **(Recommended)** Click **"Restrict Key"**
-
-### API Key Security Best Practices
-
-#### Restrict Your API Key
-1. In Google Cloud Console, go to **Credentials**
-2. Click on your API key
-3. Under **"API restrictions"**, select **"Restrict key"**
-4. Choose only the APIs you need:
-   - Google Analytics Admin API
-   - Google Tag Manager API
-   - Looker Studio API
-
-#### Application Restrictions (Optional)
-- **HTTP referrers:** Add your Google Sheets domains if needed
-- **IP addresses:** Restrict to your organization's IPs for extra security
-
-### Troubleshooting API Key Issues
-
-#### "Invalid API Key" Error
-**Possible causes:**
-- Key was copied incorrectly (check for extra spaces)
-- APIs are not enabled in Google Cloud Console
-- Key is restricted to wrong APIs
-
-**Solutions:**
-1. **Double-check the key** - copy again from Google Cloud Console
-2. **Verify API enablement** - ensure all 3 APIs are enabled
-3. **Check restrictions** - make sure key isn't over-restricted
-
-#### "Access Denied" Error
-**Possible causes:**
-- Your Google account doesn't have access to the platforms
-- Insufficient permissions in GA4, GTM, or Looker Studio
-
-**Solutions:**
-1. **Check platform access** - ensure you can access GA4, GTM, and Looker Studio manually
-2. **Verify permissions** - you need at least "Reader" level access
-3. **Contact admin** - ask for the necessary platform permissions
+### Authorization Flow
+1. **First use**: Addocu requests permissions from your Google account
+2. **Consent screen**: You see all requested scopes
+3. **Authorization**: Grant permissions to Addocu
+4. **Access granted**: Addocu can now read data from authorized platforms
+5. **Token refresh**: Automatic token renewal, no re-authorization needed (unless you revoke access)
 
 ## 🎯 Platform-Specific Configuration
 
@@ -139,31 +117,79 @@ If you haven't created an API key yet, follow these steps:
 - **Organization reports:** Shows all org-accessible reports
 - **Data source status:** Indicates which sources are active/broken
 
-## 🔄 Managing Multiple Configurations
+## 🎛️ Service Toggles & Advanced Configuration (v3.0+)
+
+### Enable/Disable Individual Platforms
+
+In the configuration sidebar, you can **selectively enable or disable** platforms:
+
+- **GA4** - Google Analytics 4 audit
+- **GTM** - Google Tag Manager audit
+- **Looker Studio** - Looker Studio reports
+- **Search Console** - Search Console data
+- **YouTube** - YouTube channel audit
+- **Google Business Profile** - Location management
+- **Google Ads** - Ads campaigns and conversions
+- **Merchant Center** - Product feeds
+- **BigQuery** - Datasets and tables
+- **AdSense** - Monetization audit
+
+**Use cases:**
+- Run audits for only specific platforms
+- Reduce execution time by disabling unused platforms
+- Save on API quota usage by limiting platform syncs
+
+### Google Ads Developer Token (v3.0+)
+
+Google Ads requires a **Developer Token** for API access:
+
+1. **Get your Developer Token:**
+   - Go to [ads.google.com](https://ads.google.com)
+   - Click on **Tools & Settings** (gear icon)
+   - Select **API Center** → **Access level**
+   - Copy your **Developer Token** (40-character alphanumeric string)
+
+2. **Configure in Addocu:**
+   - Go to **Extensions > Addocu > Configure**
+   - Paste your Developer Token in the **"Google Ads Developer Token"** field
+   - Click **Save**
+
+3. **Test Connection:**
+   - Click **"Test All Connections"**
+   - Google Ads should show **Connected** status
+
+**Note:** The Developer Token is stored securely in your user properties and never transmitted externally.
+
+### Advanced Filters (Optional)
+
+Customize your audits with optional filters:
+
+- **GA4 Properties Filter** - Audit specific properties (comma-separated IDs)
+- **GTM Workspaces Filter** - Audit specific workspaces
+- **BigQuery Project ID** - Specify which BigQuery project to audit
+
+## 🔄 Multi-User Setup
 
 ### Personal vs Organization Use
 
 #### Personal Use
-- **Use your personal Google account** API key
-- **Access only your own** GA4, GTM, and Looker Studio resources
+- **Single Google account** with OAuth2 authentication
+- **Access only your own** GA4, GTM, and other resources
 - **Configuration stored** in your personal Google Apps Script properties
 
 #### Organization Use
-- **Each user needs their own** API key (Google security requirement)
-- **Shared resources** will be visible to all users with access
+- **Each user authenticates** with their own account
+- **Shared spreadsheets** can be used by multiple team members
+- **Each user sees** only the data they have access to
 - **No central configuration** - each user configures independently
 
-### Switching Between Accounts
+### Sharing Audit Results
 
-#### Method 1: Multiple API Keys
-1. **Create separate Google Cloud projects** for different accounts
-2. **Generate API keys** for each project
-3. **Switch in Addocu** by updating the API key in configuration
-
-#### Method 2: Shared Project
-1. **Use one Google Cloud project** with broad permissions
-2. **Share project access** with team members
-3. **Same API key** can be used by multiple team members
+Since all data is stored in Google Sheets:
+1. Create an audit in your personal sheet
+2. **Share the sheet** with team members
+3. They can **view all audit results** (but cannot re-run audits with their own access)
+4. Each team member can **run their own audit** in their personal sheet to see data they have access to
 
 ## 📊 Testing Your Configuration
 

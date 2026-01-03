@@ -1,6 +1,39 @@
 /**
- * @fileoverview Looker Studio Module v3.0 - Hybrid Authentication
- * Uses OAuth2 for permissions + User API Key for access (consistent with Addocu model)
+ * @fileoverview Looker Studio Module v3.0 - OAuth2 Implementation
+ *
+ * LOOKER STUDIO API IMPLEMENTATION NOTES:
+ * ======================================
+ *
+ * API Status: Limited OAuth2 API (Stable)
+ * Current Approach: Uses official Looker Studio API v1 with OAuth2
+ * Endpoint: https://datastudio.googleapis.com/v1/assets:search
+ *
+ * Why This Approach Works:
+ * - Looker Studio has very limited programmatic APIs
+ * - The assets:search endpoint is the only way to list reports via API
+ * - No Content API or comprehensive management API exists
+ * - Reports must be discovered by searching assets with assetTypes=REPORT filter
+ *
+ * Current Implementation Strengths:
+ * - Uses official Google API (not workarounds)
+ * - OAuth2 authentication (standard for Addocu)
+ * - Pagination support (handles many reports)
+ * - Error handling with detailed logging
+ * - Rate limiting with Utilities.sleep(500) between pages
+ *
+ * Limitations of Looker Studio API:
+ * - No write operations (read-only)
+ * - No ability to modify reports, data sources, or connections
+ * - Limited metadata returned (no data source details, chart info, etc.)
+ * - Reports older than creation time not discoverable
+ * - Cannot list data sources independently
+ *
+ * Scope Required: https://www.googleapis.com/auth/datastudio
+ *
+ * Future Considerations:
+ * - If Google releases Data Studio Management API, can migrate to official APIs
+ * - Current implementation is stable and will continue to work
+ * - No planned deprecation announced
  */
 
 const LOOKER_STUDIO_HEADERS = [
@@ -15,17 +48,15 @@ function syncLookerStudioWithUI() {
   const result = syncLookerStudioCore();
   const ui = SpreadsheetApp.getUi();
   if (result.status === 'SUCCESS') {
-    ui.alert(
-      '📊 Looker Studio Synchronized',
-      `✅ ${result.records} reports synchronized successfully.\n\nTime: ${Math.round(result.duration / 1000)}s`,
-      ui.ButtonSet.OK
-    );
+    const body = `Reports: ${result.records}\n\n` +
+      `Total: ${result.records} elements | Time: ${Math.round(result.duration / 1000)}s\n\n` +
+      `Data written to LOOKER_STUDIO.`;
+    ui.alert('Looker Studio Synchronized', body, ui.ButtonSet.OK);
   } else {
-    ui.alert(
-      '❌ Looker Studio Error',
-      `Synchronization failed: ${result.error}\n\nCheck the LOGS sheet for more details.`,
-      ui.ButtonSet.OK
-    );
+    const body = `Synchronization failed: ${result.error}\n\n` +
+      `Action: Verify that you have authorized the script with OAuth2 and have access to Looker Studio reports.\n\n` +
+      `Details: Check LOGS sheet for more information.`;
+    ui.alert('Looker Studio Error', body, ui.ButtonSet.OK);
   }
 }
 

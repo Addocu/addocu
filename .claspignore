@@ -13,5 +13,6 @@ node_modules/
 tests/
 .clasp.json
 .claspignore
+.mcp.json
 logs/
 .vscode/

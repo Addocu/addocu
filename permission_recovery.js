@@ -1,7 +1,7 @@
 /**
  * @fileoverview Permission Recovery Enhanced Functions - Addocu v3.0
  * @version 3.1 - Enhanced permission functions WITHOUT duplicates
- * 
+ *
  * IMPORTANT: onFileScopeGranted is handled by auth_recovery.js
  * This file contains only ENHANCED permission recovery functions
  */
@@ -21,7 +21,7 @@ function testBasicPermissionsEnhanced() {
     permissions: {},
     errors: []
   };
-  
+
   // Test 1: Spreadsheet access
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -31,7 +31,7 @@ function testBasicPermissionsEnhanced() {
     results.errors.push(`Spreadsheet: ${error.message}`);
     results.success = false;
   }
-  
+
   // Test 2: UserProperties
   try {
     const userProps = PropertiesService.getUserProperties();
@@ -43,7 +43,7 @@ function testBasicPermissionsEnhanced() {
     results.errors.push(`UserProperties: ${error.message}`);
     results.success = false;
   }
-  
+
   // Test 3: OAuth Token
   try {
     const token = ScriptApp.getOAuthToken();
@@ -53,7 +53,7 @@ function testBasicPermissionsEnhanced() {
     results.errors.push(`OAuth: ${error.message}`);
     results.success = false;
   }
-  
+
   // Test 4: UI Access
   try {
     const ui = SpreadsheetApp.getUi();
@@ -63,7 +63,7 @@ function testBasicPermissionsEnhanced() {
     results.errors.push(`UI: ${error.message}`);
     results.success = false;
   }
-  
+
   return results;
 }
 
@@ -74,32 +74,32 @@ function testBasicPermissionsEnhanced() {
 function initializeUserConfigurationSafe() {
   try {
     const userProperties = PropertiesService.getUserProperties();
-    
+
     // Check if configuration already exists
     const existingConfig = userProperties.getProperty('ADDOCU_INITIALIZED');
-    
+
     if (!existingConfig) {
       // Default initial configuration
       const defaultConfig = {
         'ADDOCU_INITIALIZED': 'true',
         'ADDOCU_FIRST_TIME': 'true',
         'ADDOCU_SYNC_GA4': 'true',
-        'ADDOCU_SYNC_GTM': 'true', 
+        'ADDOCU_SYNC_GTM': 'true',
         'ADDOCU_SYNC_LOOKER': 'true',
         'ADDOCU_LOG_LEVEL': 'INFO',
         'ADDOCU_LOG_RETENTION': '30',
         'ADDOCU_REQUEST_TIMEOUT': '60',
         'ADDOCU_SYNC_FREQUENCY': 'manual'
       };
-      
+
       // Apply default configuration
       userProperties.setProperties(defaultConfig);
-      
+
       logEvent('INIT', 'Initial user configuration created');
     } else {
       logEvent('INIT', 'User configuration already exists');
     }
-    
+
   } catch (error) {
     logError('INIT', `Error initializing user configuration: ${error.message}`);
     // No rethrow - user can use Add-on without persistent configuration
@@ -120,7 +120,7 @@ function getUserConfigSafe() {
     return readUserConfiguration();
   } catch (error) {
     logError('CONFIG_SAFE', `Error reading normal configuration: ${error.message}`);
-    
+
     // Fallback: return default configuration
     return getDefaultUserConfig(error.message);
   }
@@ -149,28 +149,28 @@ function getDefaultUserConfig(errorMessage = null) {
     // API Configuration
     lookerApiKey: '',
     gtmFilter: '',
-    
+
     // Advanced Filters
     ga4Properties: '',
     gtmWorkspaces: '',
-    
+
     // Service Configuration
     syncFrequency: 'manual',
     requestTimeout: 60,
-    
+
     // Services Status - All enabled by default
     syncLooker: true,
     syncGA4: true,
     syncGTM: true,
-    
+
     // OAuth2 Information
     oauth2Ready: true,
     userEmail: getUserEmailSafe(),
-    
+
     // Status
     isFirstTime: true,
     isPro: true,
-    
+
     // Error status
     permissionsError: !!errorMessage,
     permissionsErrorMessage: errorMessage,
@@ -189,29 +189,29 @@ function getDefaultUserConfig(errorMessage = null) {
 function attemptPermissionRecoveryEnhanced() {
   try {
     logEvent('RECOVERY', 'Attempting automatic permission recovery...');
-    
+
     // Step 1: Force initialization
     initializeUserConfigurationSafe();
-    
+
     // Step 2: Test basic permissions
     const permissionTest = testBasicPermissionsEnhanced();
-    
+
     if (permissionTest.success) {
       logEvent('RECOVERY', 'Permission recovery successful');
       return { success: true, message: 'Permissions recovered correctly' };
     } else {
       logWarning('RECOVERY', `Partial recovery: ${permissionTest.errors.join(', ')}`);
-      return { 
-        success: false, 
+      return {
+        success: false,
         message: 'Partial recovery - manual reauthorization required',
         errors: permissionTest.errors
       };
     }
-    
+
   } catch (error) {
     logError('RECOVERY', `Error in permission recovery: ${error.message}`);
-    return { 
-      success: false, 
+    return {
+      success: false,
       message: `Recovery error: ${error.message}`,
       requiresManualAuth: true
     };
@@ -230,7 +230,7 @@ function diagnoseConnectionsEnhanced() {
   try {
     // First verify basic permissions
     const permissionTest = testBasicPermissionsEnhanced();
-    
+
     if (!permissionTest.success) {
       // If there are permission problems, return specific information
       return [
@@ -240,13 +240,13 @@ function diagnoseConnectionsEnhanced() {
         ['Looker Studio API', 'Pending Authorization', 'PENDING', 'OAuth2 pending']
       ];
     }
-    
+
     // If permissions work, do normal diagnostics
     return diagnoseConnectionsComplete();
-    
+
   } catch (error) {
     logError('DIAGNOSTIC_ENHANCED', `Error in enhanced diagnostics: ${error.message}`);
-    
+
     return [
       ['Addocu System', 'Critical Error', 'ERROR', `System error: ${error.message}`],
       ['Recommended Solution', 'Reauthorization', 'ACTION', 'Extensions > Addocu > 🔄 Reauthorize Permissions']
@@ -266,50 +266,50 @@ function diagnoseConnectionsEnhanced() {
 function saveUserConfigurationEnhanced(config) {
   try {
     const userProperties = PropertiesService.getUserProperties();
-    
+
     // Map properties with validation
     const propertiesToSet = {};
-    
+
     if (config.lookerApiKey !== undefined) {
       if (config.lookerApiKey.trim()) {
         propertiesToSet.ADDOCU_LOOKER_API_KEY = config.lookerApiKey.trim();
       }
     }
-    
+
     if (config.gtmFilter !== undefined) {
       propertiesToSet.ADDOCU_GTM_FILTER = config.gtmFilter;
     }
-    
+
     if (config.ga4Properties !== undefined) {
       if (config.ga4Properties.trim()) {
         propertiesToSet.ADDOCU_GA4_PROPERTIES_FILTER = config.ga4Properties.trim();
       }
     }
-    
+
     if (config.gtmWorkspaces !== undefined) {
       if (config.gtmWorkspaces.trim()) {
         propertiesToSet.ADDOCU_GTM_WORKSPACES_FILTER = config.gtmWorkspaces.trim();
       }
     }
-    
+
     // Mark as configured
     propertiesToSet.ADDOCU_FIRST_TIME = 'false';
     propertiesToSet.ADDOCU_LAST_CONFIG_UPDATE = Date.now().toString();
-    
+
     // Apply all properties at once
     if (Object.keys(propertiesToSet).length > 0) {
       userProperties.setProperties(propertiesToSet);
     }
-    
+
     logEvent('CONFIG_SAVE', `Configuration saved: ${Object.keys(config).join(', ')}`);
-    
+
     return { success: true };
-    
+
   } catch (error) {
     logError('CONFIG_SAVE', `Error saving configuration: ${error.message}`);
-    
-    return { 
-      success: false, 
+
+    return {
+      success: false,
       error: error.message,
       requiresPermissionRecovery: error.message.includes('PERMISSION_DENIED')
     };

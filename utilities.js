@@ -1,15 +1,79 @@
 /**
- * @fileoverview Central Utilities Module for Addocu v2.0
- * @version 3.0 - Adapted for complete open source model
+ * @fileoverview Central Utilities Module for Addocu v3.0
+ * @version 3.0 - Complete open source model
+ *
+ * BETA API MONITORING NOTES (January 2026):
+ * ==========================================
+ * Two Advanced Services are in BETA status. Monitor for stable v1 releases:
+ *
+ * 1. AnalyticsAdmin (v1beta)
+ *    - Status: BETA - Currently using v1beta
+ *    - Stability: High - stable despite beta label
+ *    - Migration path: v1beta → v1 (when released)
+ *    - Action: Monitor Google Developers blog for v1 stable release announcement
+ *    - Deadline: None - can be used as-is for now
+ *    - Files affected: ga4.js
+ *
+ * 2. AnalyticsData (v1beta)
+ *    - Status: BETA - Currently using v1beta
+ *    - Stability: High - stable despite beta label
+ *    - Migration path: v1beta → v1 (when released)
+ *    - Action: Monitor Google Developers blog for v1 stable release announcement
+ *    - Deadline: None - can be used as-is for now
+ *    - Files affected: ga4.js (if reporting features used)
+ *    - Note: Used for GA4 reporting, Addocu focuses on config audit
+ *
+ * All other APIs are stable:
+ * - TagManager v2: Stable, no deprecation announced
+ * - All REST APIs: Using stable versions (v1, v2, v3)
+ *
+ * STACKDRIVER EXCEPTION LOGGING MONITORING (January 2026):
+ * ========================================================
+ * appsscript.json: "exceptionLogging": "STACKDRIVER"
+ *
+ * Cost Impact Analysis:
+ * - StackDriver is Google Cloud Logging
+ * - Free tier: 50 GB/month ingestion
+ * - Addocu logging volume: Typically <1GB/month for normal usage
+ * - Cost per GB after free tier: ~$0.50/GB
+ * - Expected monthly cost: $0 (within free tier for most users)
+ *
+ * What Gets Logged:
+ * - Script execution errors and exceptions (automatic)
+ * - logEvent(), logError(), logWarning() from logging.js (manual)
+ * - API errors and failures
+ * - Authentication errors
+ *
+ * Log Retention:
+ * - Default GCP retention: 30 days
+ * - Logs older than 30 days are automatically deleted
+ * - Can be adjusted in GCP Console if needed
+ *
+ * Optimization Recommendations:
+ * - Current logging is appropriate for audit use case
+ * - Only log errors and significant events (already implemented)
+ * - Debug logging only in INFO level (can disable in config)
+ * - Monitor LOGS sheet in Google Sheets as primary location
+ *
+ * Monitoring:
+ * - Check GCP Console > Logging regularly for unusual patterns
+ * - Watch for errors that might indicate API issues
+ * - Review error patterns to improve script reliability
+ *
+ * When to Investigate:
+ * - If GCP Logging shows quota limits reached
+ * - If error rate suddenly increases
+ * - If authentication failures spike
+ * - If timeout or rate limiting errors appear
  */
 
 // =================================================================
-// ADDOCU V2.0 CENTRAL CONFIGURATION
+// ADDOCU V3.0 CENTRAL CONFIGURATION
 // =================================================================
 
 const ADDOCU_CONFIG = {
   services: {
-    available: ['ga4', 'gtm', 'looker', 'lookerStudio', 'searchConsole', 'youtube', 'googleBusinessProfile', 'googleAds', 'googleMerchantCenter', 'bigquery', 'adsense']
+    available: ['ga4', 'gtm', 'lookerStudio', 'searchConsole', 'youtube', 'googleBusinessProfile', 'googleAds', 'googleMerchantCenter', 'bigQuery', 'adSense']
   },
   apis: {
     ga4: {
@@ -21,11 +85,6 @@ const ADDOCU_CONFIG = {
       name: 'Google Tag Manager API',
       baseUrl: 'https://tagmanager.googleapis.com/tagmanager/v2',
       testEndpoint: '/accounts'
-    },
-    looker: {
-      name: 'Looker Studio API',
-      baseUrl: 'https://datastudio.googleapis.com/v1',
-      testEndpoint: '/assets:search?assetTypes=REPORT&pageSize=1'
     },
     lookerStudio: {
       name: 'Looker Studio API',
@@ -49,20 +108,20 @@ const ADDOCU_CONFIG = {
     },
     googleAds: {
       name: 'Google Ads API',
-      baseUrl: 'https://googleads.googleapis.com/v18/customers:listAccessibleCustomers',
-      testEndpoint: ''
+      baseUrl: 'https://googleads.googleapis.com/v20/customers:listAccessibleCustomers',
+      testEndpoint: '/customers:listAccessibleCustomers'
     },
     googleMerchantCenter: {
-      name: 'Google Merchant API',
+      name: 'Google Merchant Center API',
       baseUrl: 'https://merchantapi.googleapis.com/accounts/v1',
       testEndpoint: '/accounts'
     },
-    bigquery: {
+    bigQuery: {
       name: 'BigQuery API',
       baseUrl: 'https://bigquery.googleapis.com/bigquery/v2',
       testEndpoint: '/projects'
     },
-    adsense: {
+    adSense: {
       name: 'AdSense Management API',
       baseUrl: 'https://adsense.googleapis.com/v2',
       testEndpoint: '/accounts'
@@ -89,7 +148,7 @@ function getAPIKey() {
   const apiKey = userProperties.getProperty('ADDOCU_LOOKER_API_KEY');
 
   if (!apiKey) {
-    throw new Error('Looker Studio API Key not configured. Set it up in "⚙️ Configure Addocu".');
+    throw new Error('Looker Studio API Key not configured. Set it up in Configure Addocu.');
   }
 
   // Basic format validation
@@ -139,7 +198,7 @@ function getAuthConfig(serviceName) {
     if (serviceName === 'ga4' || serviceName === 'gtm' || serviceName === 'searchConsole' ||
       serviceName === 'youtube' || serviceName === 'googleBusinessProfile' ||
       serviceName === 'googleAds' || serviceName === 'googleMerchantCenter' ||
-      serviceName === 'bigquery' || serviceName === 'adsense') {
+      serviceName === 'bigQuery' || serviceName === 'adSense') {
       const oauthToken = ScriptApp.getOAuthToken();
       if (!oauthToken) {
         throw new Error(`OAuth2 token required for ${serviceName}. Authorize the script first.`);
@@ -192,6 +251,85 @@ function getAuthConfig(serviceName) {
 }
 
 /**
+ * Handles OAuth authentication errors gracefully with user-friendly messaging.
+ * Detects missing scopes and provides actionable error messages.
+ * @param {string} serviceName - The service name attempting to authenticate.
+ * @param {Error} error - The error object from authentication attempt.
+ * @returns {Object} Graceful error response with status and message.
+ */
+function handleAuthError(serviceName, error) {
+  const errorMsg = error.message || error.toString();
+
+  // Detect specific auth error patterns
+  const isMissingToken = errorMsg.includes('OAuth2 token') || errorMsg.includes('getOAuthToken');
+  const isMissingDevToken = serviceName === 'googleAds' && errorMsg.includes('Developer Token');
+  const isMissingConfig = errorMsg.includes('missing') || errorMsg.includes('not configured');
+  const isPermissionDenied = errorMsg.includes('PERMISSION_DENIED') || errorMsg.includes('403');
+  const isScopeIssue = errorMsg.includes('insufficient') || errorMsg.includes('scope');
+
+  let userMessage = '';
+  let actionItems = [];
+
+  if (isMissingToken) {
+    userMessage = `${serviceName} authentication requires authorization.`;
+    actionItems = [
+      'Go to Extensions > Addocu > Reauthorize Permissions',
+      'Grant all requested scopes when prompted',
+      'Try the sync again'
+    ];
+  } else if (isMissingDevToken) {
+    userMessage = 'Google Ads Developer Token is not configured.';
+    actionItems = [
+      'Open Extensions > Addocu > Configuration',
+      'Enter your Google Ads Developer Token',
+      'Save the configuration',
+      'Try the sync again'
+    ];
+  } else if (isMissingConfig) {
+    userMessage = `${serviceName} requires additional configuration.`;
+    actionItems = [
+      'Check Extensions > Addocu > Configuration',
+      'Ensure all required fields are filled',
+      'Try the sync again'
+    ];
+  } else if (isPermissionDenied) {
+    userMessage = `You don't have access to ${serviceName} or insufficient permissions.`;
+    actionItems = [
+      'Verify you have access to this service in your Google account',
+      'Ensure your account has the necessary roles/permissions',
+      'Try reauthorizing: Extensions > Addocu > Reauthorize Permissions'
+    ];
+  } else if (isScopeIssue) {
+    userMessage = `${serviceName} requires additional OAuth scopes.`;
+    actionItems = [
+      'Reauthorize the script: Extensions > Addocu > Reauthorize Permissions',
+      'Grant all requested scopes',
+      'Try the sync again'
+    ];
+  } else {
+    userMessage = `${serviceName} synchronization encountered an error.`;
+    actionItems = [
+      `Error details: ${errorMsg.substring(0, 100)}`,
+      'Check the LOGS sheet for more information',
+      'Try Extensions > Addocu > Troubleshooting > Simplified Diagnostics'
+    ];
+  }
+
+  logError('AUTH_HANDLER', `${serviceName} auth error: ${errorMsg}`);
+
+  return {
+    status: 'AUTH_FAILED',
+    serviceName: serviceName,
+    success: false,
+    records: 0,
+    userMessage: userMessage,
+    actionItems: actionItems,
+    error: errorMsg,
+    canRetry: true
+  };
+}
+
+/**
  * Checks if a service is available for the user.
  * @param {string} serviceName - Service name.
  * @returns {boolean} True if the service is available.
@@ -225,7 +363,7 @@ function getTargetContainersFromConfig() {
     return containers;
   } catch (e) {
     if (e.message.includes('PERMISSION_DENIED')) {
-      console.warn('🔧 UTILS: UserProperties not accessible for GTM filters, using default configuration');
+      console.warn('UTILS: UserProperties not accessible for GTM filters, using default configuration');
       logEvent('GTM', 'UserProperties not accessible. All accessible containers will be audited.');
       return []; // Empty array = all containers
     }
@@ -256,7 +394,7 @@ function getTargetWorkspacesFromConfig() {
     return workspaces;
   } catch (e) {
     if (e.message.includes('PERMISSION_DENIED')) {
-      console.warn('🔧 UTILS: UserProperties not accessible for GTM workspace filters, using default configuration');
+      console.warn('UTILS: UserProperties not accessible for GTM workspace filters, using default configuration');
       logEvent('GTM', 'UserProperties not accessible. Default workspace will be used.');
       return []; // Empty array = default workspace
     }
@@ -287,7 +425,7 @@ function getTargetGA4PropertiesFromConfig() {
     return properties;
   } catch (e) {
     if (e.message.includes('PERMISSION_DENIED')) {
-      console.warn('🔧 UTILS: UserProperties not accessible for GA4 filters, using default configuration');
+      console.warn('UTILS: UserProperties not accessible for GA4 filters, using default configuration');
       logEvent('GA4', 'UserProperties not accessible. All accessible properties will be audited.');
       return []; // Empty array = all properties
     }
@@ -610,7 +748,7 @@ function writeToSheet(sheetName, headers, data, clearFirst = true, options = {})
     // Sheet metadata
     if (options.addMetadata !== false) {
       addSheetMetadata(sheet, {
-        generatedBy: 'Addocu v2.0',
+        generatedBy: 'Addocu v3.0',
         timestamp: new Date().toISOString(),
         recordCount: data ? data.length : 0,
         userEmail: Session.getActiveUser().getEmail()
@@ -629,7 +767,7 @@ function writeToSheet(sheetName, headers, data, clearFirst = true, options = {})
  * High-level utility to write structured data to a sheet.
  * Handles both Array of Objects and Array of Arrays.
  * If data is empty, it writes a "No account found" message.
- * 
+ *
  * @param {string} sheetName - Target sheet name
  * @param {Array} headers - Column headers
  * @param {Array} data - The data (Array of Objects or Arrays)
@@ -646,7 +784,7 @@ function writeDataToSheet(sheetName, headers, data, platformName = 'this platfor
     try {
       const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
       if (sheet) {
-        const message = `❌ Error: ${errorMsg}`;
+        const message = `Error: ${errorMsg}`;
         sheet.getRange(2, 1).setValue(message);
         sheet.getRange(2, 1, 1, Math.max(1, headers.length)).merge()
           .setFontWeight('bold')
@@ -655,7 +793,7 @@ function writeDataToSheet(sheetName, headers, data, platformName = 'this platfor
 
         // Add a secondary help message if it looks like a permission issue
         if (errorMsg.includes('403') || errorMsg.includes('permissions') || errorMsg.includes('authorized')) {
-          sheet.getRange(3, 1).setValue('💡 Tip: Verify that the required API is enabled in Google Cloud Console and you have authorized the add-on.');
+          sheet.getRange(3, 1).setValue('Tip: Verify that the required API is enabled in Google Cloud Console and you have authorized the add-on.');
           sheet.getRange(3, 1, 1, Math.max(1, headers.length)).merge().setFontStyle('italic').setFontColor('#666666');
         }
       }
@@ -874,9 +1012,9 @@ function validateService(serviceName) {
         account = 'OAuth2 authorized';
       } else if (serviceName === 'googleMerchantCenter') {
         account = 'OAuth2 connected';
-      } else if (serviceName === 'bigquery') {
+      } else if (serviceName === 'bigQuery') {
         account = 'OAuth2 authorized';
-      } else if (serviceName === 'adsense') {
+      } else if (serviceName === 'adSense') {
         account = 'OAuth2 connected';
       }
 

@@ -37,20 +37,15 @@ function syncGA4WithUI() {
   const ui = SpreadsheetApp.getUi();
   if (result.status === 'SUCCESS') {
     const details = result.details;
-    const message = `✅ GA4 Synchronized Successfully\n\n` +
-      `🏠 Properties: ${details.properties}\n` +
-      `📏 Dimensions: ${details.dimensions}\n` +
-      `📊 Metrics: ${details.metrics}\n` +
-      `📄 Data Streams: ${details.streams}\n\n` +
-      `Total: ${result.records} elements\n` +
-      `Time: ${Math.round(result.duration / 1000)}s`;
-    ui.alert('📈 GA4 Completed', message, ui.ButtonSet.OK);
+    const body = `Properties: ${details.properties} | Dimensions: ${details.dimensions} | Metrics: ${details.metrics} | Streams: ${details.streams}\n\n` +
+      `Total: ${result.records} elements | Time: ${Math.round(result.duration / 1000)}s\n\n` +
+      `Data written to GA4_PROPERTIES, GA4_CUSTOM_DIMENSIONS, GA4_CUSTOM_METRICS, GA4_DATA_STREAMS.`;
+    ui.alert('GA4 Synchronized', body, ui.ButtonSet.OK);
   } else {
-    ui.alert(
-      '❌ GA4 Error',
-      `Synchronization failed: ${result.error}\n\nCheck the LOGS sheet for more details.`,
-      ui.ButtonSet.OK
-    );
+    const body = `Synchronization failed: ${result.error}\n\n` +
+      `Action: Verify that the "Google Analytics Admin API" is enabled in Google Cloud Console and that you have authorized the script.\n\n` +
+      `Details: Check LOGS sheet for more information.`;
+    ui.alert('GA4 Error', body, ui.ButtonSet.OK);
   }
 }
 
@@ -103,8 +98,21 @@ function syncGA4Core() {
   } catch (error) {
     const duration = Date.now() - startTime;
     logSyncEnd('GA4_Complete', 0, duration, 'ERROR');
-    logError('GA4', `Complete synchronization failed: ${error.message}`);
 
+    // Use granular error handler for better user messaging
+    const authError = handleAuthError('GA4', error);
+    if (authError.status === 'AUTH_FAILED') {
+      logError('GA4', `Authentication error: ${authError.userMessage}`);
+      return {
+        records: 0,
+        status: 'AUTH_FAILED',
+        duration: duration,
+        error: authError.userMessage,
+        actionItems: authError.actionItems
+      };
+    }
+
+    logError('GA4', `Complete synchronization failed: ${error.message}`);
     let errMsg = error.message;
     if (errMsg.includes('403') || errMsg.includes('401')) {
       errMsg += ' | SOLUTION: Verify that the "Google Analytics Admin API" is enabled in Google Cloud Console and that the script has OAuth2 permissions.';

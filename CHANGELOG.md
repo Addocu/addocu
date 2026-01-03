@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-01-03
+
+### Added
+- **🎨 Sheet Tab Coloring**: Automatic color-coding of sheets by platform for visual organization (10 distinct platform colors)
+- **📊 Historical Tracking System**: New HISTORY and ACTIVITY_HISTORY sheets for trend analysis and audit snapshots (60-day retention)
+- **✨ Always-On Sheet Creation**: Sheets are created even when APIs fail or return no data, with clear error/empty state indicators
+- **🎯 Enhanced Error Localization**: Actionable, user-friendly recovery guidance built into error messages
+- **🎉 Success Modal**: Animated completion modal showing total assets, execution time, and quick dashboard access
+- **🔧 Simplified Diagnostics**: Streamlined connectivity and troubleshooting tools with clearer output
+- **✅ Account Verification Tools**: Enhanced same-account detection with step-by-step guidance
+- **🚀 Service Toggles**: Enable/disable individual platforms in configuration sidebar for selective audits
+
+### Changed
+- **🔐 OAuth2 Migration Complete**: All services now use OAuth2 exclusively (API keys fully deprecated)
+- **📱 Configuration Sidebar Modernized**: Redesigned UI with setup progress indicators and platform status display
+- **🎨 Dashboard Enhanced**: Complete redesign supporting all 10 platforms with historical charts (timeline, heatmap, distribution)
+- **🔧 Error Handling System**: New recovery modules (auth_recovery.js, permission_recovery.js, account_verification.js, diagnostics.js)
+- **📈 Reporting Layer**: Dashboard now displays historical KPI trends and asset distribution across all 10 platforms
+
+### Fixed
+- **🐛 OAuth2 Token Validation**: Improved token refresh and expiration handling
+- **🔒 Permission Recovery**: Automatic detection and recovery from PERMISSION_DENIED errors
+- **📊 Dashboard Data**: Fixed inflated metrics showing placeholder values (now shows real data only)
+- **🌙 Dark Mode**: Eliminated header artifacts and improved visual consistency
+- **🎯 Sheet Creation**: Fixed GTM container counting to only count containers with actual tags
+
+### Security
+- **🔒 Enhanced Permission Validation**: Better OAuth2 token verification and scoping
+- **🛡️ Isolated User Data**: Complete data isolation using UserProperties per user
+- **🔍 Permission Diagnostics**: Safe diagnostic tools that don't expose sensitive data
+
+### Breaking Changes
+- **🔑 API Key Support Removed**: All services now require OAuth2 authentication only
+- **📂 Configuration Migration**: Users upgrading from v2.x must re-authorize with OAuth2
+- **🌍 OAuth Scope Requirements**: 7 new scopes required for new platform integrations
+
 ## [2.3.0] - 2026-01-02
 
 ### Added

@@ -4,8 +4,8 @@
 
 **Project Status:** 🟢 **Actively Maintained**
 
-- **Latest Version:** v2.1.0
-- **Last Updated:** December 2024
+- **Latest Version:** v3.0.0
+- **Last Updated:** January 3, 2026
 - **Maintenance Status:** Active development and support
 - **Response Time:** Issues typically responded to within 48 hours
 

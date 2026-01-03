@@ -40,17 +40,25 @@ This is the cause of 95% of all Addocu permission errors. If you skip this step,
 
 ---
 
-## ⚙️ Step 3: First Configuration
+## ⚙️ Step 3: First Configuration (OAuth2 Automatic)
 
 ### Open Configuration
 1. **Open any Google Sheet** (new or existing)
 2. Go to **Extensions > Addocu > ⚙️ Configure**
-3. A sidebar will appear on the right
+3. A configuration sidebar will appear on the right
+
+### OAuth2 Setup
+- **No API key needed!** All services use automatic OAuth2 authentication
+- The sidebar shows **4 setup progress steps**:
+  1. OAuth2 Authorization
+  2. Service Selection
+  3. Advanced Filters (optional)
+  4. Ready to Audit
 
 ### Test Connection
 1. Click **"Test All Connections"** button
 2. **If you see errors:** Your accounts are likely different (go back to Step 1)
-3. **If you see success:** You're ready to audit!
+3. **If all services show "Connected":** You're ready to audit!
 
 ---
 

@@ -14,28 +14,28 @@ function showAccountVerification() {
   try {
     const ui = SpreadsheetApp.getUi();
 
-    const message = '🔍 ACCOUNT VERIFICATION GUIDE\n\n' +
+    const message = 'ACCOUNT VERIFICATION GUIDE\n\n' +
       '95% of Addocu problems are caused by using different Google accounts\n' +
       'in Chrome vs Google Sheets.\n\n' +
-      '🚩 MANUAL VERIFICATION REQUIRED:\n\n' +
-      '1. 👤 Check CHROME profile (top-right corner)\n' +
+      'MANUAL VERIFICATION REQUIRED:\n\n' +
+      '1. Check CHROME profile (top-right corner)\n' +
       '   • Which Google account are you signed in with?\n\n' +
-      '2. 📊 Check GOOGLE SHEETS account (top-right corner)\n' +
+      '2. Check GOOGLE SHEETS account (top-right corner)\n' +
       '   • Which Google account is shown?\n\n' +
-      '3. 🔍 COMPARE the two accounts:\n' +
+      '3. COMPARE the two accounts:\n' +
       '   • Are they THE SAME account?\n' +
       '   • Same email address?\n\n' +
-      '❌ IF THEY\'RE DIFFERENT:\n' +
+      'IF THEY\'RE DIFFERENT:\n' +
       '• Sign out of ALL Google accounts in Chrome\n' +
       '• Sign in with only ONE account\n' +
       '• Open Google Sheets with that same account\n' +
       '• Try Addocu again\n\n' +
-      '✅ IF THEY\'RE THE SAME:\n' +
+      'IF THEY\'RE THE SAME:\n' +
       '• The problem is NOT account mismatch\n' +
-      '• Try: Extensions > Addocu > 🔄 Reauthorize Permissions\n\n' +
-      '💡 This is the #1 cause of authorization problems!';
+      '• Try: Extensions > Addocu > Reauthorize Permissions\n\n' +
+      'This is the #1 cause of authorization problems!';
 
-    ui.alert('🔍 Manual Account Verification', message, ui.ButtonSet.OK);
+    ui.alert('Manual Account Verification', message, ui.ButtonSet.OK);
 
     logEvent('ACCOUNT_VERIFICATION', 'Account verification guide shown to user');
 
@@ -65,7 +65,7 @@ function showSimplifiedDiagnostics() {
     const results = simplifiedConnectionDiagnostics();
 
     // Format results for display
-    let message = '🔍 SIMPLIFIED DIAGNOSTICS\n\n';
+    let message = 'SIMPLIFIED DIAGNOSTICS\n\n';
 
     results.forEach(result => {
       const serviceName = result[0];
@@ -73,13 +73,13 @@ function showSimplifiedDiagnostics() {
       const status = result[2];
       const details = result[3];
 
-      let indicator = '❓';
+      let indicator = '[?]';
       if (status === 'OK' || status === 'SUCCESS') {
-        indicator = '✅';
+        indicator = '[OK]';
       } else if (status === 'ERROR' || status === 'PERMISSION_ERROR') {
-        indicator = '❌';
+        indicator = '[FAIL]';
       } else if (status === 'PENDING') {
-        indicator = '⏳';
+        indicator = '[PENDING]';
       }
 
       message += `${indicator} ${serviceName}\n`;
@@ -97,19 +97,19 @@ function showSimplifiedDiagnostics() {
     const hasPending = results.some(r => r[2] === 'PENDING');
 
     if (hasErrors) {
-      message += '🚨 ISSUES DETECTED:\n';
-      message += 'Try: Extensions > Addocu > 🔄 Reauthorize Permissions\n';
+      message += 'ISSUES DETECTED:\n';
+      message += 'Try: Extensions > Addocu > Reauthorize Permissions\n';
       message += 'If problems persist: Manual account verification\n';
     } else if (hasPending) {
-      message += '🔄 ACTION NEEDED:\n';
-      message += 'Execute "📊 Audit GA4" to complete authorization\n';
+      message += 'ACTION NEEDED:\n';
+      message += 'Execute "Audit GA4" to complete authorization\n';
     } else {
-      message += '✅ ALL SYSTEMS WORKING:\n';
+      message += 'ALL SYSTEMS WORKING:\n';
       message += 'Addocu is ready to use!\n';
     }
 
     const ui = SpreadsheetApp.getUi();
-    ui.alert('🔍 Simplified Diagnostics', message, ui.ButtonSet.OK);
+    ui.alert('Simplified Diagnostics', message, ui.ButtonSet.OK);
 
     logEvent('DIAGNOSTIC_MENU', 'Simplified diagnostics completed and shown');
 

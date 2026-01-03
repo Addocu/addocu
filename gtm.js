@@ -34,20 +34,15 @@ function syncGTMWithUI() {
 
   if (result.status === 'SUCCESS') {
     const details = result.details;
-    const message = `✅ GTM Synchronized\n\n` +
-      `📦 Containers found: ${details.containersFound}\n` +
-      `🎯 Containers processed: ${details.containersProcessed}\n\n` +
-      `🏷️ Tags: ${details.tags}\n` +
-      `🔧 Variables: ${details.variables}\n` +
-      `⚡ Triggers: ${details.triggers}\n\n` +
-      `Total: ${result.records} elements\n` +
-      `Time: ${Math.round(result.duration / 1000)}s`;
-    ui.alert('🎯 GTM Completed', message, ui.ButtonSet.OK);
+    const body = `Containers: ${details.containersProcessed} (${details.containersFound} found) | Tags: ${details.tags} | Variables: ${details.variables} | Triggers: ${details.triggers}\n\n` +
+      `Total: ${result.records} elements | Time: ${Math.round(result.duration / 1000)}s\n\n` +
+      `Data written to GTM_TAGS, GTM_VARIABLES, GTM_TRIGGERS.`;
+    ui.alert('GTM Synchronized', body, ui.ButtonSet.OK);
   } else {
-    ui.alert('❌ GTM Error',
-      `Synchronization failed: ${result.error}\n\nCheck the LOGS sheet for more details.`,
-      ui.ButtonSet.OK
-    );
+    const body = `Synchronization failed: ${result.error}\n\n` +
+      `Action: Verify that you have access to GTM containers and that the script has OAuth2 permissions to the Tag Manager API.\n\n` +
+      `Details: Check LOGS sheet for more information.`;
+    ui.alert('GTM Error', body, ui.ButtonSet.OK);
   }
 }
 

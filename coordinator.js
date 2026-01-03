@@ -27,33 +27,33 @@ function onOpen(e) {
   try {
     SpreadsheetApp.getUi()
       .createAddonMenu()
-      .addItem('⚙️ Configure Addocu', 'openConfigurationSidebar')
+      .addItem('Configure Addocu', 'openConfigurationSidebar')
       .addSeparator()
-      .addItem('🚀 Audit Complete Stack', 'startCompleteAudit')
+      .addItem('Audit Complete Stack', 'startCompleteAudit')
       .addSeparator()
-      .addItem('📊 Audit GA4', 'syncGA4WithUI')
-      .addItem('🏷️ Audit GTM', 'syncGTMWithUI')
-      .addItem('📈 Audit Looker Studio', 'syncLookerStudioWithUI')
-      .addItem('🔍 Audit Search Console', 'syncSearchConsoleWithUI')
-      .addItem('🎥 Audit YouTube', 'syncYouTubeWithUI')
-      .addItem('🏪 Audit Google Business Profile', 'syncGBPWithUI')
-      .addItem('💰 Audit Google Ads', 'syncGoogleAdsWithUI')
-      .addItem('🛍️ Audit Merchant Center', 'syncGMCWithUI')
-      .addItem('🗄️ Audit BigQuery', 'syncBigQueryWithUI')
-      .addItem('📰 Audit AdSense', 'syncAdSenseWithUI')
-      .addItem('📋 Interactive Dashboard', 'openHtmlDashboard')
-      .addSubMenu(SpreadsheetApp.getUi().createMenu('🔧 Tools')
-        .addItem('🔌 Test Connections', 'diagnoseConnections')
-        .addItem('🔒 Test OAuth2', 'testOAuth2')
-        .addItem('🔍 Analyze Changes', 'analyzeRecentChangesUI')
-        .addItem('🧹 Clean Logs', 'cleanupLogsUI')
-        .addItem('📋 Generate Dashboard', 'generateManualDashboard')
+      .addItem('Audit GA4', 'syncGA4WithUI')
+      .addItem('Audit GTM', 'syncGTMWithUI')
+      .addItem('Audit Looker Studio', 'syncLookerStudioWithUI')
+      .addItem('Audit Search Console', 'syncSearchConsoleWithUI')
+      .addItem('Audit YouTube', 'syncYouTubeWithUI')
+      .addItem('Audit Google Business Profile', 'syncGBPWithUI')
+      .addItem('Audit Google Ads', 'syncGoogleAdsWithUI')
+      .addItem('Audit Merchant Center', 'syncGMCWithUI')
+      .addItem('Audit BigQuery', 'syncBigQueryWithUI')
+      .addItem('Audit AdSense', 'syncAdSenseWithUI')
+      .addItem('Interactive Dashboard', 'openHtmlDashboard')
+      .addSubMenu(SpreadsheetApp.getUi().createMenu('Tools')
+        .addItem('Test Connections', 'diagnoseConnections')
+        .addItem('Test OAuth2', 'testOAuth2')
+        .addItem('Analyze Changes', 'analyzeRecentChangesUI')
+        .addItem('Clean Logs', 'cleanupLogsUI')
+        .addItem('Generate Dashboard', 'generateManualDashboard')
       )
-      .addSubMenu(SpreadsheetApp.getUi().createMenu('🆘 Troubleshooting')
-        .addItem('🔍 Verify Accounts (IMPORTANT)', 'showAccountVerification')
-        .addItem('🔄 Reauthorize Permissions', 'forcedPermissionReauthorization')
-        .addItem('🔒 Force All Permissions', 'forceAllPermissions')
-        .addItem('📋 Simplified Diagnostics', 'showSimplifiedDiagnostics')
+      .addSubMenu(SpreadsheetApp.getUi().createMenu('Troubleshooting')
+        .addItem('Verify Accounts (IMPORTANT)', 'showAccountVerification')
+        .addItem('Reauthorize Permissions', 'forcedPermissionReauthorization')
+        .addItem('Force All Permissions', 'forceAllPermissions')
+        .addItem('Simplified Diagnostics', 'showSimplifiedDiagnostics')
       )
       .addToUi();
   } catch (error) {
@@ -61,8 +61,8 @@ function onOpen(e) {
     try {
       SpreadsheetApp.getUi()
         .createAddonMenu()
-        .addItem('🔄 Reauthorize Addocu', 'forcedPermissionReauthorization')
-        .addItem('🔍 Diagnostics', 'showCompleteDiagnostics')
+        .addItem('Reauthorize Addocu', 'forcedPermissionReauthorization')
+        .addItem('Diagnostics', 'showCompleteDiagnostics')
         .addToUi();
     } catch (e) {
       // If even this fails, log to console
@@ -378,7 +378,7 @@ function testCompleteConnection() {
 
     return [
       ['Addocu System', 'Critical Error', 'ERROR', `System error: ${error.message}`],
-      ['Solution', 'Reauthorize Permissions', 'ACTION', 'Extensions > Addocu > 🔄 Reauthorize Permissions'],
+      ['Solution', 'Reauthorize Permissions', 'ACTION', 'Extensions > Addocu > Reauthorize Permissions'],
       ['Alternative', 'Manual Account Check', 'ACTION', 'Manually verify Chrome/Sheets use same account']
     ];
   }
@@ -411,7 +411,7 @@ function attemptPermissionRecovery() {
       success: false,
       message: `Error: ${error.message}`,
       requiresReauth: true,
-      recommendation: 'Try reauthorization first: Extensions > Addocu > 🔄 Reauthorize Permissions. If problems persist, manually verify account consistency.'
+      recommendation: 'Try reauthorization first: Extensions > Addocu > Reauthorize Permissions. If problems persist, manually verify account consistency.'
     };
   }
 }
@@ -722,7 +722,7 @@ function executeCompleteAudit(services) {
     }
 
     // Audit Looker Studio
-    if (services.includes('looker')) {
+    if (services.includes('lookerStudio') || services.includes('looker')) {
       try {
         logEvent('AUDIT', 'Starting Looker Studio audit');
         const lookerResult = syncLookerStudioCore();
@@ -735,7 +735,7 @@ function executeCompleteAudit(services) {
     }
 
     // Audit Search Console
-    if (services.includes('searchConsole')) {
+    if (services.includes('searchConsole') || services.includes('gsc')) {
       try {
         logEvent('AUDIT', 'Starting Search Console audit');
         const gscResult = syncSearchConsoleCore();
@@ -761,7 +761,7 @@ function executeCompleteAudit(services) {
     }
 
     // Audit GBP
-    if (services.includes('googleBusinessProfile')) {
+    if (services.includes('googleBusinessProfile') || services.includes('gbp')) {
       try {
         logEvent('AUDIT', 'Starting GBP audit');
         const gbpResult = syncGBPCore();
@@ -774,7 +774,7 @@ function executeCompleteAudit(services) {
     }
 
     // Audit Google Ads
-    if (services.includes('googleAds')) {
+    if (services.includes('googleAds') || services.includes('ads')) {
       try {
         logEvent('AUDIT', 'Starting Google Ads audit');
         const adsResult = syncGoogleAdsCore();
@@ -787,7 +787,7 @@ function executeCompleteAudit(services) {
     }
 
     // Audit Merchant Center
-    if (services.includes('googleMerchantCenter')) {
+    if (services.includes('googleMerchantCenter') || services.includes('gmc')) {
       try {
         logEvent('AUDIT', 'Starting Merchant Center audit');
         const gmcResult = syncGMCCore();
@@ -800,7 +800,7 @@ function executeCompleteAudit(services) {
     }
 
     // Audit BigQuery
-    if (services.includes('bigquery')) {
+    if (services.includes('bigQuery') || services.includes('bigquery')) {
       try {
         logEvent('AUDIT', 'Starting BigQuery audit');
         const bqResult = syncBigQueryCore();
@@ -813,7 +813,7 @@ function executeCompleteAudit(services) {
     }
 
     // Audit AdSense
-    if (services.includes('adsense')) {
+    if (services.includes('adSense') || services.includes('adsense')) {
       try {
         logEvent('AUDIT', 'Starting AdSense audit');
         const adSenseResult = syncAdSenseCore();
@@ -899,7 +899,7 @@ function startCompleteAudit() {
 
   const ui = SpreadsheetApp.getUi();
   ui.alert(
-    '🚀 Marketing Stack Audit (Open Source)',
+    'Marketing Stack Audit (Open Source)',
     `Starting audit of: ${services.map(s => s.toUpperCase()).join(', ')}\n\n` +
     'This process may take several minutes depending on your setup size.\n\n' +
     'All features available for free!',
@@ -909,14 +909,14 @@ function startCompleteAudit() {
   const result = executeCompleteAudit(services);
 
   if (result.success) {
-    const message = `✅ Audit completed in ${Math.round(result.duration / 1000)} seconds\n\n` +
+    const message = `Audit completed in ${Math.round(result.duration / 1000)} seconds\n\n` +
       `Total audited elements: ${result.totalRecords}\n\n` +
       'Check the generated sheets for complete details.';
 
-    ui.alert('🎉 Audit Finished', message, ui.ButtonSet.OK);
+    ui.alert('Audit Finished', message, ui.ButtonSet.OK);
   } else {
     ui.alert(
-      '❌ Audit Error',
+      'Audit Error',
       `An error occurred: ${result.error}\n\nCheck the "LOGS" sheet for more details.`,
       ui.ButtonSet.OK
     );
@@ -929,7 +929,7 @@ function startCompleteAudit() {
 function syncGA4WithUI() {
   const ui = SpreadsheetApp.getUi();
   ui.alert(
-    '📊 GA4 Audit',
+    'GA4 Audit',
     'Starting complete Google Analytics 4 audit with OAuth2...',
     ui.ButtonSet.OK
   );
@@ -939,14 +939,14 @@ function syncGA4WithUI() {
 
     if (result.status === 'SUCCESS') {
       ui.alert(
-        '✅ GA4 Synchronized',
+        'GA4 Synchronized',
         `Audit completed: ${result.records} elements processed\n\n` +
         'Check the GA4_* sheets for details.',
         ui.ButtonSet.OK
       );
     } else {
       ui.alert(
-        '❌ GA4 Error',
+        'GA4 Error',
         `Error: ${result.error}\n\nCheck the LOGS sheet for more information.`,
         ui.ButtonSet.OK
       );
@@ -963,7 +963,7 @@ function syncGA4WithUI() {
 function syncGTMWithUI() {
   const ui = SpreadsheetApp.getUi();
   ui.alert(
-    '🏷️ GTM Audit',
+    'GTM Audit',
     'Starting complete Google Tag Manager audit...',
     ui.ButtonSet.OK
   );
@@ -973,14 +973,14 @@ function syncGTMWithUI() {
 
     if (result.status === 'SUCCESS') {
       ui.alert(
-        '✅ GTM Synchronized',
+        'GTM Synchronized',
         `Audit completed: ${result.records} elements processed\n\n` +
         'Check the GTM_* sheets for details.',
         ui.ButtonSet.OK
       );
     } else {
       ui.alert(
-        '❌ GTM Error',
+        'GTM Error',
         `Error: ${result.error}\n\nCheck the LOGS sheet for more information.`,
         ui.ButtonSet.OK
       );
@@ -997,7 +997,7 @@ function syncGTMWithUI() {
 function syncLookerStudioWithUI() {
   const ui = SpreadsheetApp.getUi();
   ui.alert(
-    '📈 Looker Studio Audit',
+    'Looker Studio Audit',
     'Starting complete Looker Studio audit with OAuth2...\n\nNOTE: Looker Studio now requires OAuth2 (API Keys are no longer supported by Google).',
     ui.ButtonSet.OK
   );
@@ -1007,14 +1007,14 @@ function syncLookerStudioWithUI() {
 
     if (result.status === 'SUCCESS') {
       ui.alert(
-        '✅ Looker Studio Synchronized',
+        'Looker Studio Synchronized',
         `Audit completed: ${result.records} elements processed\n\n` +
         'Check the LOOKER_STUDIO sheet for details.',
         ui.ButtonSet.OK
       );
     } else {
       ui.alert(
-        '❌ Looker Studio Error',
+        'Looker Studio Error',
         `Error: ${result.error}\n\nCheck the LOGS sheet for more information.`,
         ui.ButtonSet.OK
       );
@@ -1040,7 +1040,7 @@ function generateManualDashboard() {
     generateExecutiveDashboard({});
 
     SpreadsheetApp.getUi().alert(
-      '📊 Dashboard Generated',
+      'Dashboard Generated',
       'The executive dashboard has been updated in the DASHBOARD sheet.',
       SpreadsheetApp.getUi().ButtonSet.OK
     );
@@ -1070,10 +1070,10 @@ function generateExecutiveDashboard(results) {
     dashboardSheet.clear();
 
     // Dashboard header - Write row by row to avoid dimension errors
-    dashboardSheet.getRange(1, 1).setValue('🚀 ADDOCU - EXECUTIVE DASHBOARD (OPEN SOURCE)');
+    dashboardSheet.getRange(1, 1).setValue('ADDOCU - EXECUTIVE DASHBOARD (OPEN SOURCE)');
     dashboardSheet.getRange(2, 1).setValue(`Generated: ${new Date().toLocaleString('en-US')}`);
     dashboardSheet.getRange(3, 1).setValue('');
-    dashboardSheet.getRange(4, 1).setValue('📊 AUDIT SUMMARY');
+    dashboardSheet.getRange(4, 1).setValue('AUDIT SUMMARY');
 
     // Service table headers
     const tableHeaders = ['Service', 'Status', 'Elements', 'Last Update'];
@@ -1113,15 +1113,15 @@ function getServiceStatus(service) {
 
   switch (service) {
     case 'GA4':
-      return '✅ Available (OAuth2)';
+      return 'Available (OAuth2)';
     case 'GTM':
-      return '✅ Available (OAuth2)';
+      return 'Available (OAuth2)';
     case 'LOOKER':
-      return '✅ Available (OAuth2) - API Keys deprecated';
+      return 'Available (OAuth2) - API Keys deprecated';
     case 'GSC':
-      return '✅ Available (OAuth2)';
+      return 'Available (OAuth2)';
     default:
-      return '❓ Unknown';
+      return 'Unknown';
   }
 }
 
@@ -1267,8 +1267,8 @@ function diagnoseConnections() {
 
     // Show initial message about the most common problem
     const initialResponse = ui.alert(
-      '🔍 Connectivity Diagnostics',
-      '💡 BEFORE CONTINUING:\n\n' +
+      'Connectivity Diagnostics',
+      'BEFORE CONTINUING:\n\n' +
       '95% of Addocu problems are due to using different accounts in Chrome and Google Sheets.\n\n' +
       'Have you verified that both use the SAME Google account?',
       ui.ButtonSet.YES_NO
@@ -1283,10 +1283,10 @@ function diagnoseConnections() {
     // User says they have verified - run diagnostics
     const results = simplifiedConnectionDiagnostics();
 
-    let message = '🔍 SIMPLIFIED DIAGNOSTICS\n\n';
+    let message = 'SIMPLIFIED DIAGNOSTICS\n\n';
     results.forEach(result => {
-      const status = result[2] === 'OK' ? '✅' :
-        result[2] === 'PENDING' ? '⏳' : '❌';
+      const status = result[2] === 'OK' ? '[OK]' :
+        result[2] === 'PENDING' ? '[PENDING]' : '[ERROR]';
       message += `${status} ${result[0]}: ${result[2]}\n`;
       if (result[3]) {
         message += `   ${result[3]}\n`;
@@ -1298,14 +1298,14 @@ function diagnoseConnections() {
     const hasPending = results.some(r => r[2] === 'PENDING');
 
     if (hasErrors) {
-      message += '\n🚨 PROBLEM DETECTED:\n';
+      message += '\nPROBLEM DETECTED:\n';
       message += 'There are errors suggesting different accounts problem.\n';
       message += 'SOLUTION: Verify accounts again.\n';
     } else if (hasPending) {
-      message += '\n🔄 ACTION REQUIRED:\n';
+      message += '\nACTION REQUIRED:\n';
       message += 'Execute "Audit GA4" to complete authorization.';
     } else {
-      message += '\n✅ EVERYTHING LOOKS GOOD:\n';
+      message += '\nEVERYTHING LOOKS GOOD:\n';
       message += 'Basic permissions work correctly.';
     }
 
@@ -1332,7 +1332,7 @@ function testOAuth2() {
 
     if (!token) {
       SpreadsheetApp.getUi().alert(
-        '⚠️ OAuth2 Not Authorized',
+        'OAuth2 Not Authorized',
         'The script does not have OAuth2 permissions. Execute "Audit GA4" to authorize automatically.',
         SpreadsheetApp.getUi().ButtonSet.OK
       );
@@ -1345,10 +1345,10 @@ function testOAuth2() {
     // Test GTM
     const gtmResult = validateService('gtm');
 
-    const message = `🔒 OAUTH2 TEST\n\n` +
-      `✅ OAuth2 Token: Available\n` +
-      `📈 GA4: ${ga4Result.status} - ${ga4Result.message}\n` +
-      `🏷️ GTM: ${gtmResult.status} - ${gtmResult.message}\n\n` +
+    const message = `OAUTH2 TEST\n\n` +
+      `OAuth2 Token: Available\n` +
+      `GA4: ${ga4Result.status} - ${ga4Result.message}\n` +
+      `GTM: ${gtmResult.status} - ${gtmResult.message}\n\n` +
       `User: ${Session.getActiveUser().getEmail()}`;
 
     SpreadsheetApp.getUi().alert('OAuth2 Test', message, SpreadsheetApp.getUi().ButtonSet.OK);
@@ -1413,7 +1413,7 @@ function cleanupLogsUI() {
         logsSheet.getRange(1, 1, 1, 4).setFontWeight('bold').setBackground('#E8F0FE');
       }
 
-      ui.alert('✅ Logs Cleaned', 'Logs have been cleaned successfully.', ui.ButtonSet.OK);
+      ui.alert('Logs Cleaned', 'Logs have been cleaned successfully.', ui.ButtonSet.OK);
 
       logEvent('MAINTENANCE', 'Logs cleaned manually');
 
@@ -1738,7 +1738,7 @@ function executeDetailedDiagnostic() {
     const apiErrors = Object.values(diagnostic.apis).filter(api => api.status !== 'OK');
     if (apiErrors.length > 0) {
       diagnostic.recommendations.push('CRITICAL: Missing API permissions - execute complete reauthorization');
-      diagnostic.recommendations.push('Solution: Extensions > Addocu > 🔄 Reauthorize Permissions');
+      diagnostic.recommendations.push('Solution: Extensions > Addocu > Reauthorize Permissions');
     }
 
     // Only say everything is fine if there really are no problems
@@ -2137,7 +2137,7 @@ function syncGTMCore_Internal() {
     const userProperties = PropertiesService.getUserProperties();
     userProperties.setProperty('ADDOCU_LAST_SYNC_GTM', Date.now().toString());
 
-    logEvent('GTM', `✅ Synchronization completed: ${totalElements} elements`);
+    logEvent('GTM', `Synchronization completed: ${totalElements} elements`);
     logSyncEnd('GTM_Sync', totalElements, duration, 'SUCCESS');
 
     return { status: 'SUCCESS', records: totalElements, duration: duration, details: results };
@@ -2145,7 +2145,7 @@ function syncGTMCore_Internal() {
   } catch (error) {
     const duration = Date.now() - startTime;
     logSyncEnd('GTM_Sync', 0, duration, 'ERROR');
-    logError('GTM', `❌ Synchronization error: ${error.message}`, error.stack);
+    logError('GTM', `Synchronization error: ${error.message}`, error.stack);
 
     // Try to create empty sheets as fallback in case of error
     try {

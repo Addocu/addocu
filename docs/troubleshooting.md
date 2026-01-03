@@ -37,32 +37,86 @@
 
 ---
 
+## 🔧 New Troubleshooting Tools (v3.0+)
+
+### Extensions > Addocu > Troubleshooting Menu
+
+**New troubleshooting options:**
+
+1. **🔍 Verify Accounts (IMPORTANT)**
+   - Manually check account matching
+   - Shows Chrome vs Google Sheets accounts
+   - Guides you through account synchronization
+   
+2. **🔒 Reauthorize Permissions**
+   - Refreshes OAuth2 authorization
+   - Use if permissions seem outdated
+   - No data loss
+
+3. **⚡ Force All Permissions**
+   - Triggers full OAuth2 re-authorization
+   - Use when "permission denied" errors persist
+   - Will show permission consent screen
+
+4. **🔧 Simplified Diagnostics**
+   - Tests connectivity to all 10 platforms
+   - Shows which APIs are accessible
+   - Provides actionable next steps for failures
+
+---
+
 ## 🐛 Other Common Issues
 
 ### Issue: "We're sorry, a server error occurred while reading from storage"
 
 **Root Cause:** Account mismatch or corrupted user properties  
-**Fix:** Follow the "Same Google Account" solution above
+**Fix:** 
+1. Go to **Extensions > Addocu > Troubleshooting > Verify Accounts**
+2. Follow the step-by-step account verification process
+3. Sign out and back in with the same account if needed
 
 ### Issue: "Error loading configuration: PERMISSION_DENIED"  
 
 **Root Cause:** Different accounts in Chrome vs Google Sheets  
-**Fix:** Account synchronization (see above)
+**Fix:** 
+1. **Extensions > Addocu > Troubleshooting > Verify Accounts (IMPORTANT)**
+2. Follow the manual verification steps shown
+3. Ensure same account is used in Chrome AND Google Sheets
 
 ### Issue: "You do not have permission to call UrlFetchApp.fetch"
 
 **Root Cause:** OAuth2 scope not properly authorized  
 **Fix:** 
-1. Extensions > Addocu > 🚨 Recuperación > 🔒 Forzar Todos los Permisos
-2. Authorize ALL permissions when prompted
+1. **Extensions > Addocu > Troubleshooting > Force All Permissions**
+2. Click through and authorize ALL permissions when prompted
+3. Wait for authorization to complete
+4. Try audit again
 
 ### Issue: "Required permissions not granted"
 
-**Root Cause:** Partial authorization  
+**Root Cause:** Partial authorization or missing scopes  
 **Fix:**
-1. Extensions > Apps Script  
-2. Run function: `forzarTodosLosPermisos`
-3. Authorize everything
+1. **Extensions > Addocu > Troubleshooting > Force All Permissions**
+2. Authorize everything when prompted (don't skip any scopes)
+3. If still failing, try in Incognito mode
+
+### Issue: "Google Ads Developer Token is missing" (v3.0+)
+
+**Root Cause:** Google Ads sync requires a Developer Token  
+**Fix:**
+1. Get your Developer Token from [ads.google.com](https://ads.google.com)
+2. Go to **Extensions > Addocu > Configure**
+3. Paste your Developer Token in the "Google Ads Developer Token" field
+4. Click Save
+5. Try Google Ads sync again
+
+### Issue: Sheets created but show "No data" or error messages (v3.0+)
+
+**Root Cause:** This is expected behavior! Sheets are created even when APIs fail or return no data  
+**Fix:**
+- **Empty sheets with no message**: You don't have access to assets in that platform
+- **Sheets with error text**: Check the error message and follow its guidance
+- Use **Extensions > Addocu > Troubleshooting > Simplified Diagnostics** to identify which APIs are accessible
 
 ---
 

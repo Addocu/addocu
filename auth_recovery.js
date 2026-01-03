@@ -1,16 +1,16 @@
 /**
  * @fileoverview Consolidated Authorization Recovery System - Addocu v3.0
  * @version CONSOLIDATED - Eliminating conflicts between duplicate files
- * 
+ *
  * THIS FILE REPLACES:
  * - auth_recovery.js (basic functions)
  * - auth_recovery_coordinador.js (duplicate functions with coordinador.js)
- * 
+ *
  * FUNCTIONS MOVED FROM coordinador.js:
  * - reautorizarPermisosForzado() -> Manual version with Google Account URLs
- * - mostrarDiagnosticoCompleto() 
+ * - mostrarDiagnosticoCompleto()
  * - confirmarReseteoEmergencia()
- * - ejecutarDiagnosticoDetallado() 
+ * - ejecutarDiagnosticoDetallado()
  * - ejecutarReseteoEmergencia()
  * - forzarTodosLosPermisos() -> UNIQUE - preserved from coordinador.js
  */
@@ -27,30 +27,30 @@
 function onFileScopeGranted(e) {
   try {
     logEvent('AUTH_RECOVERY', 'File permissions granted. Initializing configuration...');
-    
+
     // Initialize basic user configuration
     initializeUserConfiguration();
-    
+
     // Show welcome message
     try {
       const ui = SpreadsheetApp.getUi();
-      const message = '🎉 Welcome to Addocu!\n\n' +
-        '✅ Permissions have been configured correctly.\n\n' +
+      const message = 'Welcome to Addocu!\n\n' +
+        'Permissions have been configured correctly.\n\n' +
         'You can now use all functionalities:\n' +
-        '• 📊 Audit GA4\n' +
-        '• 🏷️ Audit GTM\n' +
-        '• 📈 Audit Looker Studio\n\n' +
-        'Go to Extensions > Addocu > ⚙️ Configure to customize your experience.\n\n' +
+        '• Audit GA4\n' +
+        '• Audit GTM\n' +
+        '• Audit Looker Studio\n\n' +
+        'Go to Extensions > Addocu > Configure to customize your experience.\n\n' +
         'Open Source Project - Thank you for using it!';
-      
-      ui.alert('🚀 Addocu Configured', message, ui.ButtonSet.OK);
+
+      ui.alert('Addocu Configured', message, ui.ButtonSet.OK);
     } catch (uiError) {
       // Not critical if message fails
       logWarning('AUTH_RECOVERY', `Could not show welcome message: ${uiError.message}`);
     }
-    
+
     logEvent('AUTH_RECOVERY', 'Initial configuration completed after granting permissions');
-    
+
   } catch (error) {
     logError('AUTH_RECOVERY', `Error in onFileScopeGranted: ${error.message}`);
   }
@@ -64,28 +64,28 @@ function initializeUserConfiguration() {
   try {
     const userProperties = PropertiesService.getUserProperties();
     const userEmail = Session.getActiveUser().getEmail();
-    
+
     // Set default values if they don't exist
     const defaultConfig = {
       'ADDOCU_FIRST_TIME': 'true',
       'ADDOCU_SYNC_GA4': 'true',
-      'ADDOCU_SYNC_GTM': 'true', 
+      'ADDOCU_SYNC_GTM': 'true',
       'ADDOCU_SYNC_LOOKER': 'true',
       'ADDOCU_LOG_LEVEL': 'INFO',
       'ADDOCU_REQUEST_TIMEOUT': '60',
       'ADDOCU_ALERT_ERRORS': 'true'
     };
-    
+
     // Only set values that don't exist
     Object.keys(defaultConfig).forEach(key => {
       if (!userProperties.getProperty(key)) {
         userProperties.setProperty(key, defaultConfig[key]);
       }
     });
-    
+
     // Log the initialization event
     logEvent('INIT', `User initialized: ${userEmail}`);
-    
+
   } catch (error) {
     logError('INIT', `Error initializing configuration: ${error.message}`);
     throw error;
@@ -99,19 +99,19 @@ function initializeUserConfiguration() {
 /**
  * DEFINITIVE VERSION: Guides user to actual Google permissions page.
  * Accessible from recovery menu.
- * 
+ *
  * CONSOLIDATED: This version prevails over duplicate versions
  * that attempted automatic OAuth2 authorization (which doesn't work).
  */
 function forcedPermissionReauthorization() {
   try {
     logEvent('REAUTH', 'Showing instructions for manual reauthorization...');
-    
+
     const ui = SpreadsheetApp.getUi();
-    
+
     // Get user number to personalize URL
     let customUrl = 'https://myaccount.google.com/connections?filters=3,4&hl=en&pageId=none';
-    
+
     try {
       const userEmail = Session.getActiveUser().getEmail();
       // Try to detect account number (this is approximate)
@@ -124,44 +124,44 @@ function forcedPermissionReauthorization() {
     } catch (e) {
       // Use generic URL if it fails
     }
-    
-    const message = '🔗 MANUAL REAUTHORIZATION REQUIRED\n\n' +
-      '❌ Cannot reauthorize permissions automatically.\n\n' +
-      '✅ SOLUTION (very easy - 30 seconds):\n\n' +
-      '1. 📋 COPY this URL:\n' +
+
+    const message = 'MANUAL REAUTHORIZATION REQUIRED\n\n' +
+      'Cannot reauthorize permissions automatically.\n\n' +
+      'SOLUTION (very easy - 30 seconds):\n\n' +
+      '1. COPY this URL:\n' +
       '   ' + customUrl + '\n\n' +
-      '2. 🌐 Open it in your browser\n\n' +
-      '3. 🔍 Look for "clasp - The Apps Script CLI" or "Addocu"\n\n' +
-      '4. ❌ Click "Remove access"\n\n' +
-      '5. ⚙️ Return here and use "📊 Audit GA4"\n\n' +
-      '6. ✅ Authorize ALL permissions\n\n' +
-      '💡 If the URL doesn\'t work, search "Third-party apps" in your Google account.';
-    
+      '2. Open it in your browser\n\n' +
+      '3. Look for "clasp - The Apps Script CLI" or "Addocu"\n\n' +
+      '4. Click "Remove access"\n\n' +
+      '5. Return here and use "Audit GA4"\n\n' +
+      '6. Authorize ALL permissions\n\n' +
+      'If the URL doesn\'t work, search "Third-party apps" in your Google account.';
+
     const response = ui.alert(
-      '🔗 Manual Reauthorization',
+      'Manual Reauthorization',
       message,
       ui.ButtonSet.OK_CANCEL
     );
-    
+
     if (response === ui.Button.OK) {
       // Show additional URL as backup
       ui.alert(
-        '📋 Backup URLs',
+        'Backup URLs',
         'If the first URL doesn\'t work, try these:\n\n' +
-        '🔗 Main URL:\n' +
+        'Main URL:\n' +
         customUrl + '\n\n' +
-        '🔗 Generic URL:\n' +
+        'Generic URL:\n' +
         'https://myaccount.google.com/permissions\n\n' +
-        '💡 You can also search "Google Account permissions" on Google.',
+        'You can also search "Google Account permissions" on Google.',
         ui.ButtonSet.OK
       );
     }
-    
+
     logEvent('REAUTH', 'Manual reauthorization instructions shown');
-    
+
   } catch (error) {
     logError('REAUTH', `Error showing instructions: ${error.message}`);
-    
+
     // If even this fails, show basic message
     try {
       console.log('🚨 ADDOCU - MANUAL REAUTHORIZATION NEEDED');
@@ -183,35 +183,35 @@ function forcedPermissionReauthorization() {
 function forceAllPermissions() {
   try {
     logEvent('FORCE_ALL_PERMS', 'Executing forced authorization of all permissions...');
-    
+
     const ui = SpreadsheetApp.getUi();
-    
+
     // Show warning to user
     const confirmation = ui.alert(
-      '🔒 Force All Permissions',
+      'Force All Permissions',
       'This function will attempt to force authorization of ALL necessary permissions.\n\n' +
       'If an authorization window appears, accept ALL permissions.\n\n' +
       'Continue?',
       ui.ButtonSet.YES_NO
     );
-    
+
     if (confirmation !== ui.Button.YES) {
       logEvent('FORCE_ALL_PERMS', 'Operation cancelled by user');
       return;
     }
-    
+
     // Step 1: OAuth2 Token
     ui.alert('🔄 Step 1/5', 'Verifying OAuth2 token...', ui.ButtonSet.OK);
     const token = ScriptApp.getOAuthToken();
     if (!token) {
       throw new Error('Could not get OAuth2 token');
     }
-    
-    // Step 2: Spreadsheet Access  
+
+    // Step 2: Spreadsheet Access
     ui.alert('🔄 Step 2/5', 'Verifying spreadsheet access...', ui.ButtonSet.OK);
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     ss.getId(); // Force access
-    
+
     // Step 3: External Request (APIs)
     ui.alert('🔄 Step 3/5', 'Verifying external API permissions...', ui.ButtonSet.OK);
     UrlFetchApp.fetch('https://www.googleapis.com/analytics/v3/management/accounts', {
@@ -221,15 +221,15 @@ function forceAllPermissions() {
       },
       muteHttpExceptions: true
     });
-    
+
     // Step 4: User Properties
     ui.alert('🔄 Step 4/5', 'Verifying configuration storage...', ui.ButtonSet.OK);
     const userProps = PropertiesService.getUserProperties();
     userProps.setProperty('ADDOCU_FULL_AUTH_TEST', new Date().toISOString());
-    
+
     // Step 5: Final validation
     ui.alert('🔄 Step 5/5', 'Executing final validation...', ui.ButtonSet.OK);
-    
+
     // Try a real GA4 call to ensure it works
     try {
       const ga4Response = UrlFetchApp.fetch('https://analyticsadmin.googleapis.com/v1beta/accounts', {
@@ -240,28 +240,28 @@ function forceAllPermissions() {
         },
         muteHttpExceptions: true
       });
-      
+
       const statusCode = ga4Response.getResponseCode();
       logEvent('FORCE_ALL_PERMS', `GA4 API test: HTTP ${statusCode}`);
-      
+
     } catch (apiError) {
       logWarning('FORCE_ALL_PERMS', `API test failed: ${apiError.message}`);
     }
-    
+
     // Success
     ui.alert(
-      '✅ Permissions Successfully Forced!',
+      'Permissions Successfully Forced!',
       'All permissions have been verified and forced.\n\n' +
       'You should now be able to use all Addocu functionalities.\n\n' +
-      'Try executing "📊 Audit GA4" to confirm everything works.',
+      'Try executing "Audit GA4" to confirm everything works.',
       ui.ButtonSet.OK
     );
-    
+
     logEvent('FORCE_ALL_PERMS', 'All permissions successfully forced');
-    
+
   } catch (error) {
     logError('FORCE_ALL_PERMS', `Error forcing permissions: ${error.message}`);
-    
+
     try {
       const ui = SpreadsheetApp.getUi();
       ui.alert(
@@ -292,21 +292,21 @@ function forceAllPermissions() {
 function showCompleteDiagnostics() {
   try {
     logEvent('DIAGNOSTIC_UI', 'Starting complete diagnostic from menu...');
-    
+
     const diagnostic = executeDetailedDiagnostic();
-    
+
     // Create diagnostic message
     let message = '🔍 ADDOCU DIAGNOSTIC v3.0\n\n';
     message += `User: ${diagnostic.user}\n`;
     message += `Timestamp: ${new Date().toLocaleString('en-US')}\n\n`;
-    
+
     // Permission status
     message += '📋 PERMISSIONS:\n';
     message += `${diagnostic.permissions.ui ? '✅' : '❌'} User Interface\n`;
     message += `${diagnostic.permissions.oauth2 ? '✅' : '❌'} OAuth2 Token\n`;
     message += `${diagnostic.permissions.userProperties ? '✅' : '❌'} UserProperties\n`;
     message += `${diagnostic.permissions.spreadsheet ? '✅' : '❌'} Spreadsheet Access\n\n`;
-    
+
     // Available APIs
     if (Object.keys(diagnostic.apis).length > 0) {
       message += '🔗 APIS:\n';
@@ -316,22 +316,22 @@ function showCompleteDiagnostics() {
       });
       message += '\n';
     }
-    
+
     // Recommendations
     message += '💡 RECOMMENDATIONS:\n';
     diagnostic.recommendations.forEach((rec, i) => {
       message += `${i + 1}. ${rec}\n`;
     });
-    
+
     // Show diagnostic
     const ui = SpreadsheetApp.getUi();
     ui.alert('🔍 Complete Diagnostic', message, ui.ButtonSet.OK);
-    
+
     logEvent('DIAGNOSTIC_UI', 'Diagnostic completed and shown');
-    
+
   } catch (error) {
     logError('DIAGNOSTIC_UI', `Error in diagnostic UI: ${error.message}`);
-    
+
     try {
       const ui = SpreadsheetApp.getUi();
       ui.alert(
@@ -359,7 +359,7 @@ function executeDetailedDiagnostic() {
     configuration: {},
     recommendations: []
   };
-  
+
   try {
     // 1. Current user
     try {
@@ -367,7 +367,7 @@ function executeDetailedDiagnostic() {
     } catch (e) {
       diagnostic.permissions.userAccess = false;
     }
-    
+
     // 2. UI permissions
     try {
       const ui = SpreadsheetApp.getUi();
@@ -377,7 +377,7 @@ function executeDetailedDiagnostic() {
       diagnostic.permissions.uiError = e.message;
       diagnostic.recommendations.push('Execute manual reauthorization');
     }
-    
+
     // 3. OAuth2 Token
     try {
       const token = ScriptApp.getOAuthToken();
@@ -387,7 +387,7 @@ function executeDetailedDiagnostic() {
       diagnostic.permissions.oauth2Error = e.message;
       diagnostic.recommendations.push('Authorize script for OAuth2');
     }
-    
+
     // 4. UserProperties
     try {
       const userProps = PropertiesService.getUserProperties();
@@ -397,7 +397,7 @@ function executeDetailedDiagnostic() {
       diagnostic.permissions.userProperties = false;
       diagnostic.permissions.userPropertiesError = e.message;
     }
-    
+
     // 5. Spreadsheet Access
     try {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -406,7 +406,7 @@ function executeDetailedDiagnostic() {
       diagnostic.permissions.spreadsheet = false;
       diagnostic.permissions.spreadsheetError = e.message;
     }
-    
+
     // 6. Test APIs (only if we have OAuth2)
     if (diagnostic.permissions.oauth2) {
       ['ga4', 'gtm'].forEach(service => {
@@ -424,41 +424,41 @@ function executeDetailedDiagnostic() {
         }
       });
     }
-    
+
     // 7. Final recommendations
     if (!diagnostic.permissions.ui) {
       diagnostic.recommendations.push('CRITICAL: Execute reauthorization function');
     }
-    
+
     if (!diagnostic.permissions.oauth2) {
       diagnostic.recommendations.push('Authorize access to Google APIs');
     }
-    
+
     if (!diagnostic.permissions.spreadsheet) {
       diagnostic.recommendations.push('CRITICAL: No spreadsheet access - reauthorize complete permissions');
     }
-    
+
     // Check API errors
     const apiErrors = Object.values(diagnostic.apis).filter(api => api.status !== 'OK');
     if (apiErrors.length > 0) {
       diagnostic.recommendations.push('CRITICAL: Missing API permissions - execute complete reauthorization');
       diagnostic.recommendations.push('Solution: Extensions > Addocu > 🔄 Reauthorize Permissions');
     }
-    
+
     // Only say everything is fine if there really are no problems
-    const hasProblems = !diagnostic.permissions.ui || 
-                          !diagnostic.permissions.oauth2 || 
-                          !diagnostic.permissions.spreadsheet || 
-                          apiErrors.length > 0;
-    
+    const hasProblems = !diagnostic.permissions.ui ||
+      !diagnostic.permissions.oauth2 ||
+      !diagnostic.permissions.spreadsheet ||
+      apiErrors.length > 0;
+
     if (!hasProblems && diagnostic.recommendations.length === 0) {
       diagnostic.recommendations.push('Everything appears to be working correctly');
     }
-    
+
   } catch (error) {
     diagnostic.error = error.message;
   }
-  
+
   return diagnostic;
 }
 
@@ -474,7 +474,7 @@ function executeDetailedDiagnostic() {
 function confirmEmergencyReset() {
   try {
     const ui = SpreadsheetApp.getUi();
-    
+
     const confirmation = ui.alert(
       '🚨 EMERGENCY RESET',
       'WARNING: This will delete ALL your Addocu configuration.\n\n' +
@@ -482,15 +482,15 @@ function confirmEmergencyReset() {
       'Are you sure you want to continue?',
       ui.ButtonSet.YES_NO
     );
-    
+
     if (confirmation !== ui.Button.YES) {
       logEvent('RESET_EMERGENCY', 'Emergency reset cancelled by user');
       return;
     }
-    
+
     // Execute reset
     const result = executeEmergencyReset();
-    
+
     if (result.success) {
       ui.alert(
         '🔄 Complete Reset',
@@ -505,10 +505,10 @@ function confirmEmergencyReset() {
         ui.ButtonSet.OK
       );
     }
-    
+
   } catch (error) {
     logError('RESET_EMERGENCY_UI', `Error in emergency reset: ${error.message}`);
-    
+
     try {
       const ui = SpreadsheetApp.getUi();
       ui.alert(
@@ -530,7 +530,7 @@ function confirmEmergencyReset() {
  */
 function executeEmergencyReset() {
   logEvent('RESET_EMERGENCY', 'Starting complete emergency reset...');
-  
+
   try {
     // 1. Clean UserProperties
     try {
@@ -540,7 +540,7 @@ function executeEmergencyReset() {
     } catch (e) {
       logWarning('RESET_EMERGENCY', `Error cleaning UserProperties: ${e.message}`);
     }
-    
+
     // 2. Reinitialize configuration
     try {
       initializeUserConfiguration();
@@ -548,10 +548,10 @@ function executeEmergencyReset() {
     } catch (e) {
       logWarning('RESET_EMERGENCY', `Error reinitializing: ${e.message}`);
     }
-    
+
     logEvent('RESET_EMERGENCY', 'Complete reset finished');
     return { success: true, message: 'Complete reset performed' };
-    
+
   } catch (error) {
     logError('RESET_EMERGENCY', `Error in reset: ${error.message}`);
     return { success: false, error: error.message };
@@ -568,10 +568,10 @@ function executeEmergencyReset() {
  */
 function runCompleteConnectivityDiagnostic() {
   logEvent('DIAGNOSTIC', 'Starting complete Addocu connectivity diagnostic.');
-  
+
   const servicesToTest = ['ga4', 'gtm', 'lookerStudio'];
   const results = [];
-  
+
   servicesToTest.forEach(service => {
     try {
       const result = validateService(service);
@@ -583,9 +583,9 @@ function runCompleteConnectivityDiagnostic() {
         result.user,
         formatDate(result.timestamp)
       ]);
-      
+
       logEvent('DIAGNOSTIC', `${service}: ${result.status} - ${result.message}`);
-      
+
     } catch (e) {
       logError('DIAGNOSTIC', `Error diagnosing ${service}: ${e.message}`);
       results.push([
@@ -598,7 +598,7 @@ function runCompleteConnectivityDiagnostic() {
       ]);
     }
   });
-  
+
   // WRITE TO SHEET ONLY IF POSSIBLE
   try {
     const headers = ['Service', 'Account', 'Status', 'Message', 'User', 'Timestamp'];
@@ -606,14 +606,14 @@ function runCompleteConnectivityDiagnostic() {
       alternateColors: true,
       borders: true
     });
-    
+
     logEvent('DIAGNOSTIC', `Diagnostic completed for ${results.length} services.`);
   } catch (writeError) {
     logWarning('DIAGNOSTIC', `Could not write to sheet: ${writeError.message}`);
     // Continue without failing - diagnostic can work without writing the sheet
   }
-  
+
   flushLogs();
-  
+
   return results;
 }
