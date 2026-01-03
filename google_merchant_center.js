@@ -104,6 +104,10 @@ function syncGMCCore() {
         const duration = Date.now() - startTime;
         logSyncEnd('GMC_Sync', 0, duration, 'ERROR');
         logError('GMC', `Synchronization failed: ${error.message}`);
+
+        // Report error in the primary sheet
+        writeDataToSheet('GMC_ACCOUNTS', GMC_ACCOUNTS_HEADERS, null, 'Merchant Center', error.message);
+
         return {
             records: 0,
             status: 'ERROR',

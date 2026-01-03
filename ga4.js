@@ -105,9 +105,13 @@ function syncGA4Core() {
     logSyncEnd('GA4_Complete', 0, duration, 'ERROR');
     logError('GA4', `Complete synchronization failed: ${error.message}`);
 
-    if (error.message.includes('403') || error.message.includes('401')) {
-      error.message += ' | SOLUTION: Verify that the "Google Analytics Admin API" is enabled in Google Cloud Console and that the script has OAuth2 permissions.';
+    let errMsg = error.message;
+    if (errMsg.includes('403') || errMsg.includes('401')) {
+      errMsg += ' | SOLUTION: Verify that the "Google Analytics Admin API" is enabled in Google Cloud Console and that the script has OAuth2 permissions.';
     }
+
+    // Report error in the primary sheet
+    writeDataToSheet('GA4_PROPERTIES', GA4_PROPERTIES_HEADERS, null, 'GA4', errMsg);
 
     return {
       records: 0, status: 'ERROR', duration: duration, error: error.message

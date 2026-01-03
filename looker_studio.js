@@ -53,6 +53,10 @@ function syncLookerStudioCore() {
     const duration = Date.now() - startTime;
     logSyncEnd(serviceName, 0, duration, 'ERROR');
     logError('LOOKER', `Synchronization failed: ${error.message}`);
+
+    // Report error in the primary sheet
+    writeDataToSheet('LOOKER_STUDIO', LOOKER_STUDIO_HEADERS, null, 'Looker Studio', error.message);
+
     return {
       records: 0,
       status: 'ERROR',

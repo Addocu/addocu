@@ -635,7 +635,57 @@ function writeToSheet(sheetName, headers, data, clearFirst = true, options = {})
  * @param {Array} data - The data (Array of Objects or Arrays)
  * @param {string} platformName - Optional platform name for empty message
  */
-function writeDataToSheet(sheetName, headers, data, platformName = 'this platform') {
+function writeDataToSheet(sheetName, headers, data, platformName = 'this platform', errorMsg = null) {
+  // Always ensure sheet exists and is formatted
+  if (errorMsg) {
+    logWarning('SHEET', `Reporting error for ${platformName} in sheet ${sheetName}: ${errorMsg}`);
+
+    // Clear sheet and write headers
+    writeToSheet(sheetName, headers, [], true);
+
+    try {
+      const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+      if (sheet) {
+        const message = `❌ Error: ${errorMsg}`;
+        sheet.getRange(2, 1).setValue(message);
+        sheet.getRange(2, 1, 1, Math.max(1, headers.length)).merge()
+          .setFontWeight('bold')
+          .setFontColor('#ea4335')
+          .setBackground('#fce8e6');
+
+        // Add a secondary help message if it looks like a permission issue
+        if (errorMsg.includes('403') || errorMsg.includes('permissions') || errorMsg.includes('authorized')) {
+          sheet.getRange(3, 1).setValue('💡 Tip: Verify that the required API is enabled in Google Cloud Console and you have authorized the add-on.');
+          sheet.getRange(3, 1, 1, Math.max(1, headers.length)).merge().setFontStyle('italic').setFontColor('#666666');
+        }
+      }
+    } catch (e) {
+      logError('SHEET', `Error writing error message to ${sheetName}: ${e.message}`);
+    }
+
+    // Ensure tab is colored even on error
+    const platformColors = {
+      'GA4': '#E37400', 'GTM': '#00838F', 'YouTube': '#FF0000', 'Google Ads': '#FBBC05',
+      'AdSense': '#34A853', 'Merchant': '#F9AB00', 'Search Console': '#4285F4',
+      'Looker': '#4285F4', 'GBP': '#4285F4', 'BigQuery': '#4285F4'
+    };
+    let tabColor = null;
+    for (const key in platformColors) {
+      if (platformName && platformName.includes(key)) {
+        tabColor = platformColors[key];
+        break;
+      }
+    }
+    if (tabColor) {
+      try {
+        const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+        if (sheet) sheet.setTabColor(tabColor);
+      } catch (e) { }
+    }
+
+    return;
+  }
+
   if (!data || data.length === 0) {
     logWarning('SHEET', `No data to write to sheet ${sheetName}.`);
 
@@ -658,9 +708,7 @@ function writeDataToSheet(sheetName, headers, data, platformName = 'this platfor
 
   // Detect data format
   let dataAsArrays;
-  if (!data || data.length === 0) {
-    dataAsArrays = [];
-  } else if (Array.isArray(data[0])) {
+  if (Array.isArray(data[0])) {
     // Already Array of Arrays
     dataAsArrays = data;
   } else {

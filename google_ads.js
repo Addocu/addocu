@@ -91,6 +91,10 @@ function syncGoogleAdsCore() {
 
     } catch (error) {
         logError('GOOGLE_ADS', `Fatal error in Google Ads audit: ${error.message}`);
+
+        // Report error in the primary sheet
+        writeDataToSheet('GOOGLE_ADS_CAMPAIGNS', GOOGLE_ADS_CAMPAIGNS_HEADERS, null, 'Google Ads', error.message);
+
         return {
             success: false,
             status: 'ERROR',

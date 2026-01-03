@@ -78,7 +78,17 @@ function syncGBPCore() {
             errorMsg = 'Rate limit exceeded (429). Note: GBP API often defaults to 0 quota and requires explicit project approval from Google.';
         }
         logError('GBP_CORE', 'Error in syncGBPCore: ' + errorMsg);
-        throw new Error(errorMsg);
+
+        // Report error in the primary sheet
+        writeDataToSheet('GBP_ACCOUNTS', GBP_ACCOUNTS_HEADERS, null, 'Business Profile', errorMsg);
+
+        return {
+            success: false,
+            records: 0,
+            status: 'ERROR',
+            duration: Date.now() - startTime,
+            error: errorMsg
+        };
     }
 }
 

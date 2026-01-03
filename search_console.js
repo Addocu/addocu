@@ -125,6 +125,10 @@ function syncSearchConsoleCore() {
     const duration = Date.now() - startTime;
     logSyncEnd('GSC_Sync', 0, duration, 'ERROR');
     logError('GSC', `Synchronization failed: ${error.message}`);
+
+    // Report error in the primary sheet
+    writeDataToSheet('GSC_SITES', GSC_SITES_HEADERS, null, 'Search Console', error.message);
+
     return {
       records: 0, status: 'ERROR', duration: duration, error: error.message
     };

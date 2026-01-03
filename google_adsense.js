@@ -136,6 +136,10 @@ function syncAdSenseCore() {
         const duration = Date.now() - startTime;
         logSyncEnd('AdSense_Sync', 0, duration, 'ERROR');
         logError('AdSense', `Synchronization failed: ${error.message}`);
+
+        // Report error in the primary sheet
+        writeDataToSheet('ADSENSE_ACCOUNTS', ADSENSE_ACCOUNTS_HEADERS, null, 'AdSense', error.message);
+
         return {
             records: 0,
             status: 'ERROR',

@@ -103,6 +103,10 @@ function syncYouTubeCore() {
 
     } catch (error) {
         logError('YOUTUBE_SYNC', `Critical error in YouTube sync: ${error.message}`);
+
+        // Report error in the primary sheet
+        writeDataToSheet('YOUTUBE_CHANNELS', YOUTUBE_CHANNELS_HEADERS, null, 'YouTube', error.message);
+
         result.status = 'ERROR';
         result.errors.push(error.message);
         return result;

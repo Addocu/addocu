@@ -101,6 +101,10 @@ function syncBigQueryCore() {
         const duration = Date.now() - startTime;
         logSyncEnd('BigQuery_Sync', 0, duration, 'ERROR');
         logError('BigQuery', `Synchronization failed: ${error.message}`);
+
+        // Report error in the primary sheet
+        writeDataToSheet('BQ_DATASETS', BigQuery_DATASETS_HEADERS, null, 'BigQuery', error.message);
+
         return {
             records: 0,
             status: 'ERROR',

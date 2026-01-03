@@ -137,8 +137,7 @@ function syncGTMCore() {
 
     // Try to create empty sheets as fallback in case of error
     try {
-      const emptyData = { tags: [], variables: [], triggers: [] };
-      writeAggregatedGTMData(emptyData);
+      writeAggregatedGTMData(null, error.message);
       logWarning('GTM', 'GTM sheets created as fallback after error');
     } catch (fallbackError) {
       logError('GTM', `Critical error creating GTM fallback sheets: ${fallbackError.message}`);
@@ -592,15 +591,21 @@ function processGTMTrigger(trigger, container, workspace) {
 // WRITING FUNCTIONS
 // =================================================================
 
-function writeAggregatedGTMData(aggregatedData) {
+function writeAggregatedGTMData(aggregatedData, errorMsg = null) {
   try {
     logEvent('GTM', 'Writing aggregated data to sheets...');
 
-    writeDataToSheet('GTM_TAGS', GTM_TAGS_HEADERS, aggregatedData.tags, 'GTM');
-    writeDataToSheet('GTM_VARIABLES', GTM_VARIABLES_HEADERS, aggregatedData.variables, 'GTM');
-    writeDataToSheet('GTM_TRIGGERS', GTM_TRIGGERS_HEADERS, aggregatedData.triggers, 'GTM');
+    const tags = (aggregatedData && aggregatedData.tags) || null;
+    const variables = (aggregatedData && aggregatedData.variables) || null;
+    const triggers = (aggregatedData && aggregatedData.triggers) || null;
 
-    logEvent('GTM', '✅ Data written correctly to all sheets');
+    writeDataToSheet('GTM_TAGS', GTM_TAGS_HEADERS, tags, 'GTM', errorMsg);
+    writeDataToSheet('GTM_VARIABLES', GTM_VARIABLES_HEADERS, variables, 'GTM', errorMsg);
+    writeDataToSheet('GTM_TRIGGERS', GTM_TRIGGERS_HEADERS, triggers, 'GTM', errorMsg);
+
+    if (!errorMsg) {
+      logEvent('GTM', '✅ Data written correctly to all sheets');
+    }
 
   } catch (error) {
     logError('GTM', `Error writing data: ${error.message}`);
