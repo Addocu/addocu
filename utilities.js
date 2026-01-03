@@ -139,6 +139,19 @@ const ADDOCU_CONFIG = {
 // =================================================================
 
 /**
+ * Shows a loading notification to the user.
+ * Used during sync operations to indicate progress.
+ * @param {string} message The message to display to the user.
+ */
+function showLoadingNotification(message) {
+  try {
+    SpreadsheetApp.getActiveSheet().toast(message, 'Syncing...', 3);
+  } catch (e) {
+    logWarning('UI', `Could not show loading notification: ${e.message}`);
+  }
+}
+
+/**
  * Safely gets the API Key from user properties.
  * Only needed for Looker Studio (optional functionality).
  * @returns {string} The user's API Key.

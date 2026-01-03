@@ -326,7 +326,6 @@ function processGA4Stream(stream, property) {
     'Stream Updated': formatDate(stream.updateTime),
     'Property Created': formatDate(property.createTime),
     'Property Updated': formatDate(property.updateTime),
-    'Sync Date': syncDate,
     'Notes': `Type: ${stream.type} | Created: ${formatDate(stream.createTime)}`
   };
 }

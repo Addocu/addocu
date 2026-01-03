@@ -103,7 +103,7 @@ function syncBigQueryCore() {
     logError('BigQuery', `Synchronization failed: ${error.message}`);
 
     // Report error in the primary sheet
-    writeDataToSheet('BQ_DATASETS', BigQuery_DATASETS_HEADERS, null, 'BigQuery', error.message);
+    writeDataToSheet('BQ_DATASETS', BQ_DATASETS_HEADERS, null, 'BigQuery', error.message);
 
     return {
       records: 0,
