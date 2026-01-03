@@ -824,6 +824,12 @@ function validateService(serviceName) {
         account = 'OAuth2 authorized';
       } else if (serviceName === 'googleBusinessProfile') {
         account = 'OAuth2 authorized';
+      } else if (serviceName === 'googleMerchantCenter') {
+        account = 'OAuth2 connected';
+      } else if (serviceName === 'bigquery') {
+        account = 'OAuth2 authorized';
+      } else if (serviceName === 'adsense') {
+        account = 'OAuth2 connected';
       }
 
       // Try to extract additional account information (optional)

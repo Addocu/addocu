@@ -1187,29 +1187,9 @@
           <h4 class="future-title">Pro Version Coming Soon</h4>
         </div>
         <p class="future-description">
-          We're working on advanced features to make Addocu even more powerful for professional teams.
+          Scheduled audits, AI features... and more.
         </p>
-        <div class="future-list">
-          <div class="future-item">
-            <div class="future-bullet"></div>
-            <span>BigQuery integration for data warehouse audits</span>
-          </div>
-          <div class="future-item">
-            <div class="future-bullet"></div>
-            <span>Google Ads campaigns and conversion tracking</span>
-          </div>
-          <div class="future-item">
-            <div class="future-bullet"></div>
-            <span>AI-powered analysis and optimization suggestions</span>
-          </div>
-          <div class="future-item">
-            <div class="future-bullet"></div>
-            <span>Scheduled audits and automated monitoring</span>
-          </div>
-          <div class="future-item">
-            <div class="future-bullet"></div>
-            <span>Multi-team collaboration and permissions</span>
-          </div>
+        <div class="future-list" style="display: none;">
         </div>
       </div>
     </div>
@@ -1510,8 +1490,8 @@
     }
 
     function resetConnectionStatus() {
-      const indicators = ['ga4-indicator', 'gtm-indicator', 'looker-indicator', 'gsc-indicator', 'youtube-indicator', 'gbp-indicator', 'ads-indicator', 'gmc-indicator'];
-      const statuses = ['ga4-status', 'gtm-status', 'looker-status', 'gsc-status', 'youtube-status', 'gbp-status', 'ads-status', 'gmc-status'];
+      const indicators = ['ga4-indicator', 'gtm-indicator', 'looker-indicator', 'gsc-indicator', 'youtube-indicator', 'gbp-indicator', 'ads-indicator', 'gmc-indicator', 'bigquery-indicator', 'adsense-indicator'];
+      const statuses = ['ga4-status', 'gtm-status', 'looker-status', 'gsc-status', 'youtube-status', 'gbp-status', 'ads-status', 'gmc-status', 'bigquery-status', 'adsense-status'];
 
       indicators.forEach(id => {
         document.getElementById(id).className = 'connection-indicator indicator-pending';
