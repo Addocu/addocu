@@ -64,10 +64,12 @@ function renderAdvancedDashboard(data) {
       ['Total GTM Tags', data.gtm.tags || 0],
       ['Total Looker Reports', data.looker.reports || 0],
       ['Total GSC Sites', data.gsc.sites || 0],
+      ['Total Ads Campaigns', data.ads ? data.ads.campaigns : 0],
       ['Total YouTube Channels', data.youtube ? data.youtube.channels : 0],
       ['Total GBP Locations', data.gbp ? data.gbp.locations : 0],
-      ['Total Ads Assets', data.ads ? data.ads.totalElements : 0],
       ['Total Merchant Center Assets', data.gmc ? data.gmc.totalElements : 0],
+      ['Total BigQuery Datasets', data.bigquery ? data.bigquery.datasets : 0],
+      ['Total AdSense Accounts', data.adsense ? data.adsense.accounts : 0],
       ['Health Score', `${data.healthScore || 0}%`]
     ];
 
@@ -87,16 +89,16 @@ function renderAdvancedDashboard(data) {
     currentRow++;
 
     const serviceData = [
-      ['Google Analytics 4', data.ga4.status || '✅ Active', data.ga4.totalElements || 0, data.ga4.lastUpdate || 'Never', data.ga4.qualityScore || 'N/A'],
-      ['Google Tag Manager', data.gtm.status || '✅ Active', data.gtm.totalElements || 0, data.gtm.lastUpdate || 'Never', data.gtm.qualityScore || 'N/A'],
-      ['Looker Studio', data.looker.status || '✅ Active', data.looker.totalElements || 0, data.looker.lastUpdate || 'Never', data.looker.qualityScore || 'N/A'],
-      ['Search Console', data.gsc.status || '✅ Active', data.gsc.totalElements || 0, data.gsc.lastUpdate || 'Never', data.gsc.qualityScore || 'N/A'],
-      ['YouTube', data.youtube ? data.youtube.status : '❌ Not Connected', data.youtube ? data.youtube.totalElements : 0, data.youtube ? data.youtube.lastUpdate : 'Never', '100%'],
-      ['Google Business Profile', data.gbp ? data.gbp.status : '❌ Not Connected', data.gbp ? data.gbp.totalElements : 0, data.gbp ? data.gbp.lastUpdate : 'Never', '100%'],
-      ['Google Ads', data.ads ? data.ads.status : '❌ Not Connected', data.ads ? data.ads.totalElements : 0, data.ads ? data.ads.lastUpdate : 'Never', '100%'],
-      ['Merchant Center', data.gmc ? data.gmc.status : '❌ Not Connected', data.gmc ? data.gmc.totalElements : 0, data.gmc ? data.gmc.lastUpdate : 'Never', '100%'],
-      ['BigQuery', data.bigquery ? data.bigquery.status : '❌ Not Connected', data.bigquery ? data.bigquery.totalElements : 0, data.bigquery ? data.bigquery.lastUpdate : 'Never', '100%'],
-      ['AdSense', data.adsense ? data.adsense.status : '❌ Not Connected', data.adsense ? data.adsense.totalElements : 0, data.adsense ? data.adsense.lastUpdate : 'Never', '100%']
+      ['Google Analytics 4', data.ga4.status || '⚠️ No Data', data.ga4.totalElements || 0, data.ga4.lastUpdate || 'Never', data.ga4.qualityScore || 'N/A'],
+      ['Google Tag Manager', data.gtm.status || '⚠️ No Data', data.gtm.totalElements || 0, data.gtm.lastUpdate || 'Never', data.gtm.qualityScore || 'N/A'],
+      ['Looker Studio', data.looker.status || '⚠️ No Data', data.looker.totalElements || 0, data.looker.lastUpdate || 'Never', data.looker.qualityScore || 'N/A'],
+      ['Search Console', data.gsc.status || '⚠️ No Data', data.gsc.totalElements || 0, data.gsc.lastUpdate || 'Never', data.gsc.qualityScore || 'N/A'],
+      ['YouTube', data.youtube ? data.youtube.status : '⚠️ No Data', data.youtube ? data.youtube.totalElements : 0, data.youtube ? data.youtube.lastUpdate : 'Never', '100%'],
+      ['Google Business Profile', data.gbp ? data.gbp.status : '⚠️ No Data', data.gbp ? data.gbp.totalElements : 0, data.gbp ? data.gbp.lastUpdate : 'Never', '100%'],
+      ['Google Ads', data.ads ? data.ads.status : '⚠️ No Data', data.ads ? data.ads.totalElements : 0, data.ads ? data.ads.lastUpdate : 'Never', '100%'],
+      ['Merchant Center', data.gmc ? data.gmc.status : '⚠️ No Data', data.gmc ? data.gmc.totalElements : 0, data.gmc ? data.gmc.lastUpdate : 'Never', '100%'],
+      ['BigQuery', data.bigquery ? data.bigquery.status : '⚠️ No Data', data.bigquery ? data.bigquery.totalElements : 0, data.bigquery ? data.bigquery.lastUpdate : 'Never', '100%'],
+      ['AdSense', data.adsense ? data.adsense.status : '⚠️ No Data', data.adsense ? data.adsense.totalElements : 0, data.adsense ? data.adsense.lastUpdate : 'Never', '100%']
     ];
 
     dashboardSheet.getRange(currentRow, 1, serviceData.length, serviceData[0].length).setValues(serviceData);
@@ -189,7 +191,11 @@ function recordHistoricalSnapshot(kpis) {
 
     if (!historySheet) {
       historySheet = ss.insertSheet('HISTORY');
-      const headers = ['Timestamp', 'GA4_Properties', 'GTM_Tags', 'Looker_Reports', 'Health_Score'];
+      const headers = [
+        'Timestamp', 'GA4_Elements', 'GTM_Elements', 'Looker_Elements', 'GSC_Elements',
+        'YouTube_Elements', 'GBP_Elements', 'Ads_Elements', 'GMC_Elements',
+        'BQ_Elements', 'AdSense_Elements', 'Health_Score'
+      ];
       historySheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     }
 
@@ -198,6 +204,13 @@ function recordHistoricalSnapshot(kpis) {
       kpis.ga4?.totalElements || 0,
       kpis.gtm?.totalElements || 0,
       kpis.looker?.totalElements || 0,
+      kpis.gsc?.totalElements || 0,
+      kpis.youtube?.totalElements || 0,
+      kpis.gbp?.totalElements || 0,
+      kpis.ads?.totalElements || 0,
+      kpis.gmc?.totalElements || 0,
+      kpis.bigquery?.totalElements || 0,
+      kpis.adsense?.totalElements || 0,
       kpis.healthScore || 0
     ];
 
@@ -488,7 +501,12 @@ function calculateHealthScore(quality, kpis) {
     // Boost score based on data completeness
     const totalElements = (kpis.ga4?.totalElements || 0) +
       (kpis.gtm?.totalElements || 0) +
-      (kpis.looker?.totalElements || 0);
+      (kpis.looker?.totalElements || 0) +
+      (kpis.ads?.totalElements || 0) +
+      (kpis.youtube?.totalElements || 0) +
+      (kpis.gmc?.totalElements || 0) +
+      (kpis.bigquery?.totalElements || 0) +
+      (kpis.adsense?.totalElements || 0);
 
     if (totalElements > 100) score += 5;
     if (totalElements > 500) score += 5;
@@ -646,7 +664,7 @@ function getGMCStats() {
       sources: totalSources,
       products: totalProducts,
       totalElements: total,
-      status: totalAccounts > 0 ? '✅ Active' : '❌ Not Connected',
+      status: totalAccounts > 0 ? '✅ Active' : '⚠️ No Data',
       lastUpdate: getLastUpdate('googleMerchantCenter'),
       qualityScore: "100%"
     };
@@ -654,6 +672,72 @@ function getGMCStats() {
     logWarning('DASHBOARD_V3', `Error getting GMC stats: ${e.message}`);
     return {
       accounts: 0, sources: 0, products: 0, totalElements: 0, status: '❌ Error', lastUpdate: 'N/A', qualityScore: '0%'
+    };
+  }
+}
+
+/**
+ * Collects statistics for BigQuery GA4 exports.
+ * @returns {Object} BigQuery statistics.
+ */
+function getBigQueryStats() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const datasetsSheet = ss.getSheetByName('BQ_DATASETS');
+    const tablesSheet = ss.getSheetByName('BQ_GA4_TABLES');
+    const linksSheet = ss.getSheetByName('BQ_GA4_EXPORT_LINKS');
+
+    const totalDatasets = datasetsSheet ? Math.max(0, datasetsSheet.getLastRow() - 1) : 0;
+    const totalTables = tablesSheet ? Math.max(0, tablesSheet.getLastRow() - 1) : 0;
+    const totalLinks = linksSheet ? Math.max(0, linksSheet.getLastRow() - 1) : 0;
+    const total = totalDatasets + totalTables + totalLinks;
+
+    return {
+      datasets: totalDatasets,
+      tables: totalTables,
+      links: totalLinks,
+      totalElements: total,
+      status: totalDatasets > 0 ? '✅ Active' : '⚠️ No Data',
+      lastUpdate: getLastUpdate('bigquery'),
+      qualityScore: "100%"
+    };
+  } catch (e) {
+    logWarning('DASHBOARD_V3', `Error getting BigQuery stats: ${e.message}`);
+    return {
+      datasets: 0, tables: 0, links: 0, totalElements: 0, status: '❌ Error', lastUpdate: 'N/A', qualityScore: '0%'
+    };
+  }
+}
+
+/**
+ * Collects statistics for Google AdSense.
+ * @returns {Object} AdSense statistics.
+ */
+function getAdSenseStats() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const accountsSheet = ss.getSheetByName('ADSENSE_ACCOUNTS');
+    const adUnitsSheet = ss.getSheetByName('ADSENSE_ADUNITS');
+    const sitesSheet = ss.getSheetByName('ADSENSE_SITES');
+
+    const totalAccounts = accountsSheet ? Math.max(0, accountsSheet.getLastRow() - 1) : 0;
+    const totalAdUnits = adUnitsSheet ? Math.max(0, adUnitsSheet.getLastRow() - 1) : 0;
+    const totalSites = sitesSheet ? Math.max(0, sitesSheet.getLastRow() - 1) : 0;
+    const total = totalAccounts + totalAdUnits + totalSites;
+
+    return {
+      accounts: totalAccounts,
+      adUnits: totalAdUnits,
+      sites: totalSites,
+      totalElements: total,
+      status: totalAccounts > 0 ? '✅ Active' : '⚠️ No Data',
+      lastUpdate: getLastUpdate('adsense'),
+      qualityScore: "100%"
+    };
+  } catch (e) {
+    logWarning('DASHBOARD_V3', `Error getting AdSense stats: ${e.message}`);
+    return {
+      accounts: 0, adUnits: 0, sites: 0, totalElements: 0, status: '❌ Error', lastUpdate: 'N/A', qualityScore: '0%'
     };
   }
 }
