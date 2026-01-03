@@ -893,11 +893,15 @@ function writeDataToSheet(sheetName, headers, data, platformName = 'this platfor
     'YouTube': '#FF0000',   // Red
     'Google Ads': '#FBBC05', // Yellow
     'AdSense': '#34A853',   // Green
-    'Merchant': '#F9AB00',  // Orange/Yellow
+    'Merchant Center': '#F9AB00',  // Orange/Yellow
+    'Merchant': '#F9AB00',  // Orange/Yellow (alias)
     'Search Console': '#4285F4', // Blue
-    'Looker': '#4285F4',    // Blue
-    'GBP': '#4285F4',       // Blue
-    'BigQuery': '#4285F4'   // Blue
+    'Looker Studio': '#4285F4',   // Blue
+    'Looker': '#4285F4',    // Blue (alias)
+    'Google Business Profile': '#4285F4', // Blue
+    'GBP': '#4285F4',       // Blue (alias)
+    'BigQuery': '#4285F4',  // Blue
+    'Business Profile': '#4285F4' // Blue (alias)
   };
 
   // Find a matching color

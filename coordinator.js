@@ -880,6 +880,59 @@ function executeCompleteAudit(services) {
 }
 
 // =================================================================
+// SHEET ORDERING UTILITY
+// =================================================================
+
+/**
+ * Sorts all sheets in the spreadsheet alphabetically.
+ * Keeps special sheets (DASHBOARD, LOGS) at the end in fixed order.
+ */
+function sortSheetsAlphabetically() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = spreadsheet.getSheets();
+
+    // Define special sheets that should stay at the end
+    const specialSheets = ['DASHBOARD', 'LOGS'];
+
+    // Separate regular sheets from special sheets
+    const regularSheets = [];
+    const specialSheetsMap = {};
+
+    for (const sheet of sheets) {
+      const name = sheet.getName();
+      if (specialSheets.includes(name)) {
+        specialSheetsMap[name] = sheet;
+      } else {
+        regularSheets.push(sheet);
+      }
+    }
+
+    // Sort regular sheets alphabetically by name
+    regularSheets.sort((a, b) => a.getName().localeCompare(b.getName()));
+
+    // Reorder sheets: regular (alphabetical) then special (fixed order)
+    let position = 1;
+    for (const sheet of regularSheets) {
+      spreadsheet.moveSheet(sheet, position);
+      position++;
+    }
+
+    // Add special sheets in fixed order at the end
+    for (const specialName of specialSheets) {
+      if (specialSheetsMap[specialName]) {
+        spreadsheet.moveSheet(specialSheetsMap[specialName], position);
+        position++;
+      }
+    }
+
+    logEvent('SHEET_ORDERING', 'Sheets sorted alphabetically');
+  } catch (e) {
+    logError('SHEET_ORDERING', `Error sorting sheets: ${e.message}`);
+  }
+}
+
+// =================================================================
 // SYNCHRONIZATION ORCHESTRATION WITH UI
 // =================================================================
 
@@ -922,6 +975,16 @@ function startCompleteAudit() {
     services.push('googleMerchantCenter');
   }
 
+  // BigQuery only if enabled
+  if (config.syncBigQuery) {
+    services.push('bigquery');
+  }
+
+  // AdSense only if enabled
+  if (config.syncAdSense) {
+    services.push('adsense');
+  }
+
   const ui = SpreadsheetApp.getUi();
   ui.alert(
     'Marketing Stack Audit (Open Source)',
@@ -934,9 +997,13 @@ function startCompleteAudit() {
   const result = executeCompleteAudit(services);
 
   if (result.success) {
+    // Sort sheets alphabetically after successful audit
+    sortSheetsAlphabetically();
+
     const message = `Audit completed in ${Math.round(result.duration / 1000)} seconds\n\n` +
       `Total audited elements: ${result.totalRecords}\n\n` +
-      'Check the generated sheets for complete details.';
+      'Check the generated sheets for complete details.\n\n' +
+      'Sheets have been sorted alphabetically.';
 
     ui.alert('Audit Finished', message, ui.ButtonSet.OK);
   } else {
