@@ -199,6 +199,10 @@ function simplifiedConnectionDiagnostics() {
           status = 'ERROR';
           account = 'Auth error';
           message = 'OAuth2 authorization needed';
+        } else if (service.id === 'googleBusinessProfile' && (result.message && (result.message.includes('429') || result.message.includes('Rate limit')))) {
+          status = 'WARNING';
+          account = 'Quota Restricted';
+          message = 'GBP API quota is 0 by default. Contact Google Support to enable it.';
         } else {
           status = 'ERROR';
           account = 'Error';

@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **🐛 Orchestration**: Fixed cross-platform error logging and UI refresh bugs.
+- **🛡️ Audit Resilience**: Wrapped all platform syncs in try-catch blocks to prevent a single service failure from stopping the entire "Audit Complete Stack" operation.
+- **🏪 GBP Quota Detection**: Added specific detection and guidance for Google Business Profile 429 (Rate Limit) errors caused by default 0 quota.
 - **🔍 Connection Indicators**: Corrected real-time status reporting for all APIs.
 
 ### Added

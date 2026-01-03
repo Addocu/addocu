@@ -673,82 +673,132 @@ function executeCompleteAudit(services) {
 
     // Audit GA4 (Free)
     if (services.includes('ga4')) {
-      logEvent('AUDIT', 'Starting GA4 audit');
-      const ga4Result = syncGA4Core();
-      results.ga4 = ga4Result;
-      totalRecords += ga4Result.records || 0;
+      try {
+        logEvent('AUDIT', 'Starting GA4 audit');
+        const ga4Result = syncGA4Core();
+        results.ga4 = ga4Result;
+        totalRecords += ga4Result.records || 0;
+      } catch (e) {
+        logError('AUDIT', `Error in GA4 audit: ${e.message}`);
+        results.ga4 = { success: false, error: e.message };
+      }
     }
 
     // Audit GTM
     if (services.includes('gtm')) {
-      logEvent('AUDIT', 'Starting GTM audit');
-      const gtmResult = syncGTMCore();
-      results.gtm = gtmResult;
-      totalRecords += gtmResult.records || 0;
+      try {
+        logEvent('AUDIT', 'Starting GTM audit');
+        const gtmResult = syncGTMCore();
+        results.gtm = gtmResult;
+        totalRecords += gtmResult.records || 0;
+      } catch (e) {
+        logError('AUDIT', `Error in GTM audit: ${e.message}`);
+        results.gtm = { success: false, error: e.message };
+      }
     }
 
     // Audit Looker Studio
     if (services.includes('looker')) {
-      logEvent('AUDIT', 'Starting Looker Studio audit');
-      const lookerResult = syncLookerStudioCore();
-      results.looker = lookerResult;
-      totalRecords += lookerResult.records || 0;
+      try {
+        logEvent('AUDIT', 'Starting Looker Studio audit');
+        const lookerResult = syncLookerStudioCore();
+        results.looker = lookerResult;
+        totalRecords += lookerResult.records || 0;
+      } catch (e) {
+        logError('AUDIT', `Error in Looker Studio audit: ${e.message}`);
+        results.looker = { success: false, error: e.message };
+      }
     }
 
     // Audit Search Console
     if (services.includes('searchConsole')) {
-      logEvent('AUDIT', 'Starting Search Console audit');
-      const gscResult = syncSearchConsoleCore();
-      results.searchConsole = gscResult;
-      totalRecords += gscResult.records || 0;
+      try {
+        logEvent('AUDIT', 'Starting Search Console audit');
+        const gscResult = syncSearchConsoleCore();
+        results.searchConsole = gscResult;
+        totalRecords += gscResult.records || 0;
+      } catch (e) {
+        logError('AUDIT', `Error in Search Console audit: ${e.message}`);
+        results.searchConsole = { success: false, error: e.message };
+      }
     }
 
     // Audit YouTube
     if (services.includes('youtube')) {
-      logEvent('AUDIT', 'Starting YouTube audit');
-      const youtubeResult = syncYouTubeCore();
-      results.youtube = youtubeResult;
-      totalRecords += youtubeResult.records || 0;
+      try {
+        logEvent('AUDIT', 'Starting YouTube audit');
+        const youtubeResult = syncYouTubeCore();
+        results.youtube = youtubeResult;
+        totalRecords += youtubeResult.records || 0;
+      } catch (e) {
+        logError('AUDIT', `Error in YouTube audit: ${e.message}`);
+        results.youtube = { success: false, error: e.message };
+      }
     }
 
     // Audit GBP
     if (services.includes('googleBusinessProfile')) {
-      logEvent('AUDIT', 'Starting GBP audit');
-      const gbpResult = syncGBPCore();
-      results.googleBusinessProfile = gbpResult;
-      totalRecords += gbpResult.records || 0;
+      try {
+        logEvent('AUDIT', 'Starting GBP audit');
+        const gbpResult = syncGBPCore();
+        results.googleBusinessProfile = gbpResult;
+        totalRecords += gbpResult.records || 0;
+      } catch (e) {
+        logError('AUDIT', `Error in GBP audit: ${e.message}`);
+        results.googleBusinessProfile = { success: false, error: e.message };
+      }
     }
 
     // Audit Google Ads
     if (services.includes('googleAds')) {
-      logEvent('AUDIT', 'Starting Google Ads audit');
-      const adsResult = syncGoogleAdsCore();
-      results.googleAds = adsResult;
-      totalRecords += adsResult.records || 0;
+      try {
+        logEvent('AUDIT', 'Starting Google Ads audit');
+        const adsResult = syncGoogleAdsCore();
+        results.googleAds = adsResult;
+        totalRecords += adsResult.records || 0;
+      } catch (e) {
+        logError('AUDIT', `Error in Google Ads audit: ${e.message}`);
+        results.googleAds = { success: false, error: e.message };
+      }
     }
 
     // Audit Merchant Center
     if (services.includes('googleMerchantCenter')) {
-      logEvent('AUDIT', 'Starting Merchant Center audit');
-      const gmcResult = syncGMCCore();
-      results.googleMerchantCenter = gmcResult;
-      totalRecords += gmcResult.records || 0;
+      try {
+        logEvent('AUDIT', 'Starting Merchant Center audit');
+        const gmcResult = syncGMCCore();
+        results.googleMerchantCenter = gmcResult;
+        totalRecords += gmcResult.records || 0;
+      } catch (e) {
+        logError('AUDIT', `Error in Merchant Center audit: ${e.message}`);
+        results.googleMerchantCenter = { success: false, error: e.message };
+      }
     }
 
     // Audit BigQuery
     if (services.includes('bigquery')) {
-      logEvent('AUDIT', 'Starting BigQuery audit');
-      const bqResult = syncBigQueryCore();
-      results.bigquery = bqResult;
-      totalRecords += bqResult.records || 0;
+      try {
+        logEvent('AUDIT', 'Starting BigQuery audit');
+        const bqResult = syncBigQueryCore();
+        results.bigquery = bqResult;
+        totalRecords += bqResult.records || 0;
+      } catch (e) {
+        logError('AUDIT', `Error in BigQuery audit: ${e.message}`);
+        results.bigquery = { success: false, error: e.message };
+      }
     }
 
     // Audit AdSense
     if (services.includes('adsense')) {
-      logEvent('AUDIT', 'Starting AdSense audit');
-      const adSenseResult = syncAdSenseCore();
-      results.adsense = adSenseResult;
-      totalRecords += adSenseResult.records || 0;
+      try {
+        logEvent('AUDIT', 'Starting AdSense audit');
+        const adSenseResult = syncAdSenseCore();
+        results.adsense = adSenseResult;
+        totalRecords += adSenseResult.records || 0;
+      } catch (e) {
+        logError('AUDIT', `Error in AdSense audit: ${e.message}`);
+        results.adsense = { success: false, error: e.message };
+      }
     }
 
     // Generate executive dashboard
