@@ -54,6 +54,7 @@ function onOpen(e) {
         .addSeparator()
         .addItem('🫀 Heartbeat Alert (PRO)', 'runHeartbeatAlert')
         .addItem('🔬 Dimensional Health (PRO)', 'runDimensionalHealthCheck')
+        .addItem('📚 Data Inventory (PRO)', 'runDataInventory')
       )
       .addSubMenu(SpreadsheetApp.getUi().createMenu('Troubleshooting')
         .addItem('Verify Accounts (IMPORTANT)', 'showAccountVerification')

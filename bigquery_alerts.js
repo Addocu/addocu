@@ -33,7 +33,8 @@ const BQ_ALERTS_SHEETS = {
     anomalies: 'BQ_ANOMALIES',
     config: 'BQ_ALERTS_CONFIG',
     configAudit: 'CONFIG_AUDIT',
-    paramHealth: 'BQ_PARAM_HEALTH'
+    paramHealth: 'BQ_PARAM_HEALTH',
+    dataInventory: 'BQ_DATA_INVENTORY'
 };
 
 // =================================================================
@@ -817,3 +818,301 @@ function cleanupDimensionalHealthTriggers() {
     }
 }
 
+// =================================================================
+// DATA INVENTORY (Phase 3)
+// =================================================================
+
+/**
+ * Runs the Data Inventory discovery.
+ * Auto-discovers all GA4 parameters with data types and usage stats.
+ * Called from menu: Extensions > Addocu > Tools > Data Inventory
+ */
+function runDataInventory() {
+    try {
+        const userConfig = getUserConfig();
+        const projectId = userConfig.bqProjectId;
+
+        if (!projectId) {
+            SpreadsheetApp.getUi().alert(
+                'Configuration Required',
+                'Please set your BigQuery Project ID in Configure Addocu > Advanced Filters.',
+                SpreadsheetApp.getUi().ButtonSet.OK
+            );
+            return;
+        }
+
+        logEvent('BQ_ALERTS', 'Starting Data Inventory discovery...');
+        SpreadsheetApp.getActiveSpreadsheet().toast('Discovering all parameters...', 'Data Inventory', 10);
+
+        const jobId = submitDataInventoryQuery(projectId);
+
+        if (jobId) {
+            PropertiesService.getScriptProperties().setProperty('BQ_INVENTORY_JOB_ID', jobId);
+            PropertiesService.getScriptProperties().setProperty('BQ_INVENTORY_PROJECT_ID', projectId);
+
+            ScriptApp.newTrigger('checkDataInventoryJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Query submitted. Results will appear shortly...', 'Data Inventory', 5);
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Data Inventory failed: ${e.message}`);
+        SpreadsheetApp.getUi().alert('Error', `Data Inventory failed: ${e.message}`, SpreadsheetApp.getUi().ButtonSet.OK);
+    }
+}
+
+/**
+ * Checks the status of a running Data Inventory query job.
+ */
+function checkDataInventoryJobStatus() {
+    try {
+        const scriptProps = PropertiesService.getScriptProperties();
+        const jobId = scriptProps.getProperty('BQ_INVENTORY_JOB_ID');
+        const projectId = scriptProps.getProperty('BQ_INVENTORY_PROJECT_ID');
+
+        if (!jobId || !projectId) {
+            cleanupDataInventoryTriggers();
+            return;
+        }
+
+        const job = BigQuery.Jobs.get(projectId, jobId);
+        const state = job.status.state;
+
+        logEvent('BQ_ALERTS', `Data Inventory job ${jobId} status: ${state}`);
+
+        if (state === 'DONE') {
+            if (job.status.errorResult) {
+                throw new Error(job.status.errorResult.message);
+            }
+
+            const results = BigQuery.Jobs.getQueryResults(projectId, jobId);
+            processDataInventoryResults(results);
+
+            scriptProps.deleteProperty('BQ_INVENTORY_JOB_ID');
+            scriptProps.deleteProperty('BQ_INVENTORY_PROJECT_ID');
+            cleanupDataInventoryTriggers();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Data Inventory complete!', 'Data Inventory', 5);
+
+        } else if (state === 'RUNNING' || state === 'PENDING') {
+            ScriptApp.newTrigger('checkDataInventoryJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Error checking Data Inventory job: ${e.message}`);
+        cleanupDataInventoryTriggers();
+    }
+}
+
+/**
+ * Submits the Data Inventory discovery query to BigQuery.
+ * @param {string} projectId - GCP Project ID
+ * @returns {string} Job ID
+ */
+function submitDataInventoryQuery(projectId) {
+    const datasetId = getGA4DatasetId(projectId);
+
+    if (!datasetId) {
+        throw new Error('No GA4 export dataset found.');
+    }
+
+    const query = buildDataInventoryQuery(projectId, datasetId);
+
+    logEvent('BQ_ALERTS', `Submitting Data Inventory query to ${projectId}.${datasetId}`);
+
+    const job = BigQuery.Jobs.insert({
+        configuration: {
+            query: {
+                query: query,
+                useLegacySql: false
+            }
+        }
+    }, projectId);
+
+    return job.jobReference.jobId;
+}
+
+/**
+ * Builds the Data Inventory SQL query.
+ * Discovers all parameters with data types and usage statistics.
+ * @param {string} projectId - GCP Project ID
+ * @param {string} datasetId - BigQuery Dataset ID
+ * @returns {string} SQL query
+ */
+function buildDataInventoryQuery(projectId, datasetId) {
+    return `
+WITH param_discovery AS (
+  SELECT
+    event_name,
+    ep.key as parameter_name,
+    CASE
+      WHEN COUNT(DISTINCT ep.value.string_value) > 0 AND MAX(ep.value.string_value) IS NOT NULL THEN 'STRING'
+      WHEN COUNT(DISTINCT ep.value.int_value) > 0 AND MAX(ep.value.int_value) IS NOT NULL THEN 'INT'
+      WHEN COUNT(DISTINCT ep.value.double_value) > 0 AND MAX(ep.value.double_value) IS NOT NULL THEN 'DOUBLE'
+      ELSE 'UNKNOWN'
+    END as data_type,
+    platform,
+    COUNT(*) as usage_count,
+    COUNT(DISTINCT PARSE_DATE('%Y%m%d', event_date)) as days_active,
+    MIN(PARSE_DATE('%Y%m%d', event_date)) as first_seen,
+    MAX(PARSE_DATE('%Y%m%d', event_date)) as last_seen
+  FROM \`${projectId}.${datasetId}.events_*\`
+  CROSS JOIN UNNEST(event_params) ep
+  WHERE _TABLE_SUFFIX BETWEEN 
+    FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY))
+    AND FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+  GROUP BY event_name, parameter_name, platform
+)
+SELECT
+  event_name,
+  parameter_name,
+  data_type,
+  platform,
+  usage_count,
+  days_active,
+  first_seen,
+  last_seen,
+  -- Identify potential issues
+  CASE
+    WHEN days_active = 1 THEN 'NEW'
+    WHEN days_active < 7 THEN 'RECENT'
+    WHEN usage_count < 100 THEN 'LOW_USAGE'
+    ELSE 'ACTIVE'
+  END as status,
+  -- Check if it's a standard GA4 parameter
+  CASE
+    WHEN parameter_name IN ('page_location', 'page_title', 'page_referrer', 'screen_class', 
+      'screen_name', 'firebase_screen', 'firebase_event_origin', 'engagement_time_msec',
+      'ga_session_id', 'ga_session_number', 'session_engaged', 'entrances', 'debug_mode',
+      'ignore_referrer', 'term', 'medium', 'source', 'campaign', 'content', 'campaign_id',
+      'gclid', 'dclid', 'srsltid', 'engaged_session_event', 'firebase_conversion') THEN 'STANDARD'
+    WHEN parameter_name LIKE 'ep.%' OR parameter_name LIKE 'up.%' THEN 'CUSTOM'
+    WHEN parameter_name LIKE 'im_%' THEN 'CUSTOM'
+    ELSE 'CUSTOM'
+  END as param_category
+FROM param_discovery
+ORDER BY 
+  event_name,
+  usage_count DESC
+`;
+}
+
+/**
+ * Processes Data Inventory query results.
+ * @param {Object} results - BigQuery query results
+ */
+function processDataInventoryResults(results) {
+    const rows = results.rows || [];
+    const syncDate = formatDate(new Date());
+
+    logEvent('BQ_ALERTS', `Processing ${rows.length} parameter inventory results`);
+
+    const headers = [
+        'Event', 'Parameter', 'Data Type', 'Platform', 'Usage Count',
+        'Days Active', 'First Seen', 'Last Seen', 'Status', 'Category', 'Sync Date'
+    ];
+
+    const data = rows.map(row => {
+        const f = row.f;
+        return [
+            f[0].v || '',
+            f[1].v || '',
+            f[2].v || '',
+            f[3].v || '',
+            parseInt(f[4].v) || 0,
+            parseInt(f[5].v) || 0,
+            f[6].v || '',
+            f[7].v || '',
+            f[8].v || '',
+            f[9].v || '',
+            syncDate
+        ];
+    });
+
+    writeDataInventoryResultsToSheet(headers, data);
+
+    // Summary stats
+    const newParams = data.filter(r => r[8] === 'NEW').length;
+    const lowUsage = data.filter(r => r[8] === 'LOW_USAGE').length;
+    const customParams = data.filter(r => r[9] === 'CUSTOM').length;
+
+    logEvent('BQ_ALERTS', `Data Inventory complete: ${data.length} params (${newParams} new, ${lowUsage} low-usage, ${customParams} custom)`);
+
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+        `Found ${data.length} parameters (${customParams} custom, ${newParams} new)`,
+        'Data Inventory',
+        10
+    );
+}
+
+/**
+ * Writes Data Inventory results to sheet.
+ * @param {Array} headers - Column headers
+ * @param {Array} data - Row data
+ */
+function writeDataInventoryResultsToSheet(headers, data) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(BQ_ALERTS_SHEETS.dataInventory);
+
+    if (!sheet) {
+        sheet = ss.insertSheet(BQ_ALERTS_SHEETS.dataInventory);
+        sheet.setTabColor('#10B981'); // Green for inventory
+    }
+
+    sheet.clear();
+
+    const headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setValues([headers]);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#1A5DBB');
+    headerRange.setFontColor('white');
+
+    if (data.length > 0) {
+        const dataRange = sheet.getRange(2, 1, data.length, headers.length);
+        dataRange.setValues(data);
+
+        const statusColIndex = headers.indexOf('Status') + 1;
+        const categoryColIndex = headers.indexOf('Category') + 1;
+
+        for (let i = 0; i < data.length; i++) {
+            const status = data[i][8];
+            const category = data[i][9];
+
+            // Color code status
+            if (status === 'NEW') {
+                sheet.getRange(i + 2, statusColIndex).setBackground('#DBEAFE').setFontColor('#1D4ED8');
+            } else if (status === 'LOW_USAGE') {
+                sheet.getRange(i + 2, statusColIndex).setBackground('#FEF3C7').setFontColor('#D97706');
+            }
+
+            // Color code category
+            if (category === 'CUSTOM') {
+                sheet.getRange(i + 2, categoryColIndex).setFontWeight('bold').setFontColor('#7C3AED');
+            }
+        }
+    } else {
+        sheet.getRange(2, 1).setValue('No parameters found in the last 30 days.');
+    }
+
+    sheet.autoResizeColumns(1, headers.length);
+    sheet.setFrozenRows(1);
+
+    // Add filter for easy exploration
+    sheet.getRange(1, 1, data.length + 1, headers.length).createFilter();
+}
+
+/**
+ * Cleans up Data Inventory triggers.
+ */
+function cleanupDataInventoryTriggers() {
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const trigger of triggers) {
+        if (trigger.getHandlerFunction() === 'checkDataInventoryJobStatus') {
+            ScriptApp.deleteTrigger(trigger);
+        }
+    }
+}
