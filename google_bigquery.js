@@ -182,6 +182,7 @@ function listBigQueryDatasets(projectId) {
 
 /**
  * Lists GA4 export tables in a dataset.
+ * Implements date range filtering to avoid timeout issues.
  * @param {string} projectId - GCP Project ID
  * @param {string} datasetId - Dataset ID
  * @returns {Array<Object>} Array of table objects.
@@ -194,11 +195,75 @@ function listGA4ExportTables(projectId, datasetId) {
   const response = fetchWithRetry(url, options, `BQ-Tables-${datasetId}`);
   if (!response || !response.tables) return [];
 
-  // Get detailed metadata for each table
-  return response.tables.map(t => {
+  // Get date range filter from user config (default: 30 days)
+  const dateRangeDays = getBigQueryTableDateRange();
+
+  // Filter tables by date before fetching metadata (critical optimization)
+  const filteredTables = filterTablesByDateRange(response.tables, dateRangeDays);
+
+  logEvent('BigQuery', `Dataset ${datasetId}: ${response.tables.length} total tables, ${filteredTables.length} within ${dateRangeDays}-day range`);
+
+  // Get detailed metadata only for filtered tables
+  return filteredTables.map(t => {
     const tableRef = t.tableReference;
     return getTableMetadata(projectId, datasetId, tableRef.tableId);
   }).filter(t => t !== null);
+}
+
+/**
+ * Gets the BigQuery table date range from user config.
+ * @returns {number} Number of days to look back (default: 30)
+ */
+function getBigQueryTableDateRange() {
+  try {
+    const userProperties = PropertiesService.getUserProperties();
+    const range = userProperties.getProperty('ADDOCU_BQ_TABLE_DATE_RANGE');
+    if (range === 'all') return -1; // -1 means no filtering
+    const days = parseInt(range);
+    return days > 0 ? days : 30; // Default: 30 days
+  } catch (e) {
+    return 30; // Default if error
+  }
+}
+
+/**
+ * Filters tables by date range to reduce API calls.
+ * Only GA4 daily export tables (events_YYYYMMDD) are filtered.
+ * Streaming, intraday, and other tables are always included.
+ * @param {Array} tables - Array of table objects from BigQuery API
+ * @param {number} daysBack - Number of days to look back (-1 = all)
+ * @returns {Array} Filtered array of tables
+ */
+function filterTablesByDateRange(tables, daysBack) {
+  // If daysBack is -1, return all tables (no filtering)
+  if (daysBack < 0) {
+    logEvent('BigQuery', 'Date range filter disabled (processing all tables)');
+    return tables;
+  }
+
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+  cutoffDate.setHours(0, 0, 0, 0);
+
+  return tables.filter(table => {
+    const tableId = table.tableReference.tableId;
+
+    // Match GA4 daily export tables: events_YYYYMMDD
+    const dailyMatch = tableId.match(/^events_(\d{8})$/);
+    if (dailyMatch) {
+      const dateStr = dailyMatch[1];
+      const year = parseInt(dateStr.substring(0, 4));
+      const month = parseInt(dateStr.substring(4, 6)) - 1; // 0-indexed
+      const day = parseInt(dateStr.substring(6, 8));
+      const tableDate = new Date(year, month, day);
+
+      // Only include if within date range
+      return tableDate >= cutoffDate;
+    }
+
+    // Always include non-daily tables (streaming, intraday, custom)
+    return true;
+  });
 }
 
 /**

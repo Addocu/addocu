@@ -254,7 +254,10 @@ function readUserConfiguration() {
 
       // User Status
       isFirstTime: userProperties.getProperty('ADDOCU_FIRST_TIME') !== 'false',
-      isPro: true // All users have complete access
+      isPro: true, // All users have complete access
+
+      // BigQuery Configuration
+      bqTableDateRange: userProperties.getProperty('ADDOCU_BQ_TABLE_DATE_RANGE') || '30'
     };
 
     return config;
@@ -360,6 +363,12 @@ function saveUserConfiguration(config) {
       } else {
         userProperties.deleteProperty('ADDOCU_GTM_WORKSPACES_FILTER');
       }
+    }
+
+    // Save BigQuery table date range
+    if (config.bqTableDateRange !== undefined) {
+      userProperties.setProperty('ADDOCU_BQ_TABLE_DATE_RANGE', config.bqTableDateRange.toString());
+      logEvent('CONFIG', `BigQuery table date range set to: ${config.bqTableDateRange}`);
     }
 
     // Mark as not first time (OAuth2 is always ready)

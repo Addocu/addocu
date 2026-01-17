@@ -860,7 +860,8 @@
         </div>
 
         <div class="section-description highlight">
-          <strong>Hybrid Model:</strong> Addocu requires both OAuth2 (automatic) for permissions AND your Google Cloud API Key (manual) for API access. Both are mandatory.
+          <strong>Hybrid Model:</strong> Addocu requires both OAuth2 (automatic) for permissions AND your Google Cloud
+          API Key (manual) for API access. Both are mandatory.
         </div>
 
         <div class="input-group">
@@ -1163,6 +1164,24 @@
                   Example: my-analytics-project
                 </div>
               </div>
+
+              <div class="input-group">
+                <label class="input-label">BigQuery Table Date Range</label>
+                <div class="input-field">
+                  <select id="bq-table-date-range"
+                    style="width: 100%; padding: 12px 16px; border: 1px solid var(--addocu-border); border-radius: 8px; font-size: 14px; background: var(--addocu-white); cursor: pointer;">
+                    <option value="7">Last 7 days</option>
+                    <option value="30" selected>Last 30 days (recommended)</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="365">Last 365 days</option>
+                    <option value="all">All tables (may timeout)</option>
+                  </select>
+                </div>
+                <div class="input-help">
+                  <strong>Important:</strong> GA4 exports create ~365 tables per dataset. Processing all tables can
+                  cause timeouts. We recommend 30 days for typical audits.
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1387,6 +1406,11 @@
             document.getElementById('bq-project-id').value = config.bqProjectId;
           }
 
+          if (config && config.bqTableDateRange) {
+            appState.filters.bqTableDateRange = config.bqTableDateRange;
+            document.getElementById('bq-table-date-range').value = config.bqTableDateRange;
+          }
+
           hideStatus();
 
           // Auto-test connection if API key is configured
@@ -1440,6 +1464,7 @@
       appState.filters.ga4Properties = document.getElementById('ga4-properties').value.trim();
       appState.filters.gtmWorkspaces = document.getElementById('gtm-workspaces').value.trim();
       appState.filters.bqProjectId = document.getElementById('bq-project-id').value.trim();
+      appState.filters.bqTableDateRange = document.getElementById('bq-table-date-range').value;
     }
 
     function parseCommaSeparatedValues(input) {
@@ -1652,9 +1677,15 @@
         services: enabledServices,
         filters: {
           ga4Properties: parseCommaSeparatedValues(appState.filters.ga4Properties),
-          gtmWorkspaces: parseCommaSeparatedValues(appState.filters.gtmWorkspaces)
+          gtmWorkspaces: parseCommaSeparatedValues(appState.filters.gtmWorkspaces),
+          bqTableDateRange: appState.filters.bqTableDateRange || '30'
         }
       };
+
+      // Save BigQuery date range before audit
+      google.script.run.saveUserConfiguration({
+        bqTableDateRange: appState.filters.bqTableDateRange || '30'
+      });
 
       google.script.run
         .withSuccessHandler(function (response) {
