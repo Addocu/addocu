@@ -31,7 +31,9 @@ const BQ_ALERTS_CONFIG = {
 // Sheet names for alerts
 const BQ_ALERTS_SHEETS = {
     anomalies: 'BQ_ANOMALIES',
-    config: 'BQ_ALERTS_CONFIG'
+    config: 'BQ_ALERTS_CONFIG',
+    configAudit: 'CONFIG_AUDIT',
+    paramHealth: 'BQ_PARAM_HEALTH'
 };
 
 // =================================================================
@@ -449,3 +451,369 @@ function estimateHeartbeatQueryCost(projectId) {
         return { error: e.message };
     }
 }
+
+// =================================================================
+// DIMENSIONAL HEALTH CHECK (Phase 2)
+// =================================================================
+
+/**
+ * Runs the Dimensional Health Check.
+ * Validates parameter fill rates based on CONFIG_AUDIT sheet rules.
+ * Called from menu: Extensions > Addocu > Tools > Dimensional Health Check
+ */
+function runDimensionalHealthCheck() {
+    try {
+        const userConfig = getUserConfig();
+        const projectId = userConfig.bqProjectId;
+
+        if (!projectId) {
+            SpreadsheetApp.getUi().alert(
+                'Configuration Required',
+                'Please set your BigQuery Project ID in Configure Addocu > Advanced Filters.',
+                SpreadsheetApp.getUi().ButtonSet.OK
+            );
+            return;
+        }
+
+        // Ensure CONFIG_AUDIT sheet exists with template
+        const auditRules = getOrCreateConfigAuditSheet();
+
+        if (auditRules.length === 0) {
+            SpreadsheetApp.getUi().alert(
+                'No Audit Rules',
+                'Please add at least one event/parameter rule to the CONFIG_AUDIT sheet, then run again.',
+                SpreadsheetApp.getUi().ButtonSet.OK
+            );
+            return;
+        }
+
+        logEvent('BQ_ALERTS', `Starting Dimensional Health Check with ${auditRules.length} rules...`);
+        SpreadsheetApp.getActiveSpreadsheet().toast(`Validating ${auditRules.length} event/param rules...`, 'Dimensional Health Check', 10);
+
+        // Submit the BigQuery job
+        const jobId = submitDimensionalHealthQuery(projectId, auditRules);
+
+        if (jobId) {
+            PropertiesService.getScriptProperties().setProperty('BQ_DIMHEALTH_JOB_ID', jobId);
+            PropertiesService.getScriptProperties().setProperty('BQ_DIMHEALTH_PROJECT_ID', projectId);
+
+            ScriptApp.newTrigger('checkDimensionalHealthJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Query submitted. Results will appear shortly...', 'Dimensional Health Check', 5);
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Dimensional Health Check failed: ${e.message}`);
+        SpreadsheetApp.getUi().alert('Error', `Dimensional Health Check failed: ${e.message}`, SpreadsheetApp.getUi().ButtonSet.OK);
+    }
+}
+
+/**
+ * Checks the status of a running Dimensional Health query job.
+ */
+function checkDimensionalHealthJobStatus() {
+    try {
+        const scriptProps = PropertiesService.getScriptProperties();
+        const jobId = scriptProps.getProperty('BQ_DIMHEALTH_JOB_ID');
+        const projectId = scriptProps.getProperty('BQ_DIMHEALTH_PROJECT_ID');
+
+        if (!jobId || !projectId) {
+            cleanupDimensionalHealthTriggers();
+            return;
+        }
+
+        const job = BigQuery.Jobs.get(projectId, jobId);
+        const state = job.status.state;
+
+        logEvent('BQ_ALERTS', `Dimensional Health job ${jobId} status: ${state}`);
+
+        if (state === 'DONE') {
+            if (job.status.errorResult) {
+                throw new Error(job.status.errorResult.message);
+            }
+
+            const results = BigQuery.Jobs.getQueryResults(projectId, jobId);
+            processDimensionalHealthResults(results);
+
+            scriptProps.deleteProperty('BQ_DIMHEALTH_JOB_ID');
+            scriptProps.deleteProperty('BQ_DIMHEALTH_PROJECT_ID');
+            cleanupDimensionalHealthTriggers();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Dimensional Health Check complete!', 'Health Check', 5);
+
+        } else if (state === 'RUNNING' || state === 'PENDING') {
+            ScriptApp.newTrigger('checkDimensionalHealthJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Error checking Dimensional Health job: ${e.message}`);
+        cleanupDimensionalHealthTriggers();
+    }
+}
+
+/**
+ * Gets or creates the CONFIG_AUDIT sheet with template headers.
+ * @returns {Array} Array of audit rule objects
+ */
+function getOrCreateConfigAuditSheet() {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(BQ_ALERTS_SHEETS.configAudit);
+
+    const headers = ['Event Name', 'Parameter Name', 'Platform', 'Min Fill Rate %', 'Alert Type', 'Active'];
+
+    if (!sheet) {
+        // Create new sheet with template
+        sheet = ss.insertSheet(BQ_ALERTS_SHEETS.configAudit);
+        sheet.setTabColor('#3B82F6'); // Blue for config
+
+        // Write headers
+        const headerRange = sheet.getRange(1, 1, 1, headers.length);
+        headerRange.setValues([headers]);
+        headerRange.setFontWeight('bold');
+        headerRange.setBackground('#1E40AF');
+        headerRange.setFontColor('white');
+
+        // Add example rows
+        const examples = [
+            ['purchase', 'im_store_id', 'ALL', 95, 'DROP', true],
+            ['page_view', 'im_page_type', 'ALL', 90, 'DROP', true],
+            ['add_to_cart', 'item_id', 'ALL', 99, 'DROP', true]
+        ];
+        sheet.getRange(2, 1, examples.length, headers.length).setValues(examples);
+
+        // Add helper note
+        sheet.getRange(6, 1).setValue('ℹ️ Add your critical event/parameter pairs above. Platform: ALL, WEB, IOS, or ANDROID');
+        sheet.getRange(6, 1).setFontStyle('italic').setFontColor('#6B7280');
+
+        sheet.autoResizeColumns(1, headers.length);
+        sheet.setFrozenRows(1);
+
+        logEvent('BQ_ALERTS', 'Created CONFIG_AUDIT sheet with template');
+        return []; // Return empty on first creation so user can configure
+    }
+
+    // Read existing rules
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return [];
+
+    const data = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+
+    const rules = data
+        .filter(row => row[0] && row[1] && row[5] === true) // Has event, param, and is active
+        .map(row => ({
+            eventName: row[0].toString().trim(),
+            paramName: row[1].toString().trim(),
+            platform: row[2].toString().trim() || 'ALL',
+            minFillRate: parseFloat(row[3]) || 90,
+            alertType: row[4].toString().trim() || 'DROP'
+        }));
+
+    return rules;
+}
+
+/**
+ * Submits the Dimensional Health query to BigQuery.
+ * @param {string} projectId - GCP Project ID
+ * @param {Array} rules - Audit rules from CONFIG_AUDIT sheet
+ * @returns {string} Job ID
+ */
+function submitDimensionalHealthQuery(projectId, rules) {
+    const datasetId = getGA4DatasetId(projectId);
+
+    if (!datasetId) {
+        throw new Error('No GA4 export dataset found.');
+    }
+
+    const query = buildDimensionalHealthQuery(projectId, datasetId, rules);
+
+    logEvent('BQ_ALERTS', `Submitting Dimensional Health query for ${rules.length} rules`);
+
+    const job = BigQuery.Jobs.insert({
+        configuration: {
+            query: {
+                query: query,
+                useLegacySql: false
+            }
+        }
+    }, projectId);
+
+    return job.jobReference.jobId;
+}
+
+/**
+ * Builds the Dimensional Health SQL query for all rules.
+ * @param {string} projectId - GCP Project ID
+ * @param {string} datasetId - BigQuery Dataset ID
+ * @param {Array} rules - Audit rules
+ * @returns {string} SQL query
+ */
+function buildDimensionalHealthQuery(projectId, datasetId, rules) {
+    // Build UNION ALL for each rule
+    const ruleQueries = rules.map((rule, idx) => {
+        const platformFilter = rule.platform === 'ALL'
+            ? ''
+            : `AND platform = '${rule.platform}'`;
+
+        return `
+    SELECT
+      '${rule.eventName}' as event_name,
+      '${rule.paramName}' as parameter_name,
+      '${rule.platform}' as expected_platform,
+      platform as actual_platform,
+      ${rule.minFillRate} as min_fill_rate,
+      COUNT(*) as total_events,
+      COUNTIF((SELECT value.string_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL
+           OR (SELECT value.int_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL
+           OR (SELECT value.double_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL) as with_param,
+      ROUND(100 * COUNTIF((SELECT value.string_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL
+           OR (SELECT value.int_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL
+           OR (SELECT value.double_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL) / COUNT(*), 2) as fill_rate_pct
+    FROM \`${projectId}.${datasetId}.events_*\`
+    WHERE _TABLE_SUFFIX = FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY))
+      AND event_name = '${rule.eventName}'
+      ${platformFilter}
+    GROUP BY platform`;
+    });
+
+    const unionQuery = ruleQueries.join('\n    UNION ALL\n');
+
+    return `
+WITH param_stats AS (
+  ${unionQuery}
+)
+SELECT
+  event_name,
+  parameter_name,
+  expected_platform,
+  actual_platform,
+  min_fill_rate,
+  total_events,
+  with_param,
+  fill_rate_pct,
+  CASE
+    WHEN fill_rate_pct < min_fill_rate - 10 THEN 'CRITICAL'
+    WHEN fill_rate_pct < min_fill_rate THEN 'WARNING'
+    ELSE 'OK'
+  END as status
+FROM param_stats
+WHERE total_events > 0
+ORDER BY 
+  CASE WHEN fill_rate_pct < min_fill_rate - 10 THEN 1 WHEN fill_rate_pct < min_fill_rate THEN 2 ELSE 3 END,
+  fill_rate_pct ASC
+`;
+}
+
+/**
+ * Processes Dimensional Health query results.
+ * @param {Object} results - BigQuery query results
+ */
+function processDimensionalHealthResults(results) {
+    const rows = results.rows || [];
+    const syncDate = formatDate(new Date());
+
+    logEvent('BQ_ALERTS', `Processing ${rows.length} parameter health results`);
+
+    const headers = [
+        'Event', 'Parameter', 'Expected Platform', 'Actual Platform',
+        'Min Fill Rate', 'Total Events', 'With Param', 'Fill Rate %', 'Status', 'Sync Date'
+    ];
+
+    const data = rows.map(row => {
+        const f = row.f;
+        return [
+            f[0].v || '',
+            f[1].v || '',
+            f[2].v || '',
+            f[3].v || '',
+            parseFloat(f[4].v) || 0,
+            parseInt(f[5].v) || 0,
+            parseInt(f[6].v) || 0,
+            parseFloat(f[7].v) || 0,
+            f[8].v || 'OK',
+            syncDate
+        ];
+    });
+
+    writeParamHealthResultsToSheet(headers, data);
+
+    const criticalCount = data.filter(r => r[8] === 'CRITICAL').length;
+    const warningCount = data.filter(r => r[8] === 'WARNING').length;
+
+    logEvent('BQ_ALERTS', `Dimensional Health complete: ${criticalCount} critical, ${warningCount} warnings`);
+
+    if (criticalCount > 0) {
+        SpreadsheetApp.getActiveSpreadsheet().toast(
+            `⚠️ ${criticalCount} CRITICAL parameter issues! Check BQ_PARAM_HEALTH sheet.`,
+            'Dimensional Health Check',
+            10
+        );
+    }
+}
+
+/**
+ * Writes parameter health results to sheet.
+ * @param {Array} headers - Column headers
+ * @param {Array} data - Row data
+ */
+function writeParamHealthResultsToSheet(headers, data) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(BQ_ALERTS_SHEETS.paramHealth);
+
+    if (!sheet) {
+        sheet = ss.insertSheet(BQ_ALERTS_SHEETS.paramHealth);
+        sheet.setTabColor('#F59E0B'); // Orange for health check
+    }
+
+    sheet.clear();
+
+    const headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setValues([headers]);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#1A5DBB');
+    headerRange.setFontColor('white');
+
+    if (data.length > 0) {
+        const dataRange = sheet.getRange(2, 1, data.length, headers.length);
+        dataRange.setValues(data);
+
+        const statusColIndex = headers.indexOf('Status') + 1;
+
+        for (let i = 0; i < data.length; i++) {
+            const status = data[i][8];
+            const rowRange = sheet.getRange(i + 2, 1, 1, headers.length);
+
+            if (status === 'CRITICAL') {
+                rowRange.setBackground('#FEE2E2');
+                sheet.getRange(i + 2, statusColIndex).setFontColor('#DC2626').setFontWeight('bold');
+            } else if (status === 'WARNING') {
+                rowRange.setBackground('#FEF3C7');
+                sheet.getRange(i + 2, statusColIndex).setFontColor('#D97706').setFontWeight('bold');
+            } else {
+                sheet.getRange(i + 2, statusColIndex).setFontColor('#16A34A').setFontWeight('bold');
+            }
+        }
+    } else {
+        sheet.getRange(2, 1).setValue('✅ All parameters meet their fill rate thresholds!');
+        sheet.getRange(2, 1).setFontWeight('bold').setFontColor('#16A34A');
+    }
+
+    sheet.autoResizeColumns(1, headers.length);
+    sheet.setFrozenRows(1);
+}
+
+/**
+ * Cleans up Dimensional Health triggers.
+ */
+function cleanupDimensionalHealthTriggers() {
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const trigger of triggers) {
+        if (trigger.getHandlerFunction() === 'checkDimensionalHealthJobStatus') {
+            ScriptApp.deleteTrigger(trigger);
+        }
+    }
+}
+

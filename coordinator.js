@@ -30,6 +30,7 @@ function onOpen(e) {
       .addItem('Configure Addocu', 'openConfigurationSidebar')
       .addSeparator()
       .addItem('Audit Complete Stack', 'startCompleteAudit')
+      .addItem('Force Full Audit (Reset Incremental)', 'startFullAudit')
       .addSeparator()
       .addItem('Audit GA4', 'syncGA4WithUI')
       .addItem('Audit GTM', 'syncGTMWithUI')
@@ -46,10 +47,13 @@ function onOpen(e) {
         .addItem('Test Connections', 'diagnoseConnections')
         .addItem('Test OAuth2', 'testOAuth2')
         .addItem('Analyze Changes', 'analyzeRecentChangesUI')
+        .addItem('View Sync History', 'showSyncHistory')
+        .addItem('Clear Sync State', 'clearAllSyncState')
         .addItem('Clean Logs', 'cleanupLogsUI')
         .addItem('Generate Dashboard', 'generateManualDashboard')
         .addSeparator()
         .addItem('🫀 Heartbeat Alert (PRO)', 'runHeartbeatAlert')
+        .addItem('🔬 Dimensional Health (PRO)', 'runDimensionalHealthCheck')
       )
       .addSubMenu(SpreadsheetApp.getUi().createMenu('Troubleshooting')
         .addItem('Verify Accounts (IMPORTANT)', 'showAccountVerification')
@@ -732,23 +736,34 @@ function executeAuditWithFilters(auditConfig) {
 /**
  * Executes a complete audit of specified services.
  * @param {Array} services - Array with services to audit ['ga4', 'gtm', 'looker'].
- * @returns {Object} Audit result.
+ * @param {Object} options - Audit options {forceFullAudit, incrementalEnabled}
+ * @returns {Object} Audit result with auditModes summary.
  */
-function executeCompleteAudit(services) {
+function executeCompleteAudit(services, options = {}) {
   const startTime = Date.now();
-  logEvent('AUDIT', `Starting complete audit: ${services.join(', ')}`);
+  const forceFullAudit = options.forceFullAudit || false;
+  const incrementalEnabled = options.incrementalEnabled !== false;
+
+  logEvent('AUDIT', `Starting complete audit: ${services.join(', ')} | Mode: ${forceFullAudit ? 'FULL' : 'INCREMENTAL'}`);
 
   try {
     const results = {};
+    const auditModes = { FULL: 0, INCREMENTAL: 0 };
     let totalRecords = 0;
 
     // Audit GA4 (Free)
     if (services.includes('ga4')) {
       try {
         logEvent('AUDIT', 'Starting GA4 audit');
-        const ga4Result = syncGA4Core();
+        const ga4Result = syncGA4Core({
+          forceFullAudit: forceFullAudit,
+          incrementalEnabled: incrementalEnabled
+        });
         results.ga4 = ga4Result;
         totalRecords += ga4Result.records || 0;
+        if (ga4Result.syncMode) {
+          auditModes[ga4Result.syncMode]++;
+        }
       } catch (e) {
         logError('AUDIT', `Error in GA4 audit: ${e.message}`);
         results.ga4 = { success: false, error: e.message };
@@ -876,7 +891,7 @@ function executeCompleteAudit(services) {
     generateExecutiveDashboard(results);
 
     const duration = Date.now() - startTime;
-    logEvent('AUDIT', `Audit completed in ${Math.round(duration / 1000)}s. Total: ${totalRecords} records`);
+    logEvent('AUDIT', `Audit completed in ${Math.round(duration / 1000)}s. Total: ${totalRecords} records | Mode Summary: FULL=${auditModes.FULL}, INCREMENTAL=${auditModes.INCREMENTAL}`);
 
     flushLogs();
 
@@ -885,6 +900,7 @@ function executeCompleteAudit(services) {
       services: services,
       results: results,
       totalRecords: totalRecords,
+      auditModes: auditModes,
       duration: duration
     };
 
@@ -1026,24 +1042,57 @@ function startCompleteAudit() {
 
   const formattedServices = services.map(s => serviceNames[s.toLowerCase()] || s).join('\n• ');
 
+  // Determine audit mode (incremental by default, unless user forces full)
+  const incrementalEnabled = config.incrementalAuditEnabled !== false; // Default true
+  let forceFullAudit = false;
+
+  // Check if incremental sync is enabled and if any prior syncs exist
+  const hasPriorSyncs = incrementalEnabled && Object.keys(getAllSyncStates()).length > 0;
+
+  if (hasPriorSyncs) {
+    const response = ui.alert(
+      'Audit Mode',
+      'Incremental sync is enabled. Would you like to:\n\n' +
+      'OK = Run Incremental (only new/changed items)\n' +
+      'CANCEL = Force Full Audit (all items)',
+      ui.ButtonSet.OK_CANCEL
+    );
+    forceFullAudit = (response === ui.Button.CANCEL);
+  }
+
   ui.alert(
     'Full Stack Audit',
     `Starting audit of:\n• ${formattedServices}\n\n` +
     'Processing your marketing stack configuration...\n\n' +
+    (hasPriorSyncs && !forceFullAudit ? 'Running incremental audit (new/changed items only)\n\n' : '') +
     'This may take a few minutes depending on your account size.\n\n' +
     'Audit logs will be saved to the LOGS sheet.',
     ui.ButtonSet.OK
   );
 
-  const result = executeCompleteAudit(services);
+  const result = executeCompleteAudit(services, {
+    forceFullAudit: forceFullAudit,
+    incrementalEnabled: incrementalEnabled
+  });
 
   if (result.success) {
     // Sort sheets alphabetically after successful audit
     sortSheetsAlphabetically();
 
+    // Update metadata sheet with current sync states
+    updateAuditMetadataSheet();
+
+    const auditModeStr = result.auditModes && result.auditModes.FULL > 0 && result.auditModes.INCREMENTAL === 0
+      ? 'FULL'
+      : result.auditModes && result.auditModes.INCREMENTAL > 0
+        ? 'INCREMENTAL'
+        : 'MIXED';
+
     const message = `Audit completed in ${Math.round(result.duration / 1000)} seconds\n\n` +
-      `Total audited elements: ${result.totalRecords}\n\n` +
+      `Total audited elements: ${result.totalRecords}\n` +
+      `Audit Mode: ${auditModeStr}\n\n` +
       'Check the generated sheets for complete details.\n\n' +
+      'View sync history in the _AUDIT_METADATA sheet.\n\n' +
       'Sheets have been sorted alphabetically.';
 
     ui.alert('Audit Finished', message, ui.ButtonSet.OK);
@@ -1051,6 +1100,169 @@ function startCompleteAudit() {
     ui.alert(
       'Audit Error',
       `An error occurred: ${result.error}\n\nCheck the "LOGS" sheet for more details.`,
+      ui.ButtonSet.OK
+    );
+  }
+}
+
+// =================================================================
+// INCREMENTAL AUDIT CONTROL FUNCTIONS
+// =================================================================
+
+/**
+ * Starts a forced full audit, clearing incremental sync state.
+ * Used to reset the incremental sync system and perform a complete re-audit.
+ */
+function startFullAudit() {
+  const ui = SpreadsheetApp.getUi();
+
+  const response = ui.alert(
+    'Force Full Audit',
+    'This will clear all sync history and perform a complete re-audit of all services.\n\n' +
+    'WARNING: This may take 10-30 minutes depending on your account size.\n\n' +
+    'Are you sure?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    return;
+  }
+
+  // Clear all sync states
+  const allStates = getAllSyncStates();
+  for (const [service, resources] of Object.entries(allStates)) {
+    for (const resourceType of Object.keys(resources)) {
+      clearSyncState(service, resourceType);
+    }
+  }
+
+  logEvent('AUDIT', 'Cleared all sync states - will perform full audit');
+
+  // Start audit with force full flag
+  const config = readUserConfiguration();
+  const services = ['ga4', 'gtm'];
+  if (config.syncLooker) services.push('looker');
+  if (config.syncSearchConsole) services.push('searchConsole');
+  if (config.syncYouTube) services.push('youtube');
+  if (config.syncGBP) services.push('googleBusinessProfile');
+  if (config.syncGoogleAds) services.push('googleAds');
+  if (config.syncGMC || config.syncMerchantCenter) services.push('googleMerchantCenter');
+  if (config.syncBigQuery) services.push('bigquery');
+  if (config.syncAdSense) services.push('adsense');
+
+  const result = executeCompleteAudit(services, {
+    forceFullAudit: true,
+    incrementalEnabled: true
+  });
+
+  if (result.success) {
+    sortSheetsAlphabetically();
+    updateAuditMetadataSheet();
+
+    ui.alert(
+      'Full Audit Complete',
+      `Audit completed in ${Math.round(result.duration / 1000)} seconds\n\n` +
+      `Total elements: ${result.totalRecords}\n\n` +
+      'All sync states have been reset.\n' +
+      'Future audits will run incrementally.\n\n' +
+      'View sync history in the _AUDIT_METADATA sheet.',
+      ui.ButtonSet.OK
+    );
+  } else {
+    ui.alert(
+      'Audit Error',
+      `Full audit failed: ${result.error}\n\nCheck the LOGS sheet for details.`,
+      ui.ButtonSet.OK
+    );
+  }
+}
+
+/**
+ * Shows the sync history metadata sheet.
+ * Displays last sync times, record counts, and status for each service.
+ */
+function showSyncHistory() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName('_AUDIT_METADATA');
+
+    if (!sheet) {
+      updateAuditMetadataSheet();
+      sheet = ss.getSheetByName('_AUDIT_METADATA');
+    }
+
+    // Make sheet visible and move to front
+    if (sheet) {
+      sheet.showSheet();
+      ss.moveActiveSheet(1);
+    }
+
+    SpreadsheetApp.getUi().alert(
+      'Sync History',
+      'Opened _AUDIT_METADATA sheet\n\n' +
+      'This sheet shows:\n' +
+      '• Last sync timestamp for each service\n' +
+      '• Records processed in last sync\n' +
+      '• Sync status (SUCCESS/PARTIAL/ERROR)\n' +
+      '• Audit mode used (FULL/INCREMENTAL)',
+      SpreadsheetApp.getUi().ButtonSet.OK
+    );
+  } catch (error) {
+    logError('SYNC_HISTORY', `Error showing sync history: ${error.message}`);
+    SpreadsheetApp.getUi().alert(
+      'Error',
+      `Could not open sync history: ${error.message}`,
+      SpreadsheetApp.getUi().ButtonSet.OK
+    );
+  }
+}
+
+/**
+ * Clears all sync state for incremental auditing.
+ * User must confirm before clearing.
+ */
+function clearAllSyncState() {
+  const ui = SpreadsheetApp.getUi();
+
+  const response = ui.alert(
+    'Clear Sync State',
+    'This will clear all incremental sync history.\n\n' +
+    'The next audit will be a FULL audit.\n\n' +
+    'Are you sure?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    return;
+  }
+
+  try {
+    const allStates = getAllSyncStates();
+    let clearedCount = 0;
+
+    for (const [service, resources] of Object.entries(allStates)) {
+      for (const resourceType of Object.keys(resources)) {
+        if (clearSyncState(service, resourceType)) {
+          clearedCount++;
+        }
+      }
+    }
+
+    logEvent('SYNC_STATE', `Manually cleared ${clearedCount} sync states`);
+    flushLogs();
+
+    ui.alert(
+      'Sync State Cleared',
+      `Cleared ${clearedCount} service sync states.\n\n` +
+      'The next audit will perform a full sync.\n\n' +
+      'Subsequent audits will use incremental mode.',
+      ui.ButtonSet.OK
+    );
+  } catch (error) {
+    logError('SYNC_STATE', `Error clearing sync state: ${error.message}`);
+    ui.alert(
+      'Error',
+      `Failed to clear sync state: ${error.message}`,
       ui.ButtonSet.OK
     );
   }
