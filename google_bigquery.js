@@ -29,12 +29,17 @@ const BQ_GA4_EXPORT_LINKS_HEADERS = [
 
 /**
  * Main function to synchronize BigQuery data.
- * @returns {Object} Sync status and record count.
+ * Supports incremental sync by filtering datasets modified since last sync.
+ * @param {Object} options - Options object {forceFullAudit, incrementalEnabled}
+ * @returns {Object} Sync status, record count, and sync mode.
  */
-function syncBigQueryCore() {
+function syncBigQueryCore(options = {}) {
   const startTime = Date.now();
   const serviceName = 'bigquery';
   const results = { datasets: 0, ga4Tables: 0, exportLinks: 0 };
+
+  const forceFullAudit = options.forceFullAudit || false;
+  const incrementalEnabled = options.incrementalEnabled !== false;
 
   try {
     const config = getUserConfig();
@@ -49,17 +54,36 @@ function syncBigQueryCore() {
         records: 0,
         status: 'SKIPPED',
         duration: Date.now() - startTime,
+        syncMode: 'SKIPPED',
         error: 'No BigQuery Project ID configured'
       };
     }
 
-    logEvent('BigQuery', `Phase 1: Scanning project ${projectId}...`);
+    // Determine audit mode (FULL vs INCREMENTAL)
+    const auditMode = getAuditMode('BigQuery', 'Datasets', forceFullAudit);
+    const isIncremental = incrementalEnabled && auditMode === 'INCREMENTAL';
+    const lastSyncTime = isIncremental ? new Date(getSyncState('BigQuery', 'Datasets')?.lastSyncTimestamp || 0) : null;
+
+    logEvent('BigQuery', `Phase 1: Scanning project ${projectId}... (Mode: ${auditMode})`);
 
     // 1. LIST ALL DATASETS
-    const datasets = listBigQueryDatasets(projectId);
+    let datasets = listBigQueryDatasets(projectId);
+
+    // Filter datasets if incremental and we have a last sync time
+    if (isIncremental && lastSyncTime) {
+      const originalCount = datasets.length;
+      datasets = datasets.filter(d => {
+        const lastModified = new Date(d['Last Modified'] || 0);
+        return lastModified > lastSyncTime;
+      });
+      logEvent('BigQuery', `Incremental datasets: ${datasets.length} modified since last sync (from ${originalCount} total)`);
+    }
+
     results.datasets = datasets.length;
 
-    writeBQDatasetsToSheet(datasets);
+    if (datasets.length > 0 || !isIncremental) {
+      writeBQDatasetsToSheet(datasets);
+    }
 
     // 2. GET GA4 EXPORT TABLES
     const ga4Datasets = datasets.filter(d => d['Is GA4 Export'] === 'Yes');
@@ -77,7 +101,10 @@ function syncBigQueryCore() {
     }
 
     results.ga4Tables = allGa4Tables.length;
-    writeBQGA4TablesToSheet(allGa4Tables);
+
+    if (allGa4Tables.length > 0 || !isIncremental) {
+      writeBQGA4TablesToSheet(allGa4Tables);
+    }
 
     // 3. GET GA4 EXPORT LINKS
     logEvent('BigQuery', 'Phase 2: Checking GA4 BigQuery export links...');
@@ -85,6 +112,11 @@ function syncBigQueryCore() {
     results.exportLinks = exportLinks.length;
 
     writeBQExportLinksToSheet(exportLinks, datasets);
+
+    // Record sync state for each resource type
+    recordSyncState('BigQuery', 'Datasets', results.datasets, 'SUCCESS', auditMode);
+    recordSyncState('BigQuery', 'GA4Tables', results.ga4Tables, 'SUCCESS', auditMode);
+    recordSyncState('BigQuery', 'ExportLinks', results.exportLinks, 'SUCCESS', auditMode);
 
     const totalElements = results.datasets + results.ga4Tables + results.exportLinks;
     const duration = Date.now() - startTime;
@@ -94,6 +126,7 @@ function syncBigQueryCore() {
       records: totalElements,
       status: 'SUCCESS',
       duration: duration,
+      syncMode: auditMode,
       details: results
     };
 
@@ -109,6 +142,7 @@ function syncBigQueryCore() {
       records: 0,
       status: 'ERROR',
       duration: duration,
+      syncMode: 'ERROR',
       error: error.message
     };
   }

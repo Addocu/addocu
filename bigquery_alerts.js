@@ -31,7 +31,11 @@ const BQ_ALERTS_CONFIG = {
 // Sheet names for alerts
 const BQ_ALERTS_SHEETS = {
     anomalies: 'BQ_ANOMALIES',
-    config: 'BQ_ALERTS_CONFIG'
+    config: 'BQ_ALERTS_CONFIG',
+    configAudit: 'CONFIG_AUDIT',
+    paramHealth: 'BQ_PARAM_HEALTH',
+    dataInventory: 'BQ_DATA_INVENTORY',
+    zombieHunter: 'BQ_ZOMBIE_HUNTER'
 };
 
 // =================================================================
@@ -447,5 +451,1310 @@ function estimateHeartbeatQueryCost(projectId) {
         };
     } catch (e) {
         return { error: e.message };
+    }
+}
+
+// =================================================================
+// DIMENSIONAL HEALTH CHECK (Phase 2)
+// =================================================================
+
+/**
+ * Runs the Dimensional Health Check.
+ * Validates parameter fill rates based on CONFIG_AUDIT sheet rules.
+ * Called from menu: Extensions > Addocu > Tools > Dimensional Health Check
+ */
+function runDimensionalHealthCheck() {
+    try {
+        const userConfig = getUserConfig();
+        const projectId = userConfig.bqProjectId;
+
+        if (!projectId) {
+            SpreadsheetApp.getUi().alert(
+                'Configuration Required',
+                'Please set your BigQuery Project ID in Configure Addocu > Advanced Filters.',
+                SpreadsheetApp.getUi().ButtonSet.OK
+            );
+            return;
+        }
+
+        // Ensure CONFIG_AUDIT sheet exists with template
+        const auditRules = getOrCreateConfigAuditSheet();
+
+        if (auditRules.length === 0) {
+            SpreadsheetApp.getUi().alert(
+                'No Audit Rules',
+                'Please add at least one event/parameter rule to the CONFIG_AUDIT sheet, then run again.',
+                SpreadsheetApp.getUi().ButtonSet.OK
+            );
+            return;
+        }
+
+        logEvent('BQ_ALERTS', `Starting Dimensional Health Check with ${auditRules.length} rules...`);
+        SpreadsheetApp.getActiveSpreadsheet().toast(`Validating ${auditRules.length} event/param rules...`, 'Dimensional Health Check', 10);
+
+        // Submit the BigQuery job
+        const jobId = submitDimensionalHealthQuery(projectId, auditRules);
+
+        if (jobId) {
+            PropertiesService.getScriptProperties().setProperty('BQ_DIMHEALTH_JOB_ID', jobId);
+            PropertiesService.getScriptProperties().setProperty('BQ_DIMHEALTH_PROJECT_ID', projectId);
+
+            ScriptApp.newTrigger('checkDimensionalHealthJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Query submitted. Results will appear shortly...', 'Dimensional Health Check', 5);
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Dimensional Health Check failed: ${e.message}`);
+        SpreadsheetApp.getUi().alert('Error', `Dimensional Health Check failed: ${e.message}`, SpreadsheetApp.getUi().ButtonSet.OK);
+    }
+}
+
+/**
+ * Checks the status of a running Dimensional Health query job.
+ */
+function checkDimensionalHealthJobStatus() {
+    try {
+        const scriptProps = PropertiesService.getScriptProperties();
+        const jobId = scriptProps.getProperty('BQ_DIMHEALTH_JOB_ID');
+        const projectId = scriptProps.getProperty('BQ_DIMHEALTH_PROJECT_ID');
+
+        if (!jobId || !projectId) {
+            cleanupDimensionalHealthTriggers();
+            return;
+        }
+
+        const job = BigQuery.Jobs.get(projectId, jobId);
+        const state = job.status.state;
+
+        logEvent('BQ_ALERTS', `Dimensional Health job ${jobId} status: ${state}`);
+
+        if (state === 'DONE') {
+            if (job.status.errorResult) {
+                throw new Error(job.status.errorResult.message);
+            }
+
+            const results = BigQuery.Jobs.getQueryResults(projectId, jobId);
+            processDimensionalHealthResults(results);
+
+            scriptProps.deleteProperty('BQ_DIMHEALTH_JOB_ID');
+            scriptProps.deleteProperty('BQ_DIMHEALTH_PROJECT_ID');
+            cleanupDimensionalHealthTriggers();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Dimensional Health Check complete!', 'Health Check', 5);
+
+        } else if (state === 'RUNNING' || state === 'PENDING') {
+            ScriptApp.newTrigger('checkDimensionalHealthJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Error checking Dimensional Health job: ${e.message}`);
+        cleanupDimensionalHealthTriggers();
+    }
+}
+
+/**
+ * Gets or creates the CONFIG_AUDIT sheet with template headers.
+ * @returns {Array} Array of audit rule objects
+ */
+function getOrCreateConfigAuditSheet() {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(BQ_ALERTS_SHEETS.configAudit);
+
+    const headers = ['Event Name', 'Parameter Name', 'Platform', 'Min Fill Rate %', 'Alert Type', 'Active'];
+
+    if (!sheet) {
+        // Create new sheet with template
+        sheet = ss.insertSheet(BQ_ALERTS_SHEETS.configAudit);
+        sheet.setTabColor('#3B82F6'); // Blue for config
+
+        // Write headers
+        const headerRange = sheet.getRange(1, 1, 1, headers.length);
+        headerRange.setValues([headers]);
+        headerRange.setFontWeight('bold');
+        headerRange.setBackground('#1E40AF');
+        headerRange.setFontColor('white');
+
+        // Add example rows
+        const examples = [
+            ['purchase', 'im_store_id', 'ALL', 95, 'DROP', true],
+            ['page_view', 'im_page_type', 'ALL', 90, 'DROP', true],
+            ['add_to_cart', 'item_id', 'ALL', 99, 'DROP', true]
+        ];
+        sheet.getRange(2, 1, examples.length, headers.length).setValues(examples);
+
+        // Add helper note
+        sheet.getRange(6, 1).setValue('ℹ️ Add your critical event/parameter pairs above. Platform: ALL, WEB, IOS, or ANDROID');
+        sheet.getRange(6, 1).setFontStyle('italic').setFontColor('#6B7280');
+
+        sheet.autoResizeColumns(1, headers.length);
+        sheet.setFrozenRows(1);
+
+        logEvent('BQ_ALERTS', 'Created CONFIG_AUDIT sheet with template');
+        return []; // Return empty on first creation so user can configure
+    }
+
+    // Read existing rules
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return [];
+
+    const data = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+
+    const rules = data
+        .filter(row => row[0] && row[1] && row[5] === true) // Has event, param, and is active
+        .map(row => ({
+            eventName: row[0].toString().trim(),
+            paramName: row[1].toString().trim(),
+            platform: row[2].toString().trim() || 'ALL',
+            minFillRate: parseFloat(row[3]) || 90,
+            alertType: row[4].toString().trim() || 'DROP'
+        }));
+
+    return rules;
+}
+
+/**
+ * Submits the Dimensional Health query to BigQuery.
+ * @param {string} projectId - GCP Project ID
+ * @param {Array} rules - Audit rules from CONFIG_AUDIT sheet
+ * @returns {string} Job ID
+ */
+function submitDimensionalHealthQuery(projectId, rules) {
+    const datasetId = getGA4DatasetId(projectId);
+
+    if (!datasetId) {
+        throw new Error('No GA4 export dataset found.');
+    }
+
+    const query = buildDimensionalHealthQuery(projectId, datasetId, rules);
+
+    logEvent('BQ_ALERTS', `Submitting Dimensional Health query for ${rules.length} rules`);
+
+    const job = BigQuery.Jobs.insert({
+        configuration: {
+            query: {
+                query: query,
+                useLegacySql: false
+            }
+        }
+    }, projectId);
+
+    return job.jobReference.jobId;
+}
+
+/**
+ * Builds the Dimensional Health SQL query for all rules.
+ * @param {string} projectId - GCP Project ID
+ * @param {string} datasetId - BigQuery Dataset ID
+ * @param {Array} rules - Audit rules
+ * @returns {string} SQL query
+ */
+function buildDimensionalHealthQuery(projectId, datasetId, rules) {
+    // Build UNION ALL for each rule
+    const ruleQueries = rules.map((rule, idx) => {
+        const platformFilter = rule.platform === 'ALL'
+            ? ''
+            : `AND platform = '${rule.platform}'`;
+
+        return `
+    SELECT
+      '${rule.eventName}' as event_name,
+      '${rule.paramName}' as parameter_name,
+      '${rule.platform}' as expected_platform,
+      platform as actual_platform,
+      ${rule.minFillRate} as min_fill_rate,
+      COUNT(*) as total_events,
+      COUNTIF((SELECT value.string_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL
+           OR (SELECT value.int_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL
+           OR (SELECT value.double_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL) as with_param,
+      ROUND(100 * COUNTIF((SELECT value.string_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL
+           OR (SELECT value.int_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL
+           OR (SELECT value.double_value FROM UNNEST(event_params) WHERE key = '${rule.paramName}') IS NOT NULL) / COUNT(*), 2) as fill_rate_pct
+    FROM \`${projectId}.${datasetId}.events_*\`
+    WHERE _TABLE_SUFFIX = FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY))
+      AND event_name = '${rule.eventName}'
+      ${platformFilter}
+    GROUP BY platform`;
+    });
+
+    const unionQuery = ruleQueries.join('\n    UNION ALL\n');
+
+    return `
+WITH param_stats AS (
+  ${unionQuery}
+)
+SELECT
+  event_name,
+  parameter_name,
+  expected_platform,
+  actual_platform,
+  min_fill_rate,
+  total_events,
+  with_param,
+  fill_rate_pct,
+  CASE
+    WHEN fill_rate_pct < min_fill_rate - 10 THEN 'CRITICAL'
+    WHEN fill_rate_pct < min_fill_rate THEN 'WARNING'
+    ELSE 'OK'
+  END as status
+FROM param_stats
+WHERE total_events > 0
+ORDER BY 
+  CASE WHEN fill_rate_pct < min_fill_rate - 10 THEN 1 WHEN fill_rate_pct < min_fill_rate THEN 2 ELSE 3 END,
+  fill_rate_pct ASC
+`;
+}
+
+/**
+ * Processes Dimensional Health query results.
+ * @param {Object} results - BigQuery query results
+ */
+function processDimensionalHealthResults(results) {
+    const rows = results.rows || [];
+    const syncDate = formatDate(new Date());
+
+    logEvent('BQ_ALERTS', `Processing ${rows.length} parameter health results`);
+
+    const headers = [
+        'Event', 'Parameter', 'Expected Platform', 'Actual Platform',
+        'Min Fill Rate', 'Total Events', 'With Param', 'Fill Rate %', 'Status', 'Sync Date'
+    ];
+
+    const data = rows.map(row => {
+        const f = row.f;
+        return [
+            f[0].v || '',
+            f[1].v || '',
+            f[2].v || '',
+            f[3].v || '',
+            parseFloat(f[4].v) || 0,
+            parseInt(f[5].v) || 0,
+            parseInt(f[6].v) || 0,
+            parseFloat(f[7].v) || 0,
+            f[8].v || 'OK',
+            syncDate
+        ];
+    });
+
+    writeParamHealthResultsToSheet(headers, data);
+
+    const criticalCount = data.filter(r => r[8] === 'CRITICAL').length;
+    const warningCount = data.filter(r => r[8] === 'WARNING').length;
+
+    logEvent('BQ_ALERTS', `Dimensional Health complete: ${criticalCount} critical, ${warningCount} warnings`);
+
+    if (criticalCount > 0) {
+        SpreadsheetApp.getActiveSpreadsheet().toast(
+            `⚠️ ${criticalCount} CRITICAL parameter issues! Check BQ_PARAM_HEALTH sheet.`,
+            'Dimensional Health Check',
+            10
+        );
+    }
+}
+
+/**
+ * Writes parameter health results to sheet.
+ * @param {Array} headers - Column headers
+ * @param {Array} data - Row data
+ */
+function writeParamHealthResultsToSheet(headers, data) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(BQ_ALERTS_SHEETS.paramHealth);
+
+    if (!sheet) {
+        sheet = ss.insertSheet(BQ_ALERTS_SHEETS.paramHealth);
+        sheet.setTabColor('#F59E0B'); // Orange for health check
+    }
+
+    sheet.clear();
+
+    const headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setValues([headers]);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#1A5DBB');
+    headerRange.setFontColor('white');
+
+    if (data.length > 0) {
+        const dataRange = sheet.getRange(2, 1, data.length, headers.length);
+        dataRange.setValues(data);
+
+        const statusColIndex = headers.indexOf('Status') + 1;
+
+        for (let i = 0; i < data.length; i++) {
+            const status = data[i][8];
+            const rowRange = sheet.getRange(i + 2, 1, 1, headers.length);
+
+            if (status === 'CRITICAL') {
+                rowRange.setBackground('#FEE2E2');
+                sheet.getRange(i + 2, statusColIndex).setFontColor('#DC2626').setFontWeight('bold');
+            } else if (status === 'WARNING') {
+                rowRange.setBackground('#FEF3C7');
+                sheet.getRange(i + 2, statusColIndex).setFontColor('#D97706').setFontWeight('bold');
+            } else {
+                sheet.getRange(i + 2, statusColIndex).setFontColor('#16A34A').setFontWeight('bold');
+            }
+        }
+    } else {
+        sheet.getRange(2, 1).setValue('✅ All parameters meet their fill rate thresholds!');
+        sheet.getRange(2, 1).setFontWeight('bold').setFontColor('#16A34A');
+    }
+
+    sheet.autoResizeColumns(1, headers.length);
+    sheet.setFrozenRows(1);
+}
+
+/**
+ * Cleans up Dimensional Health triggers.
+ */
+function cleanupDimensionalHealthTriggers() {
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const trigger of triggers) {
+        if (trigger.getHandlerFunction() === 'checkDimensionalHealthJobStatus') {
+            ScriptApp.deleteTrigger(trigger);
+        }
+    }
+}
+
+// =================================================================
+// DATA INVENTORY (Phase 3)
+// =================================================================
+
+/**
+ * Runs the Data Inventory discovery.
+ * Auto-discovers all GA4 parameters with data types and usage stats.
+ * Called from menu: Extensions > Addocu > Tools > Data Inventory
+ */
+function runDataInventory() {
+    try {
+        const userConfig = getUserConfig();
+        const projectId = userConfig.bqProjectId;
+
+        if (!projectId) {
+            SpreadsheetApp.getUi().alert(
+                'Configuration Required',
+                'Please set your BigQuery Project ID in Configure Addocu > Advanced Filters.',
+                SpreadsheetApp.getUi().ButtonSet.OK
+            );
+            return;
+        }
+
+        logEvent('BQ_ALERTS', 'Starting Data Inventory discovery...');
+        SpreadsheetApp.getActiveSpreadsheet().toast('Discovering all parameters...', 'Data Inventory', 10);
+
+        const jobId = submitDataInventoryQuery(projectId);
+
+        if (jobId) {
+            PropertiesService.getScriptProperties().setProperty('BQ_INVENTORY_JOB_ID', jobId);
+            PropertiesService.getScriptProperties().setProperty('BQ_INVENTORY_PROJECT_ID', projectId);
+
+            ScriptApp.newTrigger('checkDataInventoryJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Query submitted. Results will appear shortly...', 'Data Inventory', 5);
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Data Inventory failed: ${e.message}`);
+        SpreadsheetApp.getUi().alert('Error', `Data Inventory failed: ${e.message}`, SpreadsheetApp.getUi().ButtonSet.OK);
+    }
+}
+
+/**
+ * Checks the status of a running Data Inventory query job.
+ */
+function checkDataInventoryJobStatus() {
+    try {
+        const scriptProps = PropertiesService.getScriptProperties();
+        const jobId = scriptProps.getProperty('BQ_INVENTORY_JOB_ID');
+        const projectId = scriptProps.getProperty('BQ_INVENTORY_PROJECT_ID');
+
+        if (!jobId || !projectId) {
+            cleanupDataInventoryTriggers();
+            return;
+        }
+
+        const job = BigQuery.Jobs.get(projectId, jobId);
+        const state = job.status.state;
+
+        logEvent('BQ_ALERTS', `Data Inventory job ${jobId} status: ${state}`);
+
+        if (state === 'DONE') {
+            if (job.status.errorResult) {
+                throw new Error(job.status.errorResult.message);
+            }
+
+            const results = BigQuery.Jobs.getQueryResults(projectId, jobId);
+            processDataInventoryResults(results);
+
+            scriptProps.deleteProperty('BQ_INVENTORY_JOB_ID');
+            scriptProps.deleteProperty('BQ_INVENTORY_PROJECT_ID');
+            cleanupDataInventoryTriggers();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Data Inventory complete!', 'Data Inventory', 5);
+
+        } else if (state === 'RUNNING' || state === 'PENDING') {
+            ScriptApp.newTrigger('checkDataInventoryJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Error checking Data Inventory job: ${e.message}`);
+        cleanupDataInventoryTriggers();
+    }
+}
+
+/**
+ * Submits the Data Inventory discovery query to BigQuery.
+ * @param {string} projectId - GCP Project ID
+ * @returns {string} Job ID
+ */
+function submitDataInventoryQuery(projectId) {
+    const datasetId = getGA4DatasetId(projectId);
+
+    if (!datasetId) {
+        throw new Error('No GA4 export dataset found.');
+    }
+
+    const query = buildDataInventoryQuery(projectId, datasetId);
+
+    logEvent('BQ_ALERTS', `Submitting Data Inventory query to ${projectId}.${datasetId}`);
+
+    const job = BigQuery.Jobs.insert({
+        configuration: {
+            query: {
+                query: query,
+                useLegacySql: false
+            }
+        }
+    }, projectId);
+
+    return job.jobReference.jobId;
+}
+
+/**
+ * Builds the Data Inventory SQL query.
+ * Discovers all parameters with data types and usage statistics.
+ * @param {string} projectId - GCP Project ID
+ * @param {string} datasetId - BigQuery Dataset ID
+ * @returns {string} SQL query
+ */
+function buildDataInventoryQuery(projectId, datasetId) {
+    return `
+WITH param_discovery AS (
+  SELECT
+    event_name,
+    ep.key as parameter_name,
+    CASE
+      WHEN COUNT(DISTINCT ep.value.string_value) > 0 AND MAX(ep.value.string_value) IS NOT NULL THEN 'STRING'
+      WHEN COUNT(DISTINCT ep.value.int_value) > 0 AND MAX(ep.value.int_value) IS NOT NULL THEN 'INT'
+      WHEN COUNT(DISTINCT ep.value.double_value) > 0 AND MAX(ep.value.double_value) IS NOT NULL THEN 'DOUBLE'
+      ELSE 'UNKNOWN'
+    END as data_type,
+    platform,
+    COUNT(*) as usage_count,
+    COUNT(DISTINCT PARSE_DATE('%Y%m%d', event_date)) as days_active,
+    MIN(PARSE_DATE('%Y%m%d', event_date)) as first_seen,
+    MAX(PARSE_DATE('%Y%m%d', event_date)) as last_seen
+  FROM \`${projectId}.${datasetId}.events_*\`
+  CROSS JOIN UNNEST(event_params) ep
+  WHERE _TABLE_SUFFIX BETWEEN 
+    FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY))
+    AND FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+  GROUP BY event_name, parameter_name, platform
+)
+SELECT
+  event_name,
+  parameter_name,
+  data_type,
+  platform,
+  usage_count,
+  days_active,
+  first_seen,
+  last_seen,
+  -- Identify potential issues
+  CASE
+    WHEN days_active = 1 THEN 'NEW'
+    WHEN days_active < 7 THEN 'RECENT'
+    WHEN usage_count < 100 THEN 'LOW_USAGE'
+    ELSE 'ACTIVE'
+  END as status,
+  -- Check if it's a standard GA4 parameter
+  CASE
+    WHEN parameter_name IN ('page_location', 'page_title', 'page_referrer', 'screen_class', 
+      'screen_name', 'firebase_screen', 'firebase_event_origin', 'engagement_time_msec',
+      'ga_session_id', 'ga_session_number', 'session_engaged', 'entrances', 'debug_mode',
+      'ignore_referrer', 'term', 'medium', 'source', 'campaign', 'content', 'campaign_id',
+      'gclid', 'dclid', 'srsltid', 'engaged_session_event', 'firebase_conversion') THEN 'STANDARD'
+    WHEN parameter_name LIKE 'ep.%' OR parameter_name LIKE 'up.%' THEN 'CUSTOM'
+    WHEN parameter_name LIKE 'im_%' THEN 'CUSTOM'
+    ELSE 'CUSTOM'
+  END as param_category
+FROM param_discovery
+ORDER BY 
+  event_name,
+  usage_count DESC
+`;
+}
+
+/**
+ * Processes Data Inventory query results.
+ * @param {Object} results - BigQuery query results
+ */
+function processDataInventoryResults(results) {
+    const rows = results.rows || [];
+    const syncDate = formatDate(new Date());
+
+    logEvent('BQ_ALERTS', `Processing ${rows.length} parameter inventory results`);
+
+    const headers = [
+        'Event', 'Parameter', 'Data Type', 'Platform', 'Usage Count',
+        'Days Active', 'First Seen', 'Last Seen', 'Status', 'Category', 'Sync Date'
+    ];
+
+    const data = rows.map(row => {
+        const f = row.f;
+        return [
+            f[0].v || '',
+            f[1].v || '',
+            f[2].v || '',
+            f[3].v || '',
+            parseInt(f[4].v) || 0,
+            parseInt(f[5].v) || 0,
+            f[6].v || '',
+            f[7].v || '',
+            f[8].v || '',
+            f[9].v || '',
+            syncDate
+        ];
+    });
+
+    writeDataInventoryResultsToSheet(headers, data);
+
+    // Summary stats
+    const newParams = data.filter(r => r[8] === 'NEW').length;
+    const lowUsage = data.filter(r => r[8] === 'LOW_USAGE').length;
+    const customParams = data.filter(r => r[9] === 'CUSTOM').length;
+
+    logEvent('BQ_ALERTS', `Data Inventory complete: ${data.length} params (${newParams} new, ${lowUsage} low-usage, ${customParams} custom)`);
+
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+        `Found ${data.length} parameters (${customParams} custom, ${newParams} new)`,
+        'Data Inventory',
+        10
+    );
+}
+
+/**
+ * Writes Data Inventory results to sheet.
+ * @param {Array} headers - Column headers
+ * @param {Array} data - Row data
+ */
+function writeDataInventoryResultsToSheet(headers, data) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(BQ_ALERTS_SHEETS.dataInventory);
+
+    if (!sheet) {
+        sheet = ss.insertSheet(BQ_ALERTS_SHEETS.dataInventory);
+        sheet.setTabColor('#10B981'); // Green for inventory
+    }
+
+    sheet.clear();
+
+    const headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setValues([headers]);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#1A5DBB');
+    headerRange.setFontColor('white');
+
+    if (data.length > 0) {
+        const dataRange = sheet.getRange(2, 1, data.length, headers.length);
+        dataRange.setValues(data);
+
+        const statusColIndex = headers.indexOf('Status') + 1;
+        const categoryColIndex = headers.indexOf('Category') + 1;
+
+        for (let i = 0; i < data.length; i++) {
+            const status = data[i][8];
+            const category = data[i][9];
+
+            // Color code status
+            if (status === 'NEW') {
+                sheet.getRange(i + 2, statusColIndex).setBackground('#DBEAFE').setFontColor('#1D4ED8');
+            } else if (status === 'LOW_USAGE') {
+                sheet.getRange(i + 2, statusColIndex).setBackground('#FEF3C7').setFontColor('#D97706');
+            }
+
+            // Color code category
+            if (category === 'CUSTOM') {
+                sheet.getRange(i + 2, categoryColIndex).setFontWeight('bold').setFontColor('#7C3AED');
+            }
+        }
+    } else {
+        sheet.getRange(2, 1).setValue('No parameters found in the last 30 days.');
+    }
+
+    sheet.autoResizeColumns(1, headers.length);
+    sheet.setFrozenRows(1);
+
+    // Add filter for easy exploration
+    sheet.getRange(1, 1, data.length + 1, headers.length).createFilter();
+}
+
+/**
+ * Cleans up Data Inventory triggers.
+ */
+function cleanupDataInventoryTriggers() {
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const trigger of triggers) {
+        if (trigger.getHandlerFunction() === 'checkDataInventoryJobStatus') {
+            ScriptApp.deleteTrigger(trigger);
+        }
+    }
+}
+
+// =================================================================
+// SMART DISCOVERY - Automated Alert Strategy
+// =================================================================
+
+/**
+ * Key conversion events that are business-critical.
+ * Parameters on these events should be monitored closely.
+ */
+const CRITICAL_EVENTS = [
+    'purchase', 'add_to_cart', 'begin_checkout', 'add_payment_info',
+    'sign_up', 'login', 'generate_lead', 'tutorial_complete',
+    'add_to_wishlist', 'view_item', 'view_item_list', 'select_item',
+    'share', 'search', 'select_content', 'view_promotion'
+];
+
+/**
+ * Parameters that are typically business-critical when present.
+ */
+const CRITICAL_PARAM_PATTERNS = [
+    'item_id', 'item_name', 'item_category', 'item_brand', 'item_variant',
+    'price', 'value', 'currency', 'quantity', 'coupon',
+    'transaction_id', 'affiliation', 'tax', 'shipping',
+    'user_id', 'method', 'search_term', 'content_type',
+    // Custom prefixes that indicate business logic
+    'im_', 'custom_', 'cd_', 'cm_'
+];
+
+/**
+ * Runs Smart Discovery: auto-discovers and populates CONFIG_AUDIT.
+ * This is the intelligent pipeline that:
+ * 1. Scans all parameters from the last 30 days
+ * 2. Identifies critical event/param combinations
+ * 3. Auto-generates monitoring rules
+ */
+function runSmartDiscovery() {
+    try {
+        const userConfig = getUserConfig();
+        const projectId = userConfig.bqProjectId;
+
+        if (!projectId) {
+            SpreadsheetApp.getUi().alert(
+                'Configuration Required',
+                'Please set your BigQuery Project ID in Configure Addocu > Advanced Filters.',
+                SpreadsheetApp.getUi().ButtonSet.OK
+            );
+            return;
+        }
+
+        logEvent('BQ_ALERTS', 'Starting Smart Discovery...');
+        SpreadsheetApp.getActiveSpreadsheet().toast('Analyzing your data for optimal alerting strategy...', 'Smart Discovery', 15);
+
+        const jobId = submitSmartDiscoveryQuery(projectId);
+
+        if (jobId) {
+            PropertiesService.getScriptProperties().setProperty('BQ_SMART_JOB_ID', jobId);
+            PropertiesService.getScriptProperties().setProperty('BQ_SMART_PROJECT_ID', projectId);
+
+            ScriptApp.newTrigger('checkSmartDiscoveryJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Analyzing parameters... Results will appear shortly.', 'Smart Discovery', 5);
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Smart Discovery failed: ${e.message}`);
+        SpreadsheetApp.getUi().alert('Error', `Smart Discovery failed: ${e.message}`, SpreadsheetApp.getUi().ButtonSet.OK);
+    }
+}
+
+/**
+ * Checks the status of a running Smart Discovery query job.
+ */
+function checkSmartDiscoveryJobStatus() {
+    try {
+        const scriptProps = PropertiesService.getScriptProperties();
+        const jobId = scriptProps.getProperty('BQ_SMART_JOB_ID');
+        const projectId = scriptProps.getProperty('BQ_SMART_PROJECT_ID');
+
+        if (!jobId || !projectId) {
+            cleanupSmartDiscoveryTriggers();
+            return;
+        }
+
+        const job = BigQuery.Jobs.get(projectId, jobId);
+        const state = job.status.state;
+
+        logEvent('BQ_ALERTS', `Smart Discovery job ${jobId} status: ${state}`);
+
+        if (state === 'DONE') {
+            if (job.status.errorResult) {
+                throw new Error(job.status.errorResult.message);
+            }
+
+            const results = BigQuery.Jobs.getQueryResults(projectId, jobId);
+            processSmartDiscoveryResults(results);
+
+            scriptProps.deleteProperty('BQ_SMART_JOB_ID');
+            scriptProps.deleteProperty('BQ_SMART_PROJECT_ID');
+            cleanupSmartDiscoveryTriggers();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Smart Discovery complete! Check CONFIG_AUDIT sheet.', 'Smart Discovery', 10);
+
+        } else if (state === 'RUNNING' || state === 'PENDING') {
+            ScriptApp.newTrigger('checkSmartDiscoveryJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Error checking Smart Discovery job: ${e.message}`);
+        cleanupSmartDiscoveryTriggers();
+    }
+}
+
+/**
+ * Submits the Smart Discovery query to BigQuery.
+ */
+function submitSmartDiscoveryQuery(projectId) {
+    const datasetId = getGA4DatasetId(projectId);
+
+    if (!datasetId) {
+        throw new Error('No GA4 export dataset found.');
+    }
+
+    const query = buildSmartDiscoveryQuery(projectId, datasetId);
+
+    logEvent('BQ_ALERTS', `Submitting Smart Discovery query to ${projectId}.${datasetId}`);
+
+    const job = BigQuery.Jobs.insert({
+        configuration: {
+            query: {
+                query: query,
+                useLegacySql: false
+            }
+        }
+    }, projectId);
+
+    return job.jobReference.jobId;
+}
+
+/**
+ * Builds the Smart Discovery SQL query.
+ * Focuses on finding critical event/param combinations.
+ */
+function buildSmartDiscoveryQuery(projectId, datasetId) {
+    // Build the critical events filter
+    const eventsFilter = CRITICAL_EVENTS.map(e => `'${e}'`).join(', ');
+
+    return `
+WITH param_stats AS (
+  SELECT
+    event_name,
+    ep.key as parameter_name,
+    platform,
+    COUNT(*) as usage_count,
+    COUNT(DISTINCT PARSE_DATE('%Y%m%d', event_date)) as days_active,
+    -- Calculate fill rate (how often this param is present on this event)
+    ROUND(100 * COUNT(CASE 
+      WHEN ep.value.string_value IS NOT NULL 
+        OR ep.value.int_value IS NOT NULL 
+        OR ep.value.double_value IS NOT NULL 
+      THEN 1 END) / COUNT(*), 2) as current_fill_rate
+  FROM \`${projectId}.${datasetId}.events_*\`
+  CROSS JOIN UNNEST(event_params) ep
+  WHERE _TABLE_SUFFIX BETWEEN 
+    FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY))
+    AND FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+  GROUP BY event_name, parameter_name, platform
+),
+scored_params AS (
+  SELECT
+    event_name,
+    parameter_name,
+    platform,
+    usage_count,
+    days_active,
+    current_fill_rate,
+    -- Score based on criticality
+    CASE
+      -- Priority 1: Custom params on conversion events (highest value)
+      WHEN event_name IN (${eventsFilter})
+        AND (parameter_name LIKE 'im_%' 
+          OR parameter_name LIKE 'custom_%' 
+          OR parameter_name NOT IN ('page_location', 'page_title', 'page_referrer', 
+            'engagement_time_msec', 'ga_session_id', 'ga_session_number', 'debug_mode',
+            'firebase_event_origin', 'session_engaged', 'entrances'))
+        AND usage_count > 100
+      THEN 100
+      -- Priority 2: E-commerce params on conversion events
+      WHEN event_name IN (${eventsFilter})
+        AND parameter_name IN ('item_id', 'item_name', 'value', 'price', 
+          'transaction_id', 'currency', 'quantity')
+      THEN 90
+      -- Priority 3: Any high-usage custom param
+      WHEN (parameter_name LIKE 'im_%' OR parameter_name LIKE 'custom_%')
+        AND usage_count > 1000
+        AND days_active >= 7
+      THEN 80
+      -- Priority 4: Stable params on key events
+      WHEN event_name IN (${eventsFilter})
+        AND days_active >= 14
+        AND current_fill_rate >= 80
+      THEN 70
+      ELSE 0
+    END as priority_score
+  FROM param_stats
+)
+SELECT
+  event_name,
+  parameter_name,
+  platform,
+  usage_count,
+  days_active,
+  current_fill_rate,
+  priority_score,
+  -- Suggest fill rate threshold based on current performance
+  CASE
+    WHEN current_fill_rate >= 99 THEN 98
+    WHEN current_fill_rate >= 95 THEN 90
+    WHEN current_fill_rate >= 90 THEN 85
+    WHEN current_fill_rate >= 80 THEN 75
+    ELSE 70
+  END as suggested_threshold
+FROM scored_params
+WHERE priority_score >= 70  -- Only include high-priority params
+ORDER BY priority_score DESC, usage_count DESC
+LIMIT 50  -- Top 50 most critical params
+`;
+}
+
+/**
+ * Processes Smart Discovery results and populates CONFIG_AUDIT.
+ */
+function processSmartDiscoveryResults(results) {
+    const rows = results.rows || [];
+
+    logEvent('BQ_ALERTS', `Smart Discovery found ${rows.length} critical event/param combinations`);
+
+    if (rows.length === 0) {
+        SpreadsheetApp.getUi().alert(
+            'No Critical Params Found',
+            'No high-priority event/parameter combinations were found. This may mean:\n' +
+            '- Your tracking is very simple\n' +
+            '- No custom parameters are being used\n' +
+            '- Data volume is too low\n\n' +
+            'You can manually add rules to the CONFIG_AUDIT sheet.',
+            SpreadsheetApp.getUi().ButtonSet.OK
+        );
+        return;
+    }
+
+    // Transform to audit rules
+    const auditRules = rows.map(row => {
+        const f = row.f;
+        return {
+            eventName: f[0].v || '',
+            paramName: f[1].v || '',
+            platform: f[2].v || 'ALL',
+            usageCount: parseInt(f[3].v) || 0,
+            daysActive: parseInt(f[4].v) || 0,
+            currentFillRate: parseFloat(f[5].v) || 0,
+            priorityScore: parseInt(f[6].v) || 0,
+            suggestedThreshold: parseInt(f[7].v) || 90
+        };
+    });
+
+    // Group by event+param (consolidate platforms to ALL if multiple)
+    const consolidatedRules = consolidateAuditRules(auditRules);
+
+    // Write to CONFIG_AUDIT sheet
+    writeSmartAuditRules(consolidatedRules);
+
+    logEvent('BQ_ALERTS', `Auto-populated CONFIG_AUDIT with ${consolidatedRules.length} rules`);
+}
+
+/**
+ * Consolidates rules by event+param, preferring ALL platform.
+ */
+function consolidateAuditRules(rules) {
+    const grouped = {};
+
+    for (const rule of rules) {
+        const key = `${rule.eventName}|${rule.paramName}`;
+
+        if (!grouped[key]) {
+            grouped[key] = { ...rule, platform: 'ALL' };
+        } else {
+            // Take the higher threshold (more conservative)
+            if (rule.suggestedThreshold > grouped[key].suggestedThreshold) {
+                grouped[key].suggestedThreshold = rule.suggestedThreshold;
+            }
+            // Accumulate usage
+            grouped[key].usageCount += rule.usageCount;
+        }
+    }
+
+    return Object.values(grouped);
+}
+
+/**
+ * Writes auto-discovered rules to CONFIG_AUDIT sheet.
+ */
+function writeSmartAuditRules(rules) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(BQ_ALERTS_SHEETS.configAudit);
+
+    const headers = ['Event Name', 'Parameter Name', 'Platform', 'Min Fill Rate %', 'Alert Type', 'Active', 'Priority Score', 'Usage Count'];
+
+    if (!sheet) {
+        sheet = ss.insertSheet(BQ_ALERTS_SHEETS.configAudit);
+        sheet.setTabColor('#3B82F6');
+    }
+
+    sheet.clear();
+
+    // Write headers
+    const headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setValues([headers]);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#1E40AF');
+    headerRange.setFontColor('white');
+
+    // Write rules
+    const data = rules.map(rule => [
+        rule.eventName,
+        rule.paramName,
+        rule.platform,
+        rule.suggestedThreshold,
+        'DROP',
+        true,  // Active by default
+        rule.priorityScore,
+        rule.usageCount
+    ]);
+
+    if (data.length > 0) {
+        const dataRange = sheet.getRange(2, 1, data.length, headers.length);
+        dataRange.setValues(data);
+
+        // Color code by priority
+        for (let i = 0; i < data.length; i++) {
+            const priority = data[i][6];
+            const rowRange = sheet.getRange(i + 2, 1, 1, headers.length);
+
+            if (priority >= 100) {
+                rowRange.setBackground('#DCFCE7'); // Green - highest priority
+            } else if (priority >= 90) {
+                rowRange.setBackground('#DBEAFE'); // Blue - e-commerce
+            } else if (priority >= 80) {
+                rowRange.setBackground('#FEF3C7'); // Yellow - custom params
+            }
+        }
+    }
+
+    // Add helper note
+    const noteRow = data.length + 3;
+    sheet.getRange(noteRow, 1).setValue('🤖 Auto-generated by Smart Discovery. Review and adjust thresholds as needed.');
+    sheet.getRange(noteRow, 1).setFontStyle('italic').setFontColor('#6B7280');
+    sheet.getRange(noteRow + 1, 1).setValue('ℹ️ Priority Score: 100=Custom+Conversion, 90=E-commerce, 80=High-usage Custom, 70=Stable Params');
+    sheet.getRange(noteRow + 1, 1).setFontStyle('italic').setFontColor('#6B7280');
+
+    sheet.autoResizeColumns(1, headers.length);
+    sheet.setFrozenRows(1);
+}
+
+/**
+ * Cleans up Smart Discovery triggers.
+ */
+function cleanupSmartDiscoveryTriggers() {
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const trigger of triggers) {
+        if (trigger.getHandlerFunction() === 'checkSmartDiscoveryJobStatus') {
+            ScriptApp.deleteTrigger(trigger);
+        }
+    }
+}
+
+// =================================================================
+// ZOMBIE HUNTER (Phase 4 - Governance)
+// =================================================================
+
+/**
+ * Runs the Zombie Hunter Audit.
+ * Cross-references GA4_CUSTOM_DIMENSIONS (Config) vs BigQuery Usage.
+ * Identifies:
+ * - 🧟 ZOMBIES: Configured but 0 usage (Waste of quota).
+ * - 👻 GHOSTS: Sending data but not configured (Data loss in UI).
+ */
+function runZombieHunter() {
+    try {
+        const userConfig = getUserConfig();
+        const projectId = userConfig.bqProjectId;
+
+        if (!projectId) {
+            SpreadsheetApp.getUi().alert('Config Required', 'Set BigQuery Project ID first.', SpreadsheetApp.getUi().ButtonSet.OK);
+            return;
+        }
+
+        logEvent('GOVERNANCE', 'Starting Zombie Hunter...');
+        SpreadsheetApp.getActiveSpreadsheet().toast('Hunting for Zombies and Ghosts...', 'Zombie Hunter', 20);
+
+        // 1. Get Configured Dimensions from Sheet
+        const configuredDims = getConfiguredDimensions();
+
+        // 2. Submit BQ Query for Real Usage
+        const jobId = submitZombieHunterQuery(projectId);
+
+        if (jobId) {
+            // Store config in properties to pass to the handler (simplified context passing)
+            PropertiesService.getScriptProperties().setProperty('BQ_ZOMBIE_JOB_ID', jobId);
+            PropertiesService.getScriptProperties().setProperty('BQ_ZOMBIE_PROJECT_ID', projectId);
+            // We need to persist the configured dimensions to compare later. 
+            // Storing large JSON in props is risky, so we'll re-read sheet in handler or store in a temp hidden sheet?
+            // Better: Re-read sheet in handler. It's fast.
+
+            ScriptApp.newTrigger('checkZombieHunterJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+        }
+
+    } catch (e) {
+        logError('GOVERNANCE', `Zombie Hunter failed: ${e.message}`);
+        SpreadsheetApp.getUi().alert('Error', `Zombie Hunter failed: ${e.message}`, SpreadsheetApp.getUi().ButtonSet.OK);
+    }
+}
+
+/**
+ * Reads the GA4_CUSTOM_DIMENSIONS sheet.
+ */
+function getConfiguredDimensions() {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('GA4_CUSTOM_DIMENSIONS');
+
+    if (!sheet) {
+        logWarning('GOVERNANCE', 'GA4_CUSTOM_DIMENSIONS sheet not found. Skipping config comparison.');
+        return [];
+    }
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return [];
+
+    // Header map
+    const headers = data[0];
+    const paramIdx = headers.indexOf('Parameter Name');
+    const dispIdx = headers.indexOf('Display Name');
+    const scopeIdx = headers.indexOf('Scope');
+
+    if (paramIdx === -1) return [];
+
+    // Extract just the parameter names + metadata
+    return data.slice(1).map(row => ({
+        parameter: row[paramIdx],
+        displayName: row[dispIdx] || '',
+        scope: row[scopeIdx] || 'EVENT'
+    })).filter(d => d.parameter);
+}
+
+/**
+ * Checks BQ Job and processes results.
+ */
+function checkZombieHunterJobStatus() {
+    try {
+        const scriptProps = PropertiesService.getScriptProperties();
+        const jobId = scriptProps.getProperty('BQ_ZOMBIE_JOB_ID');
+        const projectId = scriptProps.getProperty('BQ_ZOMBIE_PROJECT_ID');
+
+        if (!jobId || !projectId) {
+            cleanupZombieHunterTriggers();
+            return;
+        }
+
+        const job = BigQuery.Jobs.get(projectId, jobId);
+        const state = job.status.state;
+
+        if (state === 'DONE') {
+            if (job.status.errorResult) {
+                throw new Error(job.status.errorResult.message);
+            }
+
+            const results = BigQuery.Jobs.getQueryResults(projectId, jobId);
+            processZombieHunterResults(results);
+
+            scriptProps.deleteProperty('BQ_ZOMBIE_JOB_ID');
+            scriptProps.deleteProperty('BQ_ZOMBIE_PROJECT_ID');
+            cleanupZombieHunterTriggers();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Zombie Hunter Audit Complete!', 'Governance', 5);
+
+        } else if (state === 'RUNNING' || state === 'PENDING') {
+            ScriptApp.newTrigger('checkZombieHunterJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+        }
+    } catch (e) {
+        logError('GOVERNANCE', `Error checking Zombie Hunter job: ${e.message}`);
+        cleanupZombieHunterTriggers();
+    }
+}
+
+/**
+ * Submits query to find ALL used parameters in last 30 days.
+ */
+function submitZombieHunterQuery(projectId) {
+    const datasetId = getGA4DatasetId(projectId);
+    if (!datasetId) throw new Error('No GA4 export dataset found.');
+
+    const query = `
+    SELECT
+      ep.key as parameter_name,
+      COUNT(*) as usage_count,
+      MAX(event_date) as last_seen_date
+    FROM \`${projectId}.${datasetId}.events_*\`
+    CROSS JOIN UNNEST(event_params) ep
+    WHERE _TABLE_SUFFIX BETWEEN 
+      FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY))
+      AND FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+    GROUP BY 1
+    HAVING usage_count > 10 -- Ignore noise
+    ORDER BY usage_count DESC
+  `;
+
+    const job = BigQuery.Jobs.insert({
+        configuration: { query: { query: query, useLegacySql: false } }
+    }, projectId);
+
+    return job.jobReference.jobId;
+}
+
+/**
+ * Cross-references data and generates report.
+ */
+function processZombieHunterResults(bqResults) {
+    const rows = bqResults.rows || [];
+
+    // 1. Map Usage Data
+    const usageMap = new Map();
+    rows.forEach(r => {
+        usageMap.set(r.f[0].v, {
+            count: parseInt(r.f[1].v),
+            lastSeen: r.f[2].v
+        });
+    });
+
+    // 2. Map Config Data
+    const configList = getConfiguredDimensions();
+    const configSet = new Set(configList.map(c => c.parameter));
+
+    // 3. Analyze
+    const report = [];
+
+    // A. Check for ZOMBIES (Configured but No Usage)
+    configList.forEach(c => {
+        const usage = usageMap.get(c.parameter);
+        if (!usage) {
+            report.push({
+                status: '🧟 ZOMBIE',
+                parameter: c.parameter,
+                details: `Registered as '${c.displayName}' but 0 usage in 30 days.`,
+                action: 'Delete from GA4 Admin to free quota.'
+            });
+        } else {
+            report.push({
+                status: '✅ VERIFIED',
+                parameter: c.parameter,
+                details: `${usage.count} events. Last seen: ${usage.lastSeen}`,
+                action: 'Keep.'
+            });
+        }
+    });
+
+    // B. Check for GHOSTS (Usage but Not Configured)
+    // Filter for likely custom params (im_, etc, or just everything not in config)
+    // We exclude standard params to avoid noise
+    const standardParams = [
+        'page_location', 'page_referrer', 'page_title', 'screen_class', 'screen_name',
+        'ga_session_id', 'ga_session_number', 'engagement_time_msec', 'debug_mode',
+        'entrances', 'session_engaged', 'term', 'content', 'source', 'medium', 'campaign'
+    ];
+
+    usageMap.forEach((val, key) => {
+        if (!configSet.has(key) && !standardParams.includes(key)) {
+            // Simple heuristic: if it looks custom
+            report.push({
+                status: '👻 GHOST',
+                parameter: key,
+                details: `Sending data (${val.count} events) but NOT registered as Dimension.`,
+                action: 'Register in Admin if analysis needed.'
+            });
+        }
+    });
+
+    writeZombieHunterSheet(report);
+}
+
+function writeZombieHunterSheet(data) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(BQ_ALERTS_SHEETS.zombieHunter);
+
+    if (!sheet) {
+        sheet = ss.insertSheet(BQ_ALERTS_SHEETS.zombieHunter);
+        sheet.setTabColor('#7C3AED'); // Purple
+    }
+    sheet.clear();
+
+    const headers = ['Status', 'Parameter', 'Details', 'Recommended Action'];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers])
+        .setFontWeight('bold')
+        .setBackground('#5B21B6')
+        .setFontColor('white');
+
+    if (data.length > 0) {
+        // Sort: ZOMBIE, GHOST, VERIFIED
+        data.sort((a, b) => a.status.localeCompare(b.status));
+
+        const rows = data.map(d => [d.status, d.parameter, d.details, d.action]);
+        sheet.getRange(2, 1, rows.length, 4).setValues(rows);
+
+        // Formatting
+        for (let i = 0; i < rows.length; i++) {
+            const type = rows[i][0];
+            const range = sheet.getRange(i + 2, 1, 1, 4);
+            if (type.includes('ZOMBIE')) range.setBackground('#FECACA'); // Red
+            if (type.includes('GHOST')) range.setBackground('#E9D5FF'); // Purple
+            if (type.includes('VERIFIED')) range.setBackground('#DCFCE7'); // Green
+        }
+    }
+
+    sheet.autoResizeColumns(1, 4);
+}
+
+function cleanupZombieHunterTriggers() {
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const trigger of triggers) {
+        if (trigger.getHandlerFunction() === 'checkZombieHunterJobStatus') {
+            ScriptApp.deleteTrigger(trigger);
+        }
     }
 }
