@@ -34,7 +34,8 @@ const BQ_ALERTS_SHEETS = {
     config: 'BQ_ALERTS_CONFIG',
     configAudit: 'CONFIG_AUDIT',
     paramHealth: 'BQ_PARAM_HEALTH',
-    dataInventory: 'BQ_DATA_INVENTORY'
+    dataInventory: 'BQ_DATA_INVENTORY',
+    zombieHunter: 'BQ_ZOMBIE_HUNTER'
 };
 
 // =================================================================
@@ -1489,6 +1490,270 @@ function cleanupSmartDiscoveryTriggers() {
     const triggers = ScriptApp.getProjectTriggers();
     for (const trigger of triggers) {
         if (trigger.getHandlerFunction() === 'checkSmartDiscoveryJobStatus') {
+            ScriptApp.deleteTrigger(trigger);
+        }
+    }
+}
+
+// =================================================================
+// ZOMBIE HUNTER (Phase 4 - Governance)
+// =================================================================
+
+/**
+ * Runs the Zombie Hunter Audit.
+ * Cross-references GA4_CUSTOM_DIMENSIONS (Config) vs BigQuery Usage.
+ * Identifies:
+ * - 🧟 ZOMBIES: Configured but 0 usage (Waste of quota).
+ * - 👻 GHOSTS: Sending data but not configured (Data loss in UI).
+ */
+function runZombieHunter() {
+    try {
+        const userConfig = getUserConfig();
+        const projectId = userConfig.bqProjectId;
+
+        if (!projectId) {
+            SpreadsheetApp.getUi().alert('Config Required', 'Set BigQuery Project ID first.', SpreadsheetApp.getUi().ButtonSet.OK);
+            return;
+        }
+
+        logEvent('GOVERNANCE', 'Starting Zombie Hunter...');
+        SpreadsheetApp.getActiveSpreadsheet().toast('Hunting for Zombies and Ghosts...', 'Zombie Hunter', 20);
+
+        // 1. Get Configured Dimensions from Sheet
+        const configuredDims = getConfiguredDimensions();
+
+        // 2. Submit BQ Query for Real Usage
+        const jobId = submitZombieHunterQuery(projectId);
+
+        if (jobId) {
+            // Store config in properties to pass to the handler (simplified context passing)
+            PropertiesService.getScriptProperties().setProperty('BQ_ZOMBIE_JOB_ID', jobId);
+            PropertiesService.getScriptProperties().setProperty('BQ_ZOMBIE_PROJECT_ID', projectId);
+            // We need to persist the configured dimensions to compare later. 
+            // Storing large JSON in props is risky, so we'll re-read sheet in handler or store in a temp hidden sheet?
+            // Better: Re-read sheet in handler. It's fast.
+
+            ScriptApp.newTrigger('checkZombieHunterJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+        }
+
+    } catch (e) {
+        logError('GOVERNANCE', `Zombie Hunter failed: ${e.message}`);
+        SpreadsheetApp.getUi().alert('Error', `Zombie Hunter failed: ${e.message}`, SpreadsheetApp.getUi().ButtonSet.OK);
+    }
+}
+
+/**
+ * Reads the GA4_CUSTOM_DIMENSIONS sheet.
+ */
+function getConfiguredDimensions() {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('GA4_CUSTOM_DIMENSIONS');
+
+    if (!sheet) {
+        logWarning('GOVERNANCE', 'GA4_CUSTOM_DIMENSIONS sheet not found. Skipping config comparison.');
+        return [];
+    }
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return [];
+
+    // Header map
+    const headers = data[0];
+    const paramIdx = headers.indexOf('Parameter Name');
+    const dispIdx = headers.indexOf('Display Name');
+    const scopeIdx = headers.indexOf('Scope');
+
+    if (paramIdx === -1) return [];
+
+    // Extract just the parameter names + metadata
+    return data.slice(1).map(row => ({
+        parameter: row[paramIdx],
+        displayName: row[dispIdx] || '',
+        scope: row[scopeIdx] || 'EVENT'
+    })).filter(d => d.parameter);
+}
+
+/**
+ * Checks BQ Job and processes results.
+ */
+function checkZombieHunterJobStatus() {
+    try {
+        const scriptProps = PropertiesService.getScriptProperties();
+        const jobId = scriptProps.getProperty('BQ_ZOMBIE_JOB_ID');
+        const projectId = scriptProps.getProperty('BQ_ZOMBIE_PROJECT_ID');
+
+        if (!jobId || !projectId) {
+            cleanupZombieHunterTriggers();
+            return;
+        }
+
+        const job = BigQuery.Jobs.get(projectId, jobId);
+        const state = job.status.state;
+
+        if (state === 'DONE') {
+            if (job.status.errorResult) {
+                throw new Error(job.status.errorResult.message);
+            }
+
+            const results = BigQuery.Jobs.getQueryResults(projectId, jobId);
+            processZombieHunterResults(results);
+
+            scriptProps.deleteProperty('BQ_ZOMBIE_JOB_ID');
+            scriptProps.deleteProperty('BQ_ZOMBIE_PROJECT_ID');
+            cleanupZombieHunterTriggers();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Zombie Hunter Audit Complete!', 'Governance', 5);
+
+        } else if (state === 'RUNNING' || state === 'PENDING') {
+            ScriptApp.newTrigger('checkZombieHunterJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+        }
+    } catch (e) {
+        logError('GOVERNANCE', `Error checking Zombie Hunter job: ${e.message}`);
+        cleanupZombieHunterTriggers();
+    }
+}
+
+/**
+ * Submits query to find ALL used parameters in last 30 days.
+ */
+function submitZombieHunterQuery(projectId) {
+    const datasetId = getGA4DatasetId(projectId);
+    if (!datasetId) throw new Error('No GA4 export dataset found.');
+
+    const query = `
+    SELECT
+      ep.key as parameter_name,
+      COUNT(*) as usage_count,
+      MAX(event_date) as last_seen_date
+    FROM \`${projectId}.${datasetId}.events_*\`
+    CROSS JOIN UNNEST(event_params) ep
+    WHERE _TABLE_SUFFIX BETWEEN 
+      FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY))
+      AND FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+    GROUP BY 1
+    HAVING usage_count > 10 -- Ignore noise
+    ORDER BY usage_count DESC
+  `;
+
+    const job = BigQuery.Jobs.insert({
+        configuration: { query: { query: query, useLegacySql: false } }
+    }, projectId);
+
+    return job.jobReference.jobId;
+}
+
+/**
+ * Cross-references data and generates report.
+ */
+function processZombieHunterResults(bqResults) {
+    const rows = bqResults.rows || [];
+
+    // 1. Map Usage Data
+    const usageMap = new Map();
+    rows.forEach(r => {
+        usageMap.set(r.f[0].v, {
+            count: parseInt(r.f[1].v),
+            lastSeen: r.f[2].v
+        });
+    });
+
+    // 2. Map Config Data
+    const configList = getConfiguredDimensions();
+    const configSet = new Set(configList.map(c => c.parameter));
+
+    // 3. Analyze
+    const report = [];
+
+    // A. Check for ZOMBIES (Configured but No Usage)
+    configList.forEach(c => {
+        const usage = usageMap.get(c.parameter);
+        if (!usage) {
+            report.push({
+                status: '🧟 ZOMBIE',
+                parameter: c.parameter,
+                details: `Registered as '${c.displayName}' but 0 usage in 30 days.`,
+                action: 'Delete from GA4 Admin to free quota.'
+            });
+        } else {
+            report.push({
+                status: '✅ VERIFIED',
+                parameter: c.parameter,
+                details: `${usage.count} events. Last seen: ${usage.lastSeen}`,
+                action: 'Keep.'
+            });
+        }
+    });
+
+    // B. Check for GHOSTS (Usage but Not Configured)
+    // Filter for likely custom params (im_, etc, or just everything not in config)
+    // We exclude standard params to avoid noise
+    const standardParams = [
+        'page_location', 'page_referrer', 'page_title', 'screen_class', 'screen_name',
+        'ga_session_id', 'ga_session_number', 'engagement_time_msec', 'debug_mode',
+        'entrances', 'session_engaged', 'term', 'content', 'source', 'medium', 'campaign'
+    ];
+
+    usageMap.forEach((val, key) => {
+        if (!configSet.has(key) && !standardParams.includes(key)) {
+            // Simple heuristic: if it looks custom
+            report.push({
+                status: '👻 GHOST',
+                parameter: key,
+                details: `Sending data (${val.count} events) but NOT registered as Dimension.`,
+                action: 'Register in Admin if analysis needed.'
+            });
+        }
+    });
+
+    writeZombieHunterSheet(report);
+}
+
+function writeZombieHunterSheet(data) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(BQ_ALERTS_SHEETS.zombieHunter);
+
+    if (!sheet) {
+        sheet = ss.insertSheet(BQ_ALERTS_SHEETS.zombieHunter);
+        sheet.setTabColor('#7C3AED'); // Purple
+    }
+    sheet.clear();
+
+    const headers = ['Status', 'Parameter', 'Details', 'Recommended Action'];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers])
+        .setFontWeight('bold')
+        .setBackground('#5B21B6')
+        .setFontColor('white');
+
+    if (data.length > 0) {
+        // Sort: ZOMBIE, GHOST, VERIFIED
+        data.sort((a, b) => a.status.localeCompare(b.status));
+
+        const rows = data.map(d => [d.status, d.parameter, d.details, d.action]);
+        sheet.getRange(2, 1, rows.length, 4).setValues(rows);
+
+        // Formatting
+        for (let i = 0; i < rows.length; i++) {
+            const type = rows[i][0];
+            const range = sheet.getRange(i + 2, 1, 1, 4);
+            if (type.includes('ZOMBIE')) range.setBackground('#FECACA'); // Red
+            if (type.includes('GHOST')) range.setBackground('#E9D5FF'); // Purple
+            if (type.includes('VERIFIED')) range.setBackground('#DCFCE7'); // Green
+        }
+    }
+
+    sheet.autoResizeColumns(1, 4);
+}
+
+function cleanupZombieHunterTriggers() {
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const trigger of triggers) {
+        if (trigger.getHandlerFunction() === 'checkZombieHunterJobStatus') {
             ScriptApp.deleteTrigger(trigger);
         }
     }

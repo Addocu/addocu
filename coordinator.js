@@ -57,6 +57,10 @@ function onOpen(e) {
         .addItem('🔬 Dimensional Health (PRO)', 'runDimensionalHealthCheck')
         .addItem('📚 Data Inventory (PRO)', 'runDataInventory')
       )
+      .addSubMenu(SpreadsheetApp.getUi().createMenu('🛡️ Governance')
+        .addItem('User Access Audit', 'runUserAccessAudit')
+        .addItem('🧟 Zombie Hunter', 'runZombieHunter')
+      )
       .addSubMenu(SpreadsheetApp.getUi().createMenu('Troubleshooting')
         .addItem('Verify Accounts (IMPORTANT)', 'showAccountVerification')
         .addItem('Reauthorize Permissions', 'forcedPermissionReauthorization')
@@ -681,7 +685,10 @@ function executeAuditWithFilters(auditConfig) {
     if (services.includes('bigquery')) {
       logEvent('AUDIT_FILTERED', 'Starting BigQuery audit');
       try {
-        const bqResult = syncBigQueryCore();
+        const bqResult = syncBigQueryCore({
+          forceFullAudit: false,
+          incrementalEnabled: true
+        });
         results.bigquery = bqResult;
         if (bqResult.status === 'SUCCESS' || bqResult.success) {
           totalRecords += bqResult.records || 0;
@@ -873,9 +880,15 @@ function executeCompleteAudit(services, options = {}) {
     if (services.includes('bigQuery') || services.includes('bigquery')) {
       try {
         logEvent('AUDIT', 'Starting BigQuery audit');
-        const bqResult = syncBigQueryCore();
+        const bqResult = syncBigQueryCore({
+          forceFullAudit: forceFullAudit,
+          incrementalEnabled: incrementalEnabled
+        });
         results.bigquery = bqResult;
         totalRecords += bqResult.records || 0;
+        if (bqResult.syncMode) {
+          auditModes[bqResult.syncMode]++;
+        }
       } catch (e) {
         logError('AUDIT', `Error in BigQuery audit: ${e.message}`);
         results.bigquery = { success: false, error: e.message };
