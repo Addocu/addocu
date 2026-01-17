@@ -52,6 +52,7 @@ function onOpen(e) {
         .addItem('Clean Logs', 'cleanupLogsUI')
         .addItem('Generate Dashboard', 'generateManualDashboard')
         .addSeparator()
+        .addItem('🧠 Smart Discovery (PRO)', 'runSmartDiscovery')
         .addItem('🫀 Heartbeat Alert (PRO)', 'runHeartbeatAlert')
         .addItem('🔬 Dimensional Health (PRO)', 'runDimensionalHealthCheck')
         .addItem('📚 Data Inventory (PRO)', 'runDataInventory')
@@ -387,6 +388,12 @@ function saveUserConfiguration(config) {
     if (config.bqTableDateRange !== undefined) {
       userProperties.setProperty('ADDOCU_BQ_TABLE_DATE_RANGE', config.bqTableDateRange.toString());
       logEvent('CONFIG', `BigQuery table date range set to: ${config.bqTableDateRange}`);
+    }
+
+    // Save incremental audit enabled setting
+    if (config.incrementalAuditEnabled !== undefined) {
+      userProperties.setProperty('ADDOCU_INCREMENTAL_AUDIT_ENABLED', config.incrementalAuditEnabled.toString());
+      logEvent('CONFIG', `Incremental audit enabled: ${config.incrementalAuditEnabled}`);
     }
 
     // Mark as not first time (OAuth2 is always ready)

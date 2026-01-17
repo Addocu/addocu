@@ -1116,3 +1116,380 @@ function cleanupDataInventoryTriggers() {
         }
     }
 }
+
+// =================================================================
+// SMART DISCOVERY - Automated Alert Strategy
+// =================================================================
+
+/**
+ * Key conversion events that are business-critical.
+ * Parameters on these events should be monitored closely.
+ */
+const CRITICAL_EVENTS = [
+    'purchase', 'add_to_cart', 'begin_checkout', 'add_payment_info',
+    'sign_up', 'login', 'generate_lead', 'tutorial_complete',
+    'add_to_wishlist', 'view_item', 'view_item_list', 'select_item',
+    'share', 'search', 'select_content', 'view_promotion'
+];
+
+/**
+ * Parameters that are typically business-critical when present.
+ */
+const CRITICAL_PARAM_PATTERNS = [
+    'item_id', 'item_name', 'item_category', 'item_brand', 'item_variant',
+    'price', 'value', 'currency', 'quantity', 'coupon',
+    'transaction_id', 'affiliation', 'tax', 'shipping',
+    'user_id', 'method', 'search_term', 'content_type',
+    // Custom prefixes that indicate business logic
+    'im_', 'custom_', 'cd_', 'cm_'
+];
+
+/**
+ * Runs Smart Discovery: auto-discovers and populates CONFIG_AUDIT.
+ * This is the intelligent pipeline that:
+ * 1. Scans all parameters from the last 30 days
+ * 2. Identifies critical event/param combinations
+ * 3. Auto-generates monitoring rules
+ */
+function runSmartDiscovery() {
+    try {
+        const userConfig = getUserConfig();
+        const projectId = userConfig.bqProjectId;
+
+        if (!projectId) {
+            SpreadsheetApp.getUi().alert(
+                'Configuration Required',
+                'Please set your BigQuery Project ID in Configure Addocu > Advanced Filters.',
+                SpreadsheetApp.getUi().ButtonSet.OK
+            );
+            return;
+        }
+
+        logEvent('BQ_ALERTS', 'Starting Smart Discovery...');
+        SpreadsheetApp.getActiveSpreadsheet().toast('Analyzing your data for optimal alerting strategy...', 'Smart Discovery', 15);
+
+        const jobId = submitSmartDiscoveryQuery(projectId);
+
+        if (jobId) {
+            PropertiesService.getScriptProperties().setProperty('BQ_SMART_JOB_ID', jobId);
+            PropertiesService.getScriptProperties().setProperty('BQ_SMART_PROJECT_ID', projectId);
+
+            ScriptApp.newTrigger('checkSmartDiscoveryJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Analyzing parameters... Results will appear shortly.', 'Smart Discovery', 5);
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Smart Discovery failed: ${e.message}`);
+        SpreadsheetApp.getUi().alert('Error', `Smart Discovery failed: ${e.message}`, SpreadsheetApp.getUi().ButtonSet.OK);
+    }
+}
+
+/**
+ * Checks the status of a running Smart Discovery query job.
+ */
+function checkSmartDiscoveryJobStatus() {
+    try {
+        const scriptProps = PropertiesService.getScriptProperties();
+        const jobId = scriptProps.getProperty('BQ_SMART_JOB_ID');
+        const projectId = scriptProps.getProperty('BQ_SMART_PROJECT_ID');
+
+        if (!jobId || !projectId) {
+            cleanupSmartDiscoveryTriggers();
+            return;
+        }
+
+        const job = BigQuery.Jobs.get(projectId, jobId);
+        const state = job.status.state;
+
+        logEvent('BQ_ALERTS', `Smart Discovery job ${jobId} status: ${state}`);
+
+        if (state === 'DONE') {
+            if (job.status.errorResult) {
+                throw new Error(job.status.errorResult.message);
+            }
+
+            const results = BigQuery.Jobs.getQueryResults(projectId, jobId);
+            processSmartDiscoveryResults(results);
+
+            scriptProps.deleteProperty('BQ_SMART_JOB_ID');
+            scriptProps.deleteProperty('BQ_SMART_PROJECT_ID');
+            cleanupSmartDiscoveryTriggers();
+
+            SpreadsheetApp.getActiveSpreadsheet().toast('Smart Discovery complete! Check CONFIG_AUDIT sheet.', 'Smart Discovery', 10);
+
+        } else if (state === 'RUNNING' || state === 'PENDING') {
+            ScriptApp.newTrigger('checkSmartDiscoveryJobStatus')
+                .timeBased()
+                .after(10 * 1000)
+                .create();
+        }
+    } catch (e) {
+        logError('BQ_ALERTS', `Error checking Smart Discovery job: ${e.message}`);
+        cleanupSmartDiscoveryTriggers();
+    }
+}
+
+/**
+ * Submits the Smart Discovery query to BigQuery.
+ */
+function submitSmartDiscoveryQuery(projectId) {
+    const datasetId = getGA4DatasetId(projectId);
+
+    if (!datasetId) {
+        throw new Error('No GA4 export dataset found.');
+    }
+
+    const query = buildSmartDiscoveryQuery(projectId, datasetId);
+
+    logEvent('BQ_ALERTS', `Submitting Smart Discovery query to ${projectId}.${datasetId}`);
+
+    const job = BigQuery.Jobs.insert({
+        configuration: {
+            query: {
+                query: query,
+                useLegacySql: false
+            }
+        }
+    }, projectId);
+
+    return job.jobReference.jobId;
+}
+
+/**
+ * Builds the Smart Discovery SQL query.
+ * Focuses on finding critical event/param combinations.
+ */
+function buildSmartDiscoveryQuery(projectId, datasetId) {
+    // Build the critical events filter
+    const eventsFilter = CRITICAL_EVENTS.map(e => `'${e}'`).join(', ');
+
+    return `
+WITH param_stats AS (
+  SELECT
+    event_name,
+    ep.key as parameter_name,
+    platform,
+    COUNT(*) as usage_count,
+    COUNT(DISTINCT PARSE_DATE('%Y%m%d', event_date)) as days_active,
+    -- Calculate fill rate (how often this param is present on this event)
+    ROUND(100 * COUNT(CASE 
+      WHEN ep.value.string_value IS NOT NULL 
+        OR ep.value.int_value IS NOT NULL 
+        OR ep.value.double_value IS NOT NULL 
+      THEN 1 END) / COUNT(*), 2) as current_fill_rate
+  FROM \`${projectId}.${datasetId}.events_*\`
+  CROSS JOIN UNNEST(event_params) ep
+  WHERE _TABLE_SUFFIX BETWEEN 
+    FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY))
+    AND FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+  GROUP BY event_name, parameter_name, platform
+),
+scored_params AS (
+  SELECT
+    event_name,
+    parameter_name,
+    platform,
+    usage_count,
+    days_active,
+    current_fill_rate,
+    -- Score based on criticality
+    CASE
+      -- Priority 1: Custom params on conversion events (highest value)
+      WHEN event_name IN (${eventsFilter})
+        AND (parameter_name LIKE 'im_%' 
+          OR parameter_name LIKE 'custom_%' 
+          OR parameter_name NOT IN ('page_location', 'page_title', 'page_referrer', 
+            'engagement_time_msec', 'ga_session_id', 'ga_session_number', 'debug_mode',
+            'firebase_event_origin', 'session_engaged', 'entrances'))
+        AND usage_count > 100
+      THEN 100
+      -- Priority 2: E-commerce params on conversion events
+      WHEN event_name IN (${eventsFilter})
+        AND parameter_name IN ('item_id', 'item_name', 'value', 'price', 
+          'transaction_id', 'currency', 'quantity')
+      THEN 90
+      -- Priority 3: Any high-usage custom param
+      WHEN (parameter_name LIKE 'im_%' OR parameter_name LIKE 'custom_%')
+        AND usage_count > 1000
+        AND days_active >= 7
+      THEN 80
+      -- Priority 4: Stable params on key events
+      WHEN event_name IN (${eventsFilter})
+        AND days_active >= 14
+        AND current_fill_rate >= 80
+      THEN 70
+      ELSE 0
+    END as priority_score
+  FROM param_stats
+)
+SELECT
+  event_name,
+  parameter_name,
+  platform,
+  usage_count,
+  days_active,
+  current_fill_rate,
+  priority_score,
+  -- Suggest fill rate threshold based on current performance
+  CASE
+    WHEN current_fill_rate >= 99 THEN 98
+    WHEN current_fill_rate >= 95 THEN 90
+    WHEN current_fill_rate >= 90 THEN 85
+    WHEN current_fill_rate >= 80 THEN 75
+    ELSE 70
+  END as suggested_threshold
+FROM scored_params
+WHERE priority_score >= 70  -- Only include high-priority params
+ORDER BY priority_score DESC, usage_count DESC
+LIMIT 50  -- Top 50 most critical params
+`;
+}
+
+/**
+ * Processes Smart Discovery results and populates CONFIG_AUDIT.
+ */
+function processSmartDiscoveryResults(results) {
+    const rows = results.rows || [];
+
+    logEvent('BQ_ALERTS', `Smart Discovery found ${rows.length} critical event/param combinations`);
+
+    if (rows.length === 0) {
+        SpreadsheetApp.getUi().alert(
+            'No Critical Params Found',
+            'No high-priority event/parameter combinations were found. This may mean:\n' +
+            '- Your tracking is very simple\n' +
+            '- No custom parameters are being used\n' +
+            '- Data volume is too low\n\n' +
+            'You can manually add rules to the CONFIG_AUDIT sheet.',
+            SpreadsheetApp.getUi().ButtonSet.OK
+        );
+        return;
+    }
+
+    // Transform to audit rules
+    const auditRules = rows.map(row => {
+        const f = row.f;
+        return {
+            eventName: f[0].v || '',
+            paramName: f[1].v || '',
+            platform: f[2].v || 'ALL',
+            usageCount: parseInt(f[3].v) || 0,
+            daysActive: parseInt(f[4].v) || 0,
+            currentFillRate: parseFloat(f[5].v) || 0,
+            priorityScore: parseInt(f[6].v) || 0,
+            suggestedThreshold: parseInt(f[7].v) || 90
+        };
+    });
+
+    // Group by event+param (consolidate platforms to ALL if multiple)
+    const consolidatedRules = consolidateAuditRules(auditRules);
+
+    // Write to CONFIG_AUDIT sheet
+    writeSmartAuditRules(consolidatedRules);
+
+    logEvent('BQ_ALERTS', `Auto-populated CONFIG_AUDIT with ${consolidatedRules.length} rules`);
+}
+
+/**
+ * Consolidates rules by event+param, preferring ALL platform.
+ */
+function consolidateAuditRules(rules) {
+    const grouped = {};
+
+    for (const rule of rules) {
+        const key = `${rule.eventName}|${rule.paramName}`;
+
+        if (!grouped[key]) {
+            grouped[key] = { ...rule, platform: 'ALL' };
+        } else {
+            // Take the higher threshold (more conservative)
+            if (rule.suggestedThreshold > grouped[key].suggestedThreshold) {
+                grouped[key].suggestedThreshold = rule.suggestedThreshold;
+            }
+            // Accumulate usage
+            grouped[key].usageCount += rule.usageCount;
+        }
+    }
+
+    return Object.values(grouped);
+}
+
+/**
+ * Writes auto-discovered rules to CONFIG_AUDIT sheet.
+ */
+function writeSmartAuditRules(rules) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(BQ_ALERTS_SHEETS.configAudit);
+
+    const headers = ['Event Name', 'Parameter Name', 'Platform', 'Min Fill Rate %', 'Alert Type', 'Active', 'Priority Score', 'Usage Count'];
+
+    if (!sheet) {
+        sheet = ss.insertSheet(BQ_ALERTS_SHEETS.configAudit);
+        sheet.setTabColor('#3B82F6');
+    }
+
+    sheet.clear();
+
+    // Write headers
+    const headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setValues([headers]);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#1E40AF');
+    headerRange.setFontColor('white');
+
+    // Write rules
+    const data = rules.map(rule => [
+        rule.eventName,
+        rule.paramName,
+        rule.platform,
+        rule.suggestedThreshold,
+        'DROP',
+        true,  // Active by default
+        rule.priorityScore,
+        rule.usageCount
+    ]);
+
+    if (data.length > 0) {
+        const dataRange = sheet.getRange(2, 1, data.length, headers.length);
+        dataRange.setValues(data);
+
+        // Color code by priority
+        for (let i = 0; i < data.length; i++) {
+            const priority = data[i][6];
+            const rowRange = sheet.getRange(i + 2, 1, 1, headers.length);
+
+            if (priority >= 100) {
+                rowRange.setBackground('#DCFCE7'); // Green - highest priority
+            } else if (priority >= 90) {
+                rowRange.setBackground('#DBEAFE'); // Blue - e-commerce
+            } else if (priority >= 80) {
+                rowRange.setBackground('#FEF3C7'); // Yellow - custom params
+            }
+        }
+    }
+
+    // Add helper note
+    const noteRow = data.length + 3;
+    sheet.getRange(noteRow, 1).setValue('🤖 Auto-generated by Smart Discovery. Review and adjust thresholds as needed.');
+    sheet.getRange(noteRow, 1).setFontStyle('italic').setFontColor('#6B7280');
+    sheet.getRange(noteRow + 1, 1).setValue('ℹ️ Priority Score: 100=Custom+Conversion, 90=E-commerce, 80=High-usage Custom, 70=Stable Params');
+    sheet.getRange(noteRow + 1, 1).setFontStyle('italic').setFontColor('#6B7280');
+
+    sheet.autoResizeColumns(1, headers.length);
+    sheet.setFrozenRows(1);
+}
+
+/**
+ * Cleans up Smart Discovery triggers.
+ */
+function cleanupSmartDiscoveryTriggers() {
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const trigger of triggers) {
+        if (trigger.getHandlerFunction() === 'checkSmartDiscoveryJobStatus') {
+            ScriptApp.deleteTrigger(trigger);
+        }
+    }
+}
