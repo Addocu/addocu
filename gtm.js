@@ -10,7 +10,8 @@
 const GTM_TAGS_HEADERS = [
   'Container Name', 'Container ID', 'Workspace', 'Tag Name', 'Tag ID', 'Tag Type', 'Status',
   'Firing Triggers', 'Blocking Triggers', 'Firing Count', 'Blocking Count',
-  'Key Parameters', 'Priority', 'Firing Option', 'Last Modified', 'Tag URL', 'Notes', 'Observations'
+  'Key Parameters', 'Priority', 'Firing Option', 'Live Only', 'Schedule Start', 'Schedule End',
+  'Last Modified', 'Tag URL', 'Notes', 'Observations'
 ];
 
 const GTM_VARIABLES_HEADERS = [
@@ -426,15 +427,20 @@ function processGTMTag(tag, container, workspace) {
     // Additional configurations
     tagData['Priority'] = tag.priority || 'N/A';
     tagData['Firing Option'] = tag.tagFiringOption || 'N/A';
+    tagData['Live Only'] = tag.liveOnly ? 'Yes' : 'No';
+    tagData['Schedule Start'] = tag.scheduleStartMs ? formatDate(new Date(parseInt(tag.scheduleStartMs))) : 'N/A';
+    tagData['Schedule End'] = tag.scheduleEndMs ? formatDate(new Date(parseInt(tag.scheduleEndMs))) : 'N/A';
 
-    // Tag URL (if available)
-    tagData['Tag URL'] = tag.liveOnly ? 'Live Only' : 'N/A';
+    // Tag URL
+    tagData['Tag URL'] = tag.tagManagerUrl || 'N/A';
 
     // Automatic observations
     const observations = [];
     if (tag.paused) observations.push('Tag paused');
     if (!tag.firingTriggerId || tag.firingTriggerId.length === 0) observations.push('No firing triggers');
     if (tag.blockingTriggerId && tag.blockingTriggerId.length > 0) observations.push('Has blocking triggers');
+    if (tag.liveOnly) observations.push('Live Only');
+    if (tag.scheduleStartMs || tag.scheduleEndMs) observations.push('Scheduled');
 
     tagData['Observations'] = observations.join('; ') || 'N/A';
 

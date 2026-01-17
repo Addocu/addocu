@@ -7,8 +7,8 @@
 // =================================================================
 
 const GA4_PROPERTIES_HEADERS = [
-  'Property Name', 'Property ID', 'Property Path', 'Account Name', 'Account Path',
-  'Currency Code', 'Time Zone', 'Created Time', 'Update Time', 'Industry Category',
+  'Property Name', 'Property ID', 'Property Path', 'Property Type', 'Account Name', 'Account Path',
+  'Currency Code', 'Time Zone', 'Created Time', 'Update Time', 'Expire Time', 'Industry Category',
   'Service Level', 'Analytics URL', 'Streams URL', 'Parent', 'Delete Time',
   'Data Retention', 'Reset User Data', 'Notes'
 ];
@@ -24,7 +24,7 @@ const GA4_METRICS_HEADERS = [
 ];
 const GA4_STREAMS_HEADERS = [
   'Property Name', 'Property ID', 'Stream Name', 'Stream Type', 'Stream ID',
-  'Measurement ID / Package / Bundle', 'Default URI', 'Stream Created',
+  'Measurement ID / Package / Bundle', 'Firebase App ID', 'Default URI', 'Stream Created',
   'Stream Updated', 'Property Created', 'Property Updated', 'Notes'
 ];
 
@@ -263,12 +263,14 @@ function processGA4Property(property, account) {
     'Property Name': property.displayName || 'Unnamed',
     'Property ID': propertyId,
     'Property Path': property.name,
+    'Property Type': property.propertyType || 'ORDINARY_PROPERTY',
     'Account Name': account.displayName,
     'Account Path': account.name,
     'Currency Code': property.currencyCode || 'N/A',
     'Time Zone': property.timeZone || 'N/A',
     'Created Time': formatDate(property.createTime),
     'Update Time': formatDate(property.updateTime),
+    'Expire Time': formatDate(property.expireTime) || '',
     'Industry Category': property.industryCategory || 'N/A',
     'Service Level': property.serviceLevel || 'STANDARD',
     'Analytics URL': `https://analytics.google.com/analytics/web/#/p${propertyId}`,
@@ -277,7 +279,7 @@ function processGA4Property(property, account) {
     'Delete Time': formatDate(property.deleteTime) || '',
     'Data Retention': property.dataRetentionSettings?.eventDataRetention || 'N/A',
     'Reset User Data': property.dataRetentionSettings?.resetUserDataOnNewActivity || false,
-    'Notes': `Account: ${account.displayName} | Level: ${property.serviceLevel}`
+    'Notes': `Account: ${account.displayName} | Level: ${property.serviceLevel} | Type: ${property.propertyType || 'ORDINARY'}`
   };
 }
 
@@ -314,6 +316,7 @@ function processGA4Metric(metric, property) {
 }
 
 function processGA4Stream(stream, property) {
+  const firebaseAppId = stream.webStreamData?.firebaseAppId || stream.androidAppStreamData?.firebaseAppId || stream.iosAppStreamData?.firebaseAppId || '';
   return {
     'Property Name': property.displayName,
     'Property ID': property.name.split('/').pop(),
@@ -321,11 +324,12 @@ function processGA4Stream(stream, property) {
     'Stream Type': stream.type,
     'Stream ID': stream.name.split('/').pop(),
     'Measurement ID / Package / Bundle': stream.webStreamData?.measurementId || stream.androidAppStreamData?.packageName || stream.iosAppStreamData?.bundleId || '',
+    'Firebase App ID': firebaseAppId,
     'Default URI': stream.webStreamData?.defaultUri || '',
     'Stream Created': formatDate(stream.createTime),
     'Stream Updated': formatDate(stream.updateTime),
     'Property Created': formatDate(property.createTime),
     'Property Updated': formatDate(property.updateTime),
-    'Notes': `Type: ${stream.type} | Created: ${formatDate(stream.createTime)}`
+    'Notes': `Type: ${stream.type} | Created: ${formatDate(stream.createTime)}${firebaseAppId ? ' | Firebase: ' + firebaseAppId : ''}`
   };
 }

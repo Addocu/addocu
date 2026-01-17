@@ -157,13 +157,38 @@ function listGBPLocations(accountName) {
 
   return response.locations.map(loc => {
     const category = loc.categories && loc.categories.primaryCategory ? loc.categories.primaryCategory.displayName : 'N/A';
+
+    // Format regular hours
+    let regularHours = 'N/A';
+    if (loc.regularHours && loc.regularHours.periods) {
+      regularHours = loc.regularHours.periods.map(p =>
+        `${p.openDay || 'N/A'}: ${p.openTime?.hours || '00'}:${p.openTime?.minutes || '00'}-${p.closeTime?.hours || '00'}:${p.closeTime?.minutes || '00'}`
+      ).join('; ');
+    }
+
+    // Determine open status
+    let openStatus = 'N/A';
+    if (loc.openInfo) {
+      openStatus = loc.openInfo.status || 'N/A';
+    }
+
+    // Service area
+    let serviceArea = 'N/A';
+    if (loc.serviceArea && loc.serviceArea.places) {
+      serviceArea = loc.serviceArea.places.length > 0 ? `${loc.serviceArea.places.length} areas` : 'N/A';
+    }
+
     return {
       name: loc.name,
       title: loc.title,
       category: category,
       storeCode: loc.storeCode || 'N/A',
       status: loc.metadata && loc.metadata.mapsUri ? 'Active' : 'Missing Info',
-      mapsUri: loc.metadata ? loc.metadata.mapsUri : 'N/A'
+      mapsUri: loc.metadata ? loc.metadata.mapsUri : 'N/A',
+      regularHours: regularHours,
+      openStatus: openStatus,
+      serviceArea: serviceArea,
+      latlng: loc.latlng
     };
   });
 }
@@ -197,7 +222,7 @@ function writeGBPLocationsToSheet(locations) {
   const headers = [
     'Account Name', 'Account Type', 'Location Name', 'Location ID',
     'Address', 'Phone', 'Website', 'Primary Category', 'Latitude',
-    'Longitude', 'Verification State', 'Last Audit'
+    'Longitude', 'Open Status', 'Regular Hours', 'Service Area', 'Verification State', 'Last Audit'
   ];
 
   const lastAudit = formatDate(new Date());
@@ -209,9 +234,12 @@ function writeGBPLocationsToSheet(locations) {
     loc.storefrontAddress?.addressLines?.join(', ') || '',
     loc.phoneNumbers?.primaryPhone || '',
     loc.websiteUri || '',
-    loc.categories?.primaryCategory?.displayName || '',
+    loc.category || '',
     loc.latlng?.latitude || '',
     loc.latlng?.longitude || '',
+    loc.openStatus || '',
+    loc.regularHours || '',
+    loc.serviceArea || '',
     loc.metadata?.verificationState || '',
     lastAudit
   ]);

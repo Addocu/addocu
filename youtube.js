@@ -8,7 +8,7 @@
 // =================================================================
 
 const YOUTUBE_CHANNELS_HEADERS = [
-  'Channel ID', 'Title', 'Handle', 'Description', 'Published At',
+  'Channel ID', 'Title', 'Handle', 'Description', 'Country', 'Published At',
   'Subscribers', 'Videos', 'Views', 'Hidden Subscriber Count',
   'Thumbnail URL', 'Sync Date'
 ];
@@ -23,7 +23,8 @@ const YOUTUBE_VIDEOS_HEADERS = [
   'Video ID', 'Channel ID', 'Title', 'Description',
   'Published At', 'Duration', 'Category ID', 'Privacy Status',
   'View Count', 'Like Count', 'Comment Count',
-  'Tags', 'Thumbnail URL', 'Embeddable', 'License', 'Sync Date'
+  'Tags', 'Thumbnail URL', 'Embeddable', 'License', 'Has Caption', 'Made For Kids',
+  'Region Restriction', 'Sync Date'
 ];
 
 // =================================================================
@@ -168,6 +169,7 @@ function listYouTubeChannels() {
     title: item.snippet.title,
     handle: item.snippet.customUrl || 'N/A',
     description: item.snippet.description,
+    country: item.snippet.country || 'N/A',
     publishedAt: item.snippet.publishedAt,
     subscriberCount: item.statistics.subscriberCount,
     videoCount: item.statistics.videoCount,
@@ -242,23 +244,40 @@ function listYouTubeVideos(uploadsPlaylistId) {
   const videosResponse = fetchWithRetry(videosUrl, { headers: auth.headers }, 'YouTube');
   if (!videosResponse || !videosResponse.items) return [];
 
-  return videosResponse.items.map(item => ({
-    id: item.id,
-    channelId: item.snippet.channelId,
-    title: item.snippet.title,
-    description: item.snippet.description,
-    publishedAt: item.snippet.publishedAt,
-    duration: item.contentDetails.duration,
-    categoryId: item.snippet.categoryId,
-    privacyStatus: item.status.privacyStatus,
-    viewCount: item.statistics.viewCount || 0,
-    likeCount: item.statistics.likeCount || 0,
-    commentCount: item.statistics.commentCount || 0,
-    tags: item.snippet.tags ? item.snippet.tags.join(', ') : '',
-    thumbnailUrl: item.snippet.thumbnails?.default?.url || '',
-    embeddable: item.status.embeddable,
-    license: item.status.license
-  }));
+  return videosResponse.items.map(item => {
+    // Region restriction summary
+    let regionRestriction = 'None';
+    if (item.contentDetails.regionRestriction) {
+      const blocked = item.contentDetails.regionRestriction.blocked;
+      const allowed = item.contentDetails.regionRestriction.allowed;
+      if (blocked && blocked.length > 0) {
+        regionRestriction = `Blocked: ${blocked.length} countries`;
+      } else if (allowed && allowed.length > 0) {
+        regionRestriction = `Allowed: ${allowed.length} countries`;
+      }
+    }
+
+    return {
+      id: item.id,
+      channelId: item.snippet.channelId,
+      title: item.snippet.title,
+      description: item.snippet.description,
+      publishedAt: item.snippet.publishedAt,
+      duration: item.contentDetails.duration,
+      categoryId: item.snippet.categoryId,
+      privacyStatus: item.status.privacyStatus,
+      viewCount: item.statistics.viewCount || 0,
+      likeCount: item.statistics.likeCount || 0,
+      commentCount: item.statistics.commentCount || 0,
+      tags: item.snippet.tags ? item.snippet.tags.join(', ') : '',
+      thumbnailUrl: item.snippet.thumbnails?.default?.url || '',
+      embeddable: item.status.embeddable,
+      license: item.status.license,
+      hasCaption: item.contentDetails.caption === 'true' ? 'Yes' : 'No',
+      madeForKids: item.status.madeForKids ? 'Yes' : 'No',
+      regionRestriction: regionRestriction
+    };
+  });
 }
 
 // =================================================================
@@ -272,7 +291,7 @@ function listYouTubeVideos(uploadsPlaylistId) {
 function writeYouTubeChannelsToSheet(channels) {
   const syncDate = formatDate(new Date());
   const data = channels.map(c => [
-    c.id, c.title, c.handle, c.description, c.publishedAt,
+    c.id, c.title, c.handle, c.description, c.country, c.publishedAt,
     c.subscriberCount, c.videoCount, c.viewCount, c.hiddenSubscriberCount,
     c.thumbnailUrl, syncDate
   ]);
@@ -305,7 +324,8 @@ function writeYouTubeVideosToSheet(videos) {
     v.id, v.channelId, v.title, v.description,
     v.publishedAt, v.duration, v.categoryId, v.privacyStatus,
     v.viewCount, v.likeCount, v.commentCount,
-    v.tags, v.thumbnailUrl, v.embeddable, v.license, syncDate
+    v.tags, v.thumbnailUrl, v.embeddable, v.license, v.hasCaption, v.madeForKids,
+    v.regionRestriction, syncDate
   ]);
 
   writeDataToSheet('YOUTUBE_VIDEOS', YOUTUBE_VIDEOS_HEADERS, data, 'YouTube');

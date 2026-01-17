@@ -8,7 +8,7 @@
 // =================================================================
 
 const GMC_ACCOUNTS_HEADERS = [
-  'Account ID', 'Account Name', 'Website', 'Time Zone', 'Adult Content', 'Sync Date'
+  'Account ID', 'Account Name', 'Website', 'Time Zone', 'Language', 'Adult Content', 'Test Account', 'Sync Date'
 ];
 
 const GMC_DATA_SOURCES_HEADERS = [
@@ -230,12 +230,13 @@ function listGMCProducts(accountId) {
 function writeGMCAccountsToSheet(accounts) {
   const syncDate = formatDate(new Date());
   const data = accounts.map(a => [
-    a.accountId,
-    a.displayName,
-    a.websiteUrl,
-    a.accountType,
-    a.timeZone,
-    a.adultContent,
+    a.accountId || a.name?.split('/').pop() || 'N/A',
+    a.accountName || a.displayName || 'N/A',
+    a.websiteUri || a.websiteUrl || 'N/A',
+    a.timeZone?.id || 'N/A',
+    a.languageCode || 'N/A',
+    a.adultContent ? 'Yes' : 'No',
+    a.testAccount ? 'Yes' : 'No',
     syncDate
   ]);
   writeDataToSheet('GMC_ACCOUNTS', GMC_ACCOUNTS_HEADERS, data, 'Merchant Center');

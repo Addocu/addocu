@@ -8,7 +8,7 @@
 // =================================================================
 
 const ADSENSE_ACCOUNTS_HEADERS = [
-  'Account ID', 'Account Name', 'State', 'Time Zone', 'Currency Code', 'Creation Date', 'Sync Date'
+  'Account ID', 'Account Name', 'State', 'Premium', 'Time Zone', 'Currency Code', 'Creation Date', 'Sync Date'
 ];
 
 const ADSENSE_ADUNITS_HEADERS = [
@@ -191,7 +191,8 @@ function listAdSenseAccounts() {
     accountId: account.name.split('/').pop(),
     displayName: account.displayName || 'N/A',
     state: account.state || 'N/A',
-    timeZone: account.timeZone || 'N/A',
+    premium: account.premium ? 'Yes' : 'No',
+    timeZone: account.timeZone?.id || 'N/A',
     currencyCode: account.currencyCode || 'N/A',
     createTime: account.createTime || 'N/A'
   }));
@@ -290,6 +291,7 @@ function writeAdSenseAccountsToSheet(accounts) {
     a.accountId,
     a.displayName,
     a.state,
+    a.premium,
     a.timeZone,
     a.currencyCode,
     a.createTime,
