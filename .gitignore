@@ -219,3 +219,7 @@ bower_components/
 
 CLAUDE.md
 GEMINI.md
+
+# ============= AI AGENT CONFIGURATION =============
+.claude/
+.agent/
