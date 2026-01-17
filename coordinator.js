@@ -48,6 +48,8 @@ function onOpen(e) {
         .addItem('Analyze Changes', 'analyzeRecentChangesUI')
         .addItem('Clean Logs', 'cleanupLogsUI')
         .addItem('Generate Dashboard', 'generateManualDashboard')
+        .addSeparator()
+        .addItem('🫀 Heartbeat Alert (PRO)', 'runHeartbeatAlert')
       )
       .addSubMenu(SpreadsheetApp.getUi().createMenu('Troubleshooting')
         .addItem('Verify Accounts (IMPORTANT)', 'showAccountVerification')
@@ -362,6 +364,17 @@ function saveUserConfiguration(config) {
         userProperties.setProperty('ADDOCU_GTM_WORKSPACES_FILTER', config.gtmWorkspaces.trim());
       } else {
         userProperties.deleteProperty('ADDOCU_GTM_WORKSPACES_FILTER');
+      }
+    }
+
+    // Save BigQuery Project ID
+    if (config.bqProjectId !== undefined) {
+      if (config.bqProjectId.trim()) {
+        userProperties.setProperty('ADDOCU_BQ_PROJECT_ID', config.bqProjectId.trim());
+        logEvent('CONFIG', `BigQuery Project ID set to: ${config.bqProjectId.trim()}`);
+      } else {
+        userProperties.deleteProperty('ADDOCU_BQ_PROJECT_ID');
+        logEvent('CONFIG', 'BigQuery Project ID removed (empty value)');
       }
     }
 
