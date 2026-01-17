@@ -198,6 +198,8 @@ function getUserConfig() {
     logLevel: userProperties.getProperty('ADDOCU_LOG_LEVEL') || 'INFO',
     googleAdsDevToken: devToken,
     bqProjectId: userProperties.getProperty('ADDOCU_BQ_PROJECT_ID') || '',
+    bqTableDateRange: userProperties.getProperty('ADDOCU_BQ_TABLE_DATE_RANGE') || '30',
+    incrementalAuditEnabled: userProperties.getProperty('ADDOCU_INCREMENTAL_AUDIT_ENABLED') !== 'false', // Default true
     userEmail: Session.getActiveUser().getEmail()
   };
 }
@@ -1275,5 +1277,198 @@ function fetchWithOAuth2(url, method = 'GET', payload = null) {
   } catch (error) {
     logError('OAuth2', `Error in OAuth2 call to ${url}: ${error.message}`);
     throw error;
+  }
+}
+
+// =================================================================
+// INCREMENTAL AUDIT UTILITIES (January 2026)
+// =================================================================
+
+/**
+ * Determines if an audit should be full or incremental.
+ * First audit = FULL, subsequent = INCREMENTAL (if enabled).
+ *
+ * @param {string} service - Service name (GA4, GTM, etc.)
+ * @param {string} resourceType - Resource type (Properties, Containers, etc.)
+ * @param {boolean} forceFullAudit - If true, always return FULL
+ * @returns {string} 'FULL' or 'INCREMENTAL'
+ */
+function getAuditMode(service, resourceType, forceFullAudit = false) {
+  if (forceFullAudit) {
+    return 'FULL';
+  }
+
+  // Check if sync state exists for this service/resource
+  if (typeof isFirstSync === 'function') {
+    return isFirstSync(service, resourceType) ? 'FULL' : 'INCREMENTAL';
+  }
+
+  // Fallback if sync_state.js not loaded
+  return 'FULL';
+}
+
+/**
+ * Filters array of items by created timestamp.
+ * Used for incremental syncs to only process new items.
+ *
+ * @param {Array<Object>} items - Array of API response items
+ * @param {Date|string|null} since - Timestamp cutoff (process items created after this)
+ * @param {string} timestampField - Field name containing timestamp (e.g., 'createTime')
+ * @returns {Array<Object>} Filtered array of items
+ */
+function filterItemsSince(items, since, timestampField = 'createTime') {
+  if (!items || items.length === 0) {
+    return [];
+  }
+
+  if (!since) {
+    // No timestamp filter - return all items
+    return items;
+  }
+
+  const sinceDate = typeof since === 'string' ? new Date(since) : since;
+
+  return items.filter(item => {
+    const itemTimestamp = item[timestampField];
+    if (!itemTimestamp) {
+      return true; // Include items without timestamp
+    }
+
+    const itemDate = new Date(itemTimestamp);
+    return itemDate > sinceDate;
+  });
+}
+
+/**
+ * Filters array of items by modified timestamp.
+ * Used to detect which existing items have changed.
+ *
+ * @param {Array<Object>} items - Array of API response items
+ * @param {Date|string|null} since - Timestamp cutoff
+ * @param {string} timestampField - Field name (e.g., 'modifyTime', 'lastModified')
+ * @returns {Array<Object>} Items that were modified after cutoff
+ */
+function filterItemsModifiedSince(items, since, timestampField = 'modifyTime') {
+  return filterItemsSince(items, since, timestampField);
+}
+
+/**
+ * Extracts the primary key from an API response item.
+ * Used to identify unique records for merge/update operations.
+ *
+ * @param {Object} item - API response item
+ * @param {string} keyField - Field name of primary key (e.g., 'name', 'id', 'id')
+ * @returns {string|null} Primary key value
+ */
+function extractPrimaryKey(item, keyField) {
+  if (!item || !keyField) {
+    return null;
+  }
+
+  // Handle nested fields (e.g., 'resource.id')
+  if (keyField.includes('.')) {
+    let value = item;
+    for (const part of keyField.split('.')) {
+      value = value ? value[part] : null;
+    }
+    return value;
+  }
+
+  return item[keyField] || null;
+}
+
+/**
+ * Gets audit configuration including sync mode for a service.
+ * Prepares all necessary parameters for incremental sync.
+ *
+ * @param {string} service - Service name
+ * @param {boolean} forceFullAudit - Force full audit mode
+ * @returns {Object} Audit configuration
+ */
+function getIncrementalAuditConfig(service, forceFullAudit = false) {
+  try {
+    const config = {
+      service: service,
+      auditMode: getAuditMode(service, 'primary', forceFullAudit),
+      lastSyncTimestamp: null,
+      lastSyncCount: 0,
+      isFirstSync: true
+    };
+
+    // If function exists, get sync state
+    if (typeof getSyncState === 'function') {
+      const syncState = getSyncState(service, 'primary');
+      if (syncState) {
+        config.lastSyncTimestamp = syncState.lastSyncTimestamp;
+        config.lastSyncCount = syncState.lastSyncCount;
+        config.isFirstSync = false;
+        config.auditMode = config.auditMode === 'FULL' ? 'FULL' : 'INCREMENTAL';
+      }
+    }
+
+    return config;
+
+  } catch (error) {
+    logError('INCREMENTAL_CONFIG', `Failed to build audit config: ${error.message}`);
+    return {
+      service: service,
+      auditMode: 'FULL',
+      lastSyncTimestamp: null,
+      isFirstSync: true
+    };
+  }
+}
+
+/**
+ * Formats API response for incremental sheet operations.
+ * Ensures records have all required columns for append/merge operations.
+ *
+ * @param {Array<Object>} apiItems - API response items
+ * @param {Object} fieldMapping - Map of API fields to sheet columns
+ * @param {boolean} addSyncDate - Add 'Sync Date' column (default: true)
+ * @returns {Array<Array>} Array of formatted row arrays
+ */
+function formatItemsForSheet(apiItems, fieldMapping, addSyncDate = true) {
+  try {
+    if (!apiItems || apiItems.length === 0) {
+      return [];
+    }
+
+    const syncDate = formatDate(new Date());
+    const records = [];
+
+    for (const item of apiItems) {
+      const row = [];
+
+      // Extract values according to field mapping
+      for (const [apiField, columnName] of Object.entries(fieldMapping)) {
+        let value = item[apiField];
+
+        // Handle null/undefined
+        if (value === null || value === undefined) {
+          value = '';
+        }
+
+        // Format based on value type
+        if (typeof value === 'object') {
+          value = JSON.stringify(value);
+        }
+
+        row.push(value);
+      }
+
+      // Add sync date as last column
+      if (addSyncDate) {
+        row.push(syncDate);
+      }
+
+      records.push(row);
+    }
+
+    return records;
+
+  } catch (error) {
+    logError('FORMAT_ITEMS', `Failed to format items for sheet: ${error.message}`);
+    return [];
   }
 }

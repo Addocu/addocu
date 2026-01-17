@@ -53,36 +53,116 @@ function syncGA4WithUI() {
 // CENTRAL SYNCHRONIZATION LOGIC (REUSABLE)
 // =================================================================
 
-function syncGA4Core() {
+/**
+ * Main GA4 synchronization function with incremental audit support.
+ * Detects if this is first sync (FULL) or subsequent (INCREMENTAL).
+ * Uses append strategy for properties and sub-resources.
+ *
+ * @param {Object} options - Sync options
+ * @param {boolean} options.forceFullAudit - Force full audit even if sync state exists
+ * @param {boolean} options.incrementalEnabled - Enable incremental sync (default: true)
+ * @returns {Object} Sync result
+ */
+function syncGA4Core(options = {}) {
   const startTime = Date.now();
   const serviceName = 'ga4';
+  const forceFullAudit = options.forceFullAudit || false;
+  const incrementalEnabled = options.incrementalEnabled !== false;
+
   const results = { properties: 0, dimensions: 0, metrics: 0, streams: 0 };
 
   try {
     getAuthConfig(serviceName); // Only to verify that the service is enabled
+
+    // Determine audit mode (FULL or INCREMENTAL)
+    const auditMode = getAuditMode('GA4', 'Properties', forceFullAudit);
+    const isIncremental = incrementalEnabled && auditMode === 'INCREMENTAL';
+    const syncStateGA4 = isIncremental ? getSyncState('GA4', 'Properties') : null;
+    const lastSyncTime = syncStateGA4 ? new Date(syncStateGA4.lastSyncTimestamp) : null;
+
     logSyncStart('GA4_Complete', 'Analytics Admin Service');
+    logEvent('GA4', `Starting ${isIncremental ? 'INCREMENTAL' : 'FULL'} audit...`);
 
-    // 1. GET ACCOUNTS AND PROPERTIES (ONCE)
-    logEvent('GA4', 'Phase 1: Extracting all accounts and properties...');
-    const properties = getGA4AccountsAndProperties();
-    results.properties = properties.length;
-    writeDataToSheet('GA4_PROPERTIES', GA4_PROPERTIES_HEADERS, properties.map(p => processGA4Property(p.property, p.account)), 'GA4');
+    // 1. GET ACCOUNTS AND PROPERTIES
+    logEvent('GA4', `Phase 1: Extracting ${isIncremental ? 'new' : 'all'} accounts and properties...`);
+    let properties = getGA4AccountsAndProperties();
 
-    // 2. GET SUB-RESOURCES REUSING THE PROPERTIES LIST
+    // Filter by timestamp if incremental
+    if (isIncremental && lastSyncTime) {
+      const newProperties = properties.filter(p => {
+        const createdTime = new Date(p.property.createTime || 0);
+        return createdTime > lastSyncTime;
+      });
+      logEvent('GA4', `Filtered: ${properties.length} total properties → ${newProperties.length} new properties since last sync`);
+      properties = newProperties;
+    }
+
+    if (properties.length > 0) {
+      const processedProperties = properties.map(p => processGA4Property(p.property, p.account));
+      const appendResult = appendNewRecords('GA4_PROPERTIES', processedProperties, {
+        headers: GA4_PROPERTIES_HEADERS
+      });
+      results.properties = appendResult.recordsAppended;
+      logEvent('GA4', `Properties: ${appendResult.status} - ${appendResult.recordsAppended} appended`);
+    } else {
+      logEvent('GA4', 'No new properties to sync');
+    }
+
+    // If incremental and no new properties, skip sub-resources
+    if (isIncremental && properties.length === 0) {
+      logEvent('GA4', 'Skipping sub-resources (no new properties)');
+      recordSyncState('GA4', 'Properties', 0, 'SUCCESS', 'INCREMENTAL');
+      recordSyncState('GA4', 'Dimensions', 0, 'SUCCESS', 'INCREMENTAL');
+      recordSyncState('GA4', 'Metrics', 0, 'SUCCESS', 'INCREMENTAL');
+      recordSyncState('GA4', 'Streams', 0, 'SUCCESS', 'INCREMENTAL');
+
+      const duration = Date.now() - startTime;
+      return {
+        records: 0,
+        status: 'SUCCESS',
+        duration: duration,
+        details: results,
+        syncMode: 'INCREMENTAL',
+        message: 'No new properties to sync'
+      };
+    }
+
+    // 2. GET SUB-RESOURCES (only for new/all properties)
     logEvent('GA4', 'Phase 2: Extracting custom dimensions...');
     const dimensions = getGA4SubResources(properties, 'customDimensions', processGA4Dimension);
-    results.dimensions = dimensions.length;
-    writeDataToSheet('GA4_CUSTOM_DIMENSIONS', GA4_DIMENSIONS_HEADERS, dimensions, 'GA4');
+    if (dimensions.length > 0) {
+      const appendDimResult = appendNewRecords('GA4_CUSTOM_DIMENSIONS', dimensions, {
+        headers: GA4_DIMENSIONS_HEADERS
+      });
+      results.dimensions = appendDimResult.recordsAppended;
+      logEvent('GA4', `Dimensions: ${appendDimResult.status} - ${appendDimResult.recordsAppended} appended`);
+    }
 
     logEvent('GA4', 'Phase 3: Extracting custom metrics...');
     const metrics = getGA4SubResources(properties, 'customMetrics', processGA4Metric);
-    results.metrics = metrics.length;
-    writeDataToSheet('GA4_CUSTOM_METRICS', GA4_METRICS_HEADERS, metrics, 'GA4');
+    if (metrics.length > 0) {
+      const appendMetResult = appendNewRecords('GA4_CUSTOM_METRICS', metrics, {
+        headers: GA4_METRICS_HEADERS
+      });
+      results.metrics = appendMetResult.recordsAppended;
+      logEvent('GA4', `Metrics: ${appendMetResult.status} - ${appendMetResult.recordsAppended} appended`);
+    }
 
     logEvent('GA4', 'Phase 4: Extracting data streams...');
     const streams = getGA4SubResources(properties, 'dataStreams', processGA4Stream);
-    results.streams = streams.length;
-    writeDataToSheet('GA4_DATA_STREAMS', GA4_STREAMS_HEADERS, streams, 'GA4');
+    if (streams.length > 0) {
+      const appendStreamResult = appendNewRecords('GA4_DATA_STREAMS', streams, {
+        headers: GA4_STREAMS_HEADERS
+      });
+      results.streams = appendStreamResult.recordsAppended;
+      logEvent('GA4', `Streams: ${appendStreamResult.status} - ${appendStreamResult.recordsAppended} appended`);
+    }
+
+    // Record sync state for future incremental audits
+    recordSyncState('GA4', 'Properties', results.properties, 'SUCCESS', isIncremental ? 'INCREMENTAL' : 'FULL');
+    recordSyncState('GA4', 'Dimensions', results.dimensions, 'SUCCESS', isIncremental ? 'INCREMENTAL' : 'FULL');
+    recordSyncState('GA4', 'Metrics', results.metrics, 'SUCCESS', isIncremental ? 'INCREMENTAL' : 'FULL');
+    recordSyncState('GA4', 'Streams', results.streams, 'SUCCESS', isIncremental ? 'INCREMENTAL' : 'FULL');
 
     const totalElements = Object.values(results).reduce((sum, count) => sum + count, 0);
     const duration = Date.now() - startTime;
@@ -92,7 +172,8 @@ function syncGA4Core() {
       records: totalElements,
       status: 'SUCCESS',
       duration: duration,
-      details: results
+      details: results,
+      syncMode: isIncremental ? 'INCREMENTAL' : 'FULL'
     };
 
   } catch (error) {
@@ -118,7 +199,10 @@ function syncGA4Core() {
       errMsg += ' | SOLUTION: Verify that the "Google Analytics Admin API" is enabled in Google Cloud Console and that the script has OAuth2 permissions.';
     }
 
-    // Report error in the primary sheet
+    // Record error state
+    recordSyncState('GA4', 'Properties', 0, 'ERROR', 'FULL');
+
+    // Report error in the primary sheet (only if it's a full audit)
     writeDataToSheet('GA4_PROPERTIES', GA4_PROPERTIES_HEADERS, null, 'GA4', errMsg);
 
     return {

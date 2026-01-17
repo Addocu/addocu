@@ -1001,6 +1001,42 @@
         </button>
       </div>
 
+      <!-- Incremental Audit Settings -->
+      <div class="section">
+        <div class="section-title">Incremental Audit</div>
+        <div class="section-description">
+          First audit runs completely. Subsequent audits process only new or changed items for faster execution.
+        </div>
+
+        <div class="service-item">
+          <div class="service-info">
+            <div class="service-name">Enable Incremental Sync</div>
+            <div class="service-description">Faster audits after first run (default: enabled)</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="incremental-enabled" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div style="margin-top: 12px; padding: 12px; background-color: #f5f5f5; border-radius: 6px; border-left: 3px solid var(--addocu-blue-light);">
+          <div style="font-size: 12px; color: var(--addocu-text-secondary); margin-bottom: 8px;">
+            <strong>Sync Status:</strong>
+          </div>
+          <div style="font-size: 11px; color: var(--addocu-text-secondary);" id="sync-status-display">
+            No previous syncs found. Next audit will be FULL.
+          </div>
+        </div>
+
+        <button class="btn btn-secondary btn-full" style="margin-top: 12px;" onclick="showSyncHistory()" id="view-history-btn">
+          View Sync History
+        </button>
+
+        <button class="btn btn-secondary btn-full" style="margin-top: 8px;" onclick="clearSyncStateUI()" id="clear-sync-btn">
+          Reset Incremental State
+        </button>
+      </div>
+
       <!-- Services -->
       <div class="section">
         <div class="section-title">Services to Audit</div>
@@ -1277,6 +1313,10 @@
       filters: {
         ga4Properties: '',
         gtmWorkspaces: ''
+      },
+      incremental: {
+        enabled: true,
+        syncStates: null
       }
     };
 
@@ -1301,6 +1341,11 @@
       document.getElementById('service-gmc').addEventListener('change', updateServices);
       document.getElementById('service-bigquery').addEventListener('change', updateServices);
       document.getElementById('service-adsense').addEventListener('change', updateServices);
+
+      // Incremental audit toggle
+      document.getElementById('incremental-enabled').addEventListener('change', function() {
+        appState.incremental.enabled = this.checked;
+      });
 
       // Filter inputs
       document.getElementById('ga4-properties').addEventListener('input', updateFilters);
@@ -1411,6 +1456,18 @@
             document.getElementById('bq-table-date-range').value = config.bqTableDateRange;
           }
 
+          // Load incremental audit settings
+          if (config && config.incrementalAuditEnabled !== undefined) {
+            appState.incremental.enabled = config.incrementalAuditEnabled;
+            document.getElementById('incremental-enabled').checked = config.incrementalAuditEnabled;
+          } else {
+            // Default to enabled
+            document.getElementById('incremental-enabled').checked = true;
+          }
+
+          // Update sync status display
+          updateSyncStatusDisplay();
+
           hideStatus();
 
           // Auto-test connection if API key is configured
@@ -1494,9 +1551,17 @@
 
       showButtonLoading('save-btn', 'Saving...');
 
+      // Collect all current filter values
+      updateFilters();
+
       const configObject = {
         lookerApiKey: apiKey,
-        googleAdsDevToken: devToken
+        googleAdsDevToken: devToken,
+        ga4Properties: appState.filters.ga4Properties || '',
+        gtmWorkspaces: appState.filters.gtmWorkspaces || '',
+        bqProjectId: appState.filters.bqProjectId || '',
+        bqTableDateRange: appState.filters.bqTableDateRange || '30',
+        incrementalAuditEnabled: appState.incremental.enabled
       };
 
       google.script.run
@@ -1506,9 +1571,9 @@
           appState.isConfigured = true;
 
           updateStepStatus('apikey', true);
-          hideButtonLoading('save-btn', 'Save API Key');
+          hideButtonLoading('save-btn', 'Save Configuration');
 
-          showStatus('✅ Credentials saved successfully!', 'success');
+          showStatus('✅ Configuration saved successfully!', 'success');
 
           // Auto-test connections
           setTimeout(() => {
@@ -1516,10 +1581,76 @@
           }, 1000);
         })
         .withFailureHandler(function (error) {
-          hideButtonLoading('save-btn', 'Save API Key');
+          hideButtonLoading('save-btn', 'Save Configuration');
           showStatus(`Save failed: ${error.message}`, 'error');
         })
         .saveUserConfiguration(configObject); // Using the correct function name
+    }
+
+    // ========================================
+    // INCREMENTAL AUDIT MANAGEMENT
+    // ========================================
+
+    function updateSyncStatusDisplay() {
+      const statusDisplay = document.getElementById('sync-status-display');
+
+      google.script.run
+        .withSuccessHandler(function(allStates) {
+          if (!allStates || Object.keys(allStates).length === 0) {
+            statusDisplay.textContent = 'No previous syncs found. Next audit will be FULL.';
+          } else {
+            let statusText = 'Last sync summary:\n';
+            let count = 0;
+            for (const [service, resources] of Object.entries(allStates)) {
+              for (const [resourceType, state] of Object.entries(resources)) {
+                if (count < 3) { // Show first 3 services
+                  const lastSync = new Date(state.lastSyncTimestamp).toLocaleString();
+                  statusText += `${service} (${resourceType}): ${lastSync}\n`;
+                  count++;
+                }
+              }
+            }
+            if (Object.keys(allStates).length > 3) {
+              statusText += '...and more';
+            }
+            statusDisplay.textContent = statusText.trim();
+          }
+        })
+        .withFailureHandler(function(error) {
+          statusDisplay.textContent = 'Could not load sync history';
+        })
+        .getAllSyncStates();
+    }
+
+    function showSyncHistory() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          alert('Sync history opened in a new sheet.\n\n' +
+            'The _AUDIT_METADATA sheet shows:\n' +
+            '• Last sync timestamp\n' +
+            '• Records processed\n' +
+            '• Sync status\n' +
+            '• Audit mode (FULL/INCREMENTAL)');
+        })
+        .withFailureHandler(function(error) {
+          alert('Error: Could not open sync history.\n' + error.message);
+        })
+        .showSyncHistory();
+    }
+
+    function clearSyncStateUI() {
+      const confirmed = confirm('Clear all sync history?\n\nThe next audit will perform a FULL sync instead of incremental.');
+      if (!confirmed) return;
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          alert('Sync history cleared.\n\nNext audit will be a FULL audit.');
+          updateSyncStatusDisplay();
+        })
+        .withFailureHandler(function(error) {
+          alert('Error clearing sync state:\n' + error.message);
+        })
+        .clearAllSyncState();
     }
 
     // ========================================
