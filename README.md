@@ -45,15 +45,17 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 <tr>
 <td>
 
-### 🆓 **100% Free Forever**
-- No premium tiers or hidden costs
-- Full functionality available to everyone
-- Open source with community-driven development
+### 🆓 **Open Source & Self-Hostable**
+
+- Full source code available on GitHub
+- Deploy your own instance for free
+- Modify and customize to your needs
 
 </td>
 <td>
 
 ### ⚡ **One-Click Auditing**
+
 - Complete audit of 10 Google platforms in seconds
 - No manual data collection or documentation
 - Interactive dashboard with executive summary
@@ -64,6 +66,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 <td>
 
 ### 🔒 **Privacy & Security First**
+
 - Your data never leaves your Google account
 - No external servers or data transmission
 - Complete transparency with open source code
@@ -72,6 +75,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 <td>
 
 ### 🤝 **Community Driven**
+
 - Built by digital marketers, for digital marketers
 - Actively maintained and improved
 - Contributing makes you part of the journey
@@ -80,9 +84,26 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 </tr>
 </table>
 
+---
+
+## 📦 Two Ways to Use Addocu
+
+| | **🔧 Self-Hosted (Free)** | **☁️ Marketplace Add-on (Paid)** |
+|---|---|---|
+| **Source** | Clone from GitHub | Install from Google Workspace Marketplace |
+| **Cost** | Free forever | Subscription-based |
+| **Setup** | Manual deployment via `clasp` | One-click install |
+| **Updates** | Pull from GitHub manually | Automatic updates |
+| **Support** | Community (GitHub Issues/Discussions) | Priority support included |
+| **Best For** | Developers, self-hosters, contributors | Agencies, teams, non-technical users |
+
+> [!TIP]
+> **Not sure which to choose?** If you're comfortable with Google Apps Script and `clasp`, go self-hosted. If you want convenience and support, get the Marketplace add-on.
+
 ## ✨ Key Features
 
 ### 📊 **Google Analytics 4 Complete Audit**
+
 - **Properties & Data Streams:** Full inventory with detailed configuration
 - **Custom Dimensions & Metrics:** Complete listing with scope and parameter names
 - **Conversion Events:** All events with configuration details and status
@@ -90,6 +111,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - **Data Retention Settings:** Current policies and privacy configurations
 
 ### 🏷️ **Google Tag Manager Deep Dive**
+
 - **Container Inventory:** All containers with publication status and version history
 - **Tags, Triggers & Variables:** Complete mapping of your GTM setup with firing status
 - **Version Comparison:** Compare different container versions side-by-side
@@ -97,38 +119,46 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - **Dependency Mapping:** Understand relationships between tags, triggers, and variables
 
 ### 📈 **Looker Studio Census**
+
 - **Report Inventory:** All reports with owners, sharing settings, and modification dates
 - **Data Sources:** Complete mapping of connections and refresh status
 - **Performance Metrics:** Usage statistics and data freshness indicators
 - **Permissions Audit:** Who has access to what reports across your organization
 
 ### 💰 **Google Ads Comprehensive Audit**
+
 - **Campaigns:** Status, type, startDate, and endDate for all campaigns
 - **Conversion Actions:** Detailed inventory of tracking events and categories
 - **Audiences:** User lists and remarketing segments with size estimates
 
 ### 🏪 **Google Business Profile (GBP)**
+
 - **Accounts:** Inventory of all business accounts/groups managed
 - **Locations:** Complete list of physical storefronts and verification status
 
 ### 🛍️ **Merchant Center & Shopping**
+
 - **Feeds:** Data source health and configurations
 - **Products:** Sampling and health of your merchant products
 
 ### 🗄️ **BigQuery (Cloud Data)**
+
 - **Datasets:** Enterprise data storage inventory
 - **GA4 Backups:** Monitoring the health of real-time exports
 
 ### 📰 **AdSense (Publishing)**
+
 - **Monetization:** Audit of ad units, sites, and channels
 
 ### 🎯 **Interactive Dashboard**
+
 - **Visual Summary:** Bird's eye view of your entire marketing stack health
 - **Connectivity Diagnostics:** Real-time API connection and permission testing
 - **Asset Overview:** Count and status of all your marketing assets
 - **Quick Actions:** Direct links to manage properties and troubleshoot issues
 
 ### 🔧 **Advanced Features**
+
 - **Comprehensive Logging:** Every action logged for debugging and audit trails
 - **Multi-Account Support:** Switch between different Google accounts seamlessly
 - **Export Ready:** All data formatted for easy sharing and client reporting
@@ -141,19 +171,21 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 <div align="center">
 
 ### **⬇️ Install from Google Workspace Marketplace**
+
 [![Install from Marketplace](https://img.shields.io/badge/Install%20from-Google%20Workspace%20Marketplace-4285F4?style=for-the-badge&logo=google)](https://workspace.google.com/marketplace)
 
 </div>
 
 ### **Step-by-Step Setup:**
 
-1.  **📥 Install Addocu** from the [Google Workspace Marketplace](https://workspace.google.com/marketplace)
-2.  **📝 Open Google Sheets** (new or existing spreadsheet)
-3.  **⚙️ Open the Add-on** → `Extensions > Addocu > Configure`
-4.  **🔑 Authorize Permissions** when prompted. That's it! The connection is automatic via OAuth2.
-5.  **🚀 Run Audit** → `Extensions > Addocu > Audit Complete Stack`
+1. **📥 Install Addocu** from the [Google Workspace Marketplace](https://workspace.google.com/marketplace)
+2. **📝 Open Google Sheets** (new or existing spreadsheet)
+3. **⚙️ Open the Add-on** → `Extensions > Addocu > Configure`
+4. **🔑 Authorize Permissions** when prompted. That's it! The connection is automatic via OAuth2.
+5. **🚀 Run Audit** → `Extensions > Addocu > Audit Complete Stack`
 
 **That's it!** Your audit data will appear in dedicated sheets:
+
 - `DASHBOARD` - Executive summary
 - `GA4_PROPERTIES` - Analytics data
 - `GTM_TAGS` - Tag Manager inventory
@@ -175,6 +207,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 <summary><strong>🔧 Click here if you're having issues</strong></summary>
 
 **Before anything else:**
+
 1. Check your Chrome profile (top-right corner)
 2. Check your Google Sheets account (top-right corner)
 3. If different → Sign out everywhere and use ONE account
@@ -182,6 +215,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 **95% of Addocu issues are caused by account mismatches!**
 
 **Quick Fix:**
+
 1. `Extensions > Addocu > Troubleshooting > Reauthorize Permissions`
 2. Authorize ALL permissions when prompted
 
@@ -190,6 +224,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 </details>
 
 ### 🔑 **Access Requirements**
+
 - **"Viewer"** (or higher) access to the Google platforms you wish to audit
 - **OAuth2 Authentication:** Handled automatically. **No manual API key setup is required.**
 
@@ -218,6 +253,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 </details>
 
 ### **🛡️ Security & Privacy**
+
 - **Complete Data Isolation:** Each user's data stored separately using `PropertiesService.getUserProperties()`
 - **No External Servers:** Everything runs within Google's secure infrastructure
 - **Read-Only Access:** Addocu never modifies your GA4, GTM, or Looker Studio configurations
@@ -237,12 +273,14 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 </div>
 
 ### **✅ You ARE free to:**
+
 - ✨ Use the tool for personal or client projects
 - 🔄 Share and distribute the tool
 - 🔧 Modify and adapt the code for your needs
 - 🏢 Use it in your agency or consultancy work
 
 ### **⚠️ With these conditions:**
+
 - **📝 Attribution:** Always credit the original project
 - **🚫 Non-Commercial:** You cannot sell this tool or charge for it
 - **🔄 Share-Alike:** Any modifications must be shared under the same license
@@ -250,27 +288,33 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 ## 🗺️ Roadmap & Future
 
 ### **📍 Current Status: v2.3.0 (Full Stack Edition)**
-- ✅ Complete integration of 10 Google Marketing platforms.
-- ✅ GA4, GTM, Looker Studio, Ads, GSC, YT, GBP, GMC, BQ, AdSense.
-- ✅ **Zero-Data Handling**: Smart detection and reporting for empty platforms.
-- ✅ Interactive dashboard with real-time connectivity diagnostics.
-- ✅ Open source codebase with community-driven license.
-- ✅ Automatic OAuth2 authentication across all services.
 
-### **🔮 Roadmap & Future**
+- ✅ Complete integration of 10 Google Marketing platforms
+- ✅ GA4, GTM, Looker Studio, Ads, GSC, YT, GBP, GMC, BQ, AdSense
+- ✅ **Zero-Data Handling**: Smart detection and reporting for empty platforms
+- ✅ Interactive dashboard with real-time connectivity diagnostics
+- ✅ Open source codebase with community-driven license
+- ✅ Automatic OAuth2 authentication across all services
+
+### **🔮 Planned Features**
+
 - 📋 **DV360 & SA360** integration
 - 📋 AI-driven error detection and optimization recommendations
 - 📋 Multi-language support (ES, FR, PT, IT)
 - 📋 Automated scheduling and historical monitoring
 
-### **🚀 The Future: Addocu Pro**
-We're planning a separate, commercial **Addocu Pro** version with advanced features for teams and agencies:
-- 🤖 AI-powered analysis and optimization suggestions
-- ⏰ Automated scheduling and monitoring
-- 🚨 Proactive alerts for configuration changes
-- องค์ Advanced team collaboration features
+### **� A Note on Our Distribution Model**
 
-**Important:** Addocu Community Edition will always remain free and fully functional.
+Addocu follows an **Open Core** model:
+
+| **GitHub (This Repository)** | **Google Workspace Marketplace** |
+|---|---|
+| 🆓 Free forever | 💳 Paid subscription |
+| Clone, deploy, modify | One-click install |
+| Community support | Priority support |
+| Self-managed updates | Auto-updates |
+
+The source code here will **always remain open-source** under CC BY-NC-SA 4.0. The Marketplace add-on provides a convenient, supported experience for those who prefer it.
 
 ---
 
@@ -292,6 +336,7 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 | Found a bug? [Open an issue](https://github.com/Addocu/addocu/issues) | Have an idea? [Start a discussion](https://github.com/Addocu/addocu/discussions) | Fork → Code → PR | Fix typos, add examples |
 
 ### **🚀 Getting Started:**
+
 1. **Fork** the repository
 2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
 3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
@@ -312,16 +357,18 @@ We're planning a separate, commercial **Addocu Pro** version with advanced featu
 
 | 💬 **Discussions** | 🐛 **Bug Reports** | 📧 **Direct Support** | 🌐 **Website** |
 |:---:|:---:|:---:|:---:|
-| [GitHub Discussions](https://github.com/Addocu/addocu/discussions) | [GitHub Issues](https://github.com/Addocu/addocu/issues) | hello@addocu.com | [addocu.com](https://addocu.com) |
+| [GitHub Discussions](https://github.com/Addocu/addocu/discussions) | [GitHub Issues](https://github.com/Addocu/addocu/issues) | <hello@addocu.com> | [addocu.com](https://addocu.com) |
 
 </div>
 
 ### **📚 Documentation:**
+
 - 📖 [Installation Guide](docs/installation.md)
 - ⚙️ [Configuration Help](docs/configuration.md)
 - 🔧 [Troubleshooting Guide](docs/troubleshooting.md)
 
 ### **📱 Stay Updated:**
+
 - 🌐 **Website:** [addocu.com](https://addocu.com)
 - 📱 **LinkedIn:** Follow our [building in public journey](https://www.linkedin.com/company/addocu)
 - 📊 **Use Cases:** Real-world examples and success stories
