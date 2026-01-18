@@ -31,6 +31,8 @@
 
 Addocu automates the painful process of documenting and auditing your entire Google ecosystem, pulling detailed metadata from **GA4**, **GTM**, **Looker Studio**, **Google Ads**, **BigQuery**, **Merchant Center**, **Search Console**, **YouTube**, **AdSense**, and **G. Business Profile** directly into your spreadsheet.
 
+**Version 3.1.0 is now live!** Introducing deep dependency checks for GTM variables and GA4 configuration trails.
+
 **Born from countless hours** spent on manual documentation and a belief that there had to be a better way. We're sharing it with the community to give back and to build, together, the best auditing tool possible.
 
 <div align="center">
@@ -109,6 +111,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - **Conversion Events:** All events with configuration details and status
 - **Audiences:** User segments with creation dates and criteria
 - **Data Retention Settings:** Current policies and privacy configurations
+- **📜 GA4 Change History (New):** Complete audit trail of who changed what in the last 30 days.
 
 ### 🏷️ **Google Tag Manager Deep Dive**
 
@@ -117,6 +120,7 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - **Version Comparison:** Compare different container versions side-by-side
 - **Workspace Analysis:** Multi-workspace support for complex organizational setups
 - **Dependency Mapping:** Understand relationships between tags, triggers, and variables
+- **🔍 Unused Variable Detection (New):** Automated identification of orphaned variables to keep containers lean.
 
 ### 📈 **Looker Studio Census**
 
@@ -287,11 +291,12 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 
 ## 🗺️ Roadmap & Future
 
-### **📍 Current Status: v2.3.0 (Full Stack Edition)**
+### **📍 Current Status: v3.1.0 (Audit Dependency Edition)**
 
 - ✅ Complete integration of 10 Google Marketing platforms
 - ✅ GA4, GTM, Looker Studio, Ads, GSC, YT, GBP, GMC, BQ, AdSense
-- ✅ **Zero-Data Handling**: Smart detection and reporting for empty platforms
+- ✅ **GTM Unused Variable Detection**: Smart detection of orphaned variables.
+- ✅ **GA4 Change History**: Configuration audit trails for all properties.
 - ✅ Interactive dashboard with real-time connectivity diagnostics
 - ✅ Open source codebase with community-driven license
 - ✅ Automatic OAuth2 authentication across all services
@@ -301,18 +306,21 @@ Addocu automates the painful process of documenting and auditing your entire Goo
 - 📋 **DV360 & SA360** integration
 - 📋 AI-driven error detection and optimization recommendations
 - 📋 Multi-language support (ES, FR, PT, IT)
-- 📋 Automated scheduling and historical monitoring
+- ✅ **Automated Health Checks**: GTM dependency analysis and GA4 audit trails.
 
-### **� A Note on Our Distribution Model**
+### **📖 A Note on Our Distribution Model**
 
 Addocu follows an **Open Core** model:
 
 | **GitHub (This Repository)** | **Google Workspace Marketplace** |
 |---|---|
-| 🆓 Free forever | 💳 Paid subscription |
-| Clone, deploy, modify | One-click install |
-| Community support | Priority support |
-| Self-managed updates | Auto-updates |
+| 🆓 **Free & Customizable** | 💎 **Premium & Supported** |
+| Use for: Developers, self-hosters | Use for: Agencies, enterprises |
+| Manual deployment via `clasp` | One-click marketplace install |
+| Pull version updates manually | Automatic background updates |
+| Community support via Issues | Dedicated priority support |
+
+The source code in this repository will **always remain open-source** under CC BY-NC-SA 4.0. The Marketplace add-on provides a fully managed experience that funds the ongoing development of the tool.
 
 The source code here will **always remain open-source** under CC BY-NC-SA 4.0. The Marketplace add-on provides a convenient, supported experience for those who prefer it.
 

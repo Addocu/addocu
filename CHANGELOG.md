@@ -7,9 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-01-18
+
+### Added
+
+- **🔍 GTM Unused Variable Detection**: Automatically identifies variables not referenced in tags, triggers, or other variables.
+  - New columns in `GTM_VARIABLES`: `Usage Status` and `Used By`.
+  - Automatic tagging in `Observations` for unused components.
+- **📜 GA4 Change History Audit**: New `GA4_CHANGE_HISTORY` tab tracking configuration changes (last 30 days).
+  - Identifies "Who, What, When" for audit trails across all properties.
+  - Formats nested JSON changes into human-readable action summaries.
+- **🛡️ Audit Performance**: Optimized GTM resource fetching to prevent API timeouts during dependency analysis.
+
+### Changed
+
+- **📚 Documentation Overhaul**: Completely updated readme, security, and maintenance guides for v3.1.0.
+- **🏗️ Open Core Model**: Refined distribution strategy — source code is always free (Self-Hosted), while Marketplace add-on is supported/paid.
+
 ## [3.0.0] - 2026-01-03
 
 ### Added
+
 - **🎨 Sheet Tab Coloring**: Automatic color-coding of sheets by platform for visual organization (10 distinct platform colors)
 - **📊 Historical Tracking System**: New HISTORY and ACTIVITY_HISTORY sheets for trend analysis and audit snapshots (60-day retention)
 - **✨ Always-On Sheet Creation**: Sheets are created even when APIs fail or return no data, with clear error/empty state indicators
@@ -20,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **🚀 Service Toggles**: Enable/disable individual platforms in configuration sidebar for selective audits
 
 ### Changed
+
 - **🔐 OAuth2 Migration Complete**: All services now use OAuth2 exclusively (API keys fully deprecated)
 - **📱 Configuration Sidebar Modernized**: Redesigned UI with setup progress indicators and platform status display
 - **🎨 Dashboard Enhanced**: Complete redesign supporting all 10 platforms with historical charts (timeline, heatmap, distribution)
@@ -27,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **📈 Reporting Layer**: Dashboard now displays historical KPI trends and asset distribution across all 10 platforms
 
 ### Fixed
+
 - **🐛 OAuth2 Token Validation**: Improved token refresh and expiration handling
 - **🔒 Permission Recovery**: Automatic detection and recovery from PERMISSION_DENIED errors
 - **📊 Dashboard Data**: Fixed inflated metrics showing placeholder values (now shows real data only)
@@ -34,11 +54,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **🎯 Sheet Creation**: Fixed GTM container counting to only count containers with actual tags
 
 ### Security
+
 - **🔒 Enhanced Permission Validation**: Better OAuth2 token verification and scoping
 - **🛡️ Isolated User Data**: Complete data isolation using UserProperties per user
 - **🔍 Permission Diagnostics**: Safe diagnostic tools that don't expose sensitive data
 
 ### Breaking Changes
+
 - **🔑 API Key Support Removed**: All services now require OAuth2 authentication only
 - **📂 Configuration Migration**: Users upgrading from v2.x must re-authorize with OAuth2
 - **🌍 OAuth Scope Requirements**: 7 new scopes required for new platform integrations
@@ -46,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.3.0] - 2026-01-02
 
 ### Added
+
 - **🛍️ Google Merchant Center (GMC)**: Complete audit of Feeds and Product health.
 - **🗄️ Google BigQuery**: GA4 Export monitoring and enterprise dataset inventory.
 - **📰 Google AdSense**: Monetization audit for publishers (Accounts, Sites, Ad Units).
@@ -54,16 +77,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **🔧 Unified Diagnostics**: Single-click connectivity test for the entire marketing stack.
 
 ### Changed
+
 - **🎨 UI Refinement**: Modernized `configuration.html` for a more intuitive setup flow.
 - **📈 Reporting Layer**: Enhanced `dashboard_functions.js` to support multi-platform data.
 
 ### Fixed
+
 - **🐛 Orchestration**: Fixed cross-platform error logging and UI refresh bugs.
 - **🛡️ Audit Resilience**: Wrapped all platform syncs in try-catch blocks to prevent a single service failure from stopping the entire "Audit Complete Stack" operation.
 - **🏪 GBP Quota Detection**: Added specific detection and guidance for Google Business Profile 429 (Rate Limit) errors caused by default 0 quota.
 - **🔍 Connection Indicators**: Corrected real-time status reporting for all APIs.
 
 ### Added
+
 - **🔧 Permission Recovery System**: Enhanced error handling for PERMISSION_DENIED issues
 - **⚡ Auto-Recovery Functions**: Automatic permission detection and recovery mechanisms
 - **🛡️ Enhanced Configuration Management**: Robust fallbacks for permission errors
@@ -80,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **🛠️ onFileScopeGranted Handler**: Automatic setup when permissions are granted
 
 ### Changed
+
 - **🔄 Reorganized Sidebar Flow**: Moved "Run Audit" after "Setup Progress" for better UX
 - **🧹 Simplified Authentication**: Removed unnecessary "Save Configuration" button  
 - **🔧 OAuth2-Only Setup**: Updated messaging to reflect OAuth2 automatic configuration
@@ -93,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **🌓 Logo System**: Implemented official Addocu brand logos with theme-aware switching (light/dark)
 
 ### Fixed
+
 - **🐛 CRITICAL**: Fixed "Some services need authorization" error in sidebar configuration
 - **🔒 Permission Errors**: Enhanced handling of PERMISSION_DENIED errors with automatic recovery
 - **⚙️ Configuration Loading**: Fixed sidebar permission errors during initial setup
@@ -122,16 +150,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **🎯 Container Counting**: Fixed GTM container counting to only count containers with actual tags
 
 ### Security
+
 - **🔒 Enhanced Permission Validation**: Better OAuth2 token verification
 - **🛡️ Isolated User Data**: Complete data isolation using UserProperties
 - **🔍 Permission Diagnostics**: Safe diagnostic tools that don't expose sensitive data
 
 ### Documentation
+
 - **📚 Authorization Troubleshooting Guide**: Complete troubleshooting documentation
 - **🚪 Recovery Instructions**: Step-by-step recovery procedures for common issues
 - **🔍 Diagnostic Procedures**: Advanced diagnostic tools and interpretation guides
 
 ### Planned
+
 - Google Ads integration
 - Google Search Console support
 - BigQuery data source analysis
@@ -141,6 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.2.0] - 2026-01-02
 
 ### Added
+
 - **💰 Google Ads Integration**: Complete audit of campaigns, conversion actions, and audiences using GAQL.
 - **🏪 Google Business Profile (GBP)**: Inventory of business accounts and verified locations.
 - **🛠️ Clasp Support**: Added `.clasp.json` and `.claspignore` for streamlined local development.
@@ -152,11 +184,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.1.0] - 2025-09-06
 
 ### 🚨 BREAKING CHANGES
+
 - **Looker Studio API Migration**: Google discontinued API Key support, migrated to OAuth2 authentication
 - **API Keys no longer supported** for Looker Studio (automatic migration to OAuth2)
 - **Users must re-authorize** if using older versions
 
 ### Fixed
+
 - **🐛 CRITICAL**: Fixed "API keys are not supported by this API" error in Looker Studio
 - **🐛 CRITICAL**: Fixed "Servicio no soportado: lookerStudio" authentication error
 - **🐛 CRITICAL**: Fixed dashboard generation "columns do not match" error
@@ -164,6 +198,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Service name consistency**: Resolved lookerStudio vs looker naming conflicts
 
 ### Changed
+
 - **Looker Studio authentication**: Migrated from API Key to OAuth2 (Google requirement)
 - **Unified authentication**: GA4, GTM, and Looker Studio now all use OAuth2
 - **Improved error messages**: More descriptive OAuth2 and API migration guidance
@@ -171,23 +206,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configuration UI**: Updated to reflect OAuth2 migration (API Key field preserved for compatibility)
 
 ### Added
+
 - **Migration documentation**: Comprehensive guide for OAuth2 transition
 - **Enhanced diagnostics**: Better OAuth2 validation and troubleshooting
 - **Backwards compatibility**: API Key configurations preserved but ignored
 - **Improved testing strategy**: Comprehensive testing documentation for critical fixes
 
 ### Technical
+
 - **OAuth2 scopes**: Updated Looker Studio to use `https://www.googleapis.com/auth/datastudio`
 - **Endpoint URLs**: Corrected Looker Studio API endpoints to match current Google specifications
 - **Error handling**: Enhanced OAuth2 token validation and error reporting
 - **Service configuration**: Unified authentication configuration across all Google services
 
 ### Migration Guide
+
 - **Automatic migration**: v2.1+ automatically handles OAuth2 transition
 - **No user action required** for existing OAuth2 authorized users
 - **Documentation**: See `docs/LOOKER_STUDIO_OAUTH2_MIGRATION.md` for detailed migration info
 
 ### Security
+
 - **Enhanced authentication**: OAuth2 provides better security than API Keys
 - **Google Workspace compliance**: Meets Google's enterprise security requirements
 - **Token management**: Automatic OAuth2 token renewal and validation
@@ -195,6 +234,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-09-06
 
 ### Added
+
 - **Initial public release** of Addocu Community Edition
 - **Google Analytics 4 complete audit** with properties, custom dimensions, metrics, and conversion events
 - **Google Tag Manager deep dive** with tags, triggers, variables, and version comparison
@@ -209,12 +249,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Open source release** under CC BY-NC-SA 4.0 license
 
 ### Security
+
 - **Secure API key storage** in user properties
 - **No external data transmission** - everything stays in user's Google account
 - **OAuth 2.0 compliance** for authentication
 - **Comprehensive error handling** without exposing sensitive information
 
 ### Technical
+
 - **Modular architecture** with dedicated synchronization modules
 - **Error recovery mechanisms** for API failures
 - **Rate limiting** to prevent quota exhaustion
@@ -224,6 +266,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.0-beta] - 2025-08-15
 
 ### Added (Beta Release)
+
 - **Beta version** for community testing
 - **Core GA4 functionality** with basic property auditing
 - **GTM basic integration** for tags and triggers
@@ -232,11 +275,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configuration system** for API key setup
 
 ### Fixed
+
 - **API quota management** improvements
 - **Error handling** for missing permissions
 - **Data formatting** inconsistencies
 
 ### Changed
+
 - **Improved user interface** based on beta feedback
 - **Enhanced error messages** for better user experience
 - **Optimized API calls** for better performance
@@ -244,12 +289,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.0-alpha] - 2025-07-01
 
 ### Added (Alpha Release)
+
 - **Initial proof of concept** for Google Analytics 4 auditing
 - **Basic Google Tag Manager** integration
 - **Simple configuration** interface
 - **Preliminary dashboard** functionality
 
 ### Technical Notes
+
 - **Alpha version** for internal testing only
 - **Limited functionality** compared to final release
 - **Experimental API** integration
@@ -268,6 +315,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Release Notes Format
 
 Each release includes:
+
 - **Version number** following semantic versioning
 - **Release date** in YYYY-MM-DD format
 - **Summary of changes** organized by type
@@ -278,11 +326,19 @@ Each release includes:
 ## Future Versioning
 
 ### Community Edition (Always Free)
+
 - **Major versions** (2.0.0, 3.0.0) for significant architectural changes
 - **Minor versions** (1.1.0, 1.2.0) for new features and integrations
 - **Patch versions** (1.0.1, 1.0.2) for bug fixes and improvements
 
-### Addocu Pro (Future Commercial Version)
-- **Separate versioning** from Community Edition
-- **Independent roadmap** with advanced features
-- **Community Edition** will always remain fully functional and free
+### Self-Hosted / Community Edition (Always Free)
+
+- **GitHub Repository**: Full source code available for cloning and manual deployment.
+- **Major versions** (3.0.0) for significant architectural changes.
+- **Feature updates** (3.1.0) for new diagnostic modules.
+
+### Marketplace Add-on (Paid)
+
+- **Google Workspace Marketplace**: One-click install with automatic updates and priority support.
+- **Revenue Model**: Supports the ongoing development of the open-source core.
+- **Feature Parity**: The open-source core will always remain fully functional and mirror major feature releases.

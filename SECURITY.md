@@ -6,10 +6,10 @@ We actively maintain and provide security updates for the following versions of 
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 2.1.x   | ✅ Yes             |
-| 2.0.x   | ✅ Yes             |
-| 1.9.x   | ⚠️ Critical fixes only |
-| < 1.9   | ❌ No              |
+| 3.1.x   | ✅ Yes             |
+| 3.0.x   | ✅ Yes             |
+| 2.x.x   | ⚠️ Critical fixes only |
+| < 2.0   | ❌ No              |
 
 ## 🔐 Security Guarantees
 
@@ -26,8 +26,9 @@ Addocu is designed with security-by-design principles:
 We take security vulnerabilities seriously. If you discover a security issue, please follow these steps:
 
 ### **🚨 For Security Vulnerabilities:**
+
 1. **DO NOT** create a public GitHub issue
-2. **Email us directly:** hello@addocu.com
+2. **Email us directly:** <hello@addocu.com>
 3. **Include the following information:**
    - Description of the vulnerability
    - Steps to reproduce
@@ -35,11 +36,13 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
    - Your contact information (optional)
 
 ### **📧 Response Timeline:**
+
 - **Initial Response:** Within 24 hours
 - **Status Update:** Within 72 hours
 - **Resolution Timeline:** 7-30 days depending on severity
 
 ### **🏆 Security Researcher Recognition:**
+
 - We maintain a Hall of Fame for security researchers who responsibly disclose vulnerabilities
 - With your permission, we'll credit you in our security advisories
 - For significant findings, we may offer a token of appreciation
@@ -47,16 +50,19 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 ## 🔍 Security Best Practices for Users
 
 ### **🛡️ Account Security:**
+
 - Always use the same Google account for Chrome and Google Sheets
 - Regularly review your Google Workspace marketplace installs
 - Monitor your Google account activity for suspicious behavior
 
 ### **🔑 API Key Management:**
+
 - Store your Google Cloud API keys securely
 - Regularly rotate your API keys
 - Use least-privilege access principles for your Google Cloud projects
 
 ### **📊 Data Privacy:**
+
 - Addocu processes your data locally within Google's infrastructure
 - No data is transmitted to external servers
 - All audit data remains in your Google Sheets
@@ -84,13 +90,13 @@ If you're contributing to Addocu, please ensure:
 
 ## 🔐 Security Contact
 
-- **Email:** hello@addocu.com
+- **Email:** <hello@addocu.com>
 - **PGP Key:** [Available on request]
 - **Response Time:** 24 hours maximum
 
 ---
 
-**Last Updated:** December 2024  
-**Next Review:** March 2025
+**Last Updated:** January 2026  
+**Next Review:** April 2026
 
 *This security policy is inspired by industry best practices and is regularly updated to reflect the current threat landscape.*

@@ -7,6 +7,7 @@
 **THE ISSUE:** You must be logged into Google Chrome AND Google Sheets with **THE EXACT SAME GOOGLE ACCOUNT**.
 
 **WHY THIS HAPPENS:**
+
 - Chrome: Logged in with `work@company.com`
 - Google Sheets: Logged in with `personal@gmail.com`  
 - Result: OAuth2 fails with `PERMISSION_DENIED` errors
@@ -22,15 +23,18 @@
 ### 🔍 **How to Verify Your Account Status**
 
 **Step 1:** Check Chrome Profile
+
 - Look at top-right corner of Chrome
 - Note the email/profile shown
 
 **Step 2:** Check Google Sheets Account
+
 - Open sheets.google.com
 - Look at top-right corner
 - Verify it matches your Chrome profile
 
 **Step 3:** If Different
+
 - Click your profile picture → "Sign out"
 - Sign in with the correct account
 - Try Addocu again
@@ -47,7 +51,7 @@
    - Manually check account matching
    - Shows Chrome vs Google Sheets accounts
    - Guides you through account synchronization
-   
+
 2. **🔒 Reauthorize Permissions**
    - Refreshes OAuth2 authorization
    - Use if permissions seem outdated
@@ -70,7 +74,8 @@
 ### Issue: "We're sorry, a server error occurred while reading from storage"
 
 **Root Cause:** Account mismatch or corrupted user properties  
-**Fix:** 
+**Fix:**
+
 1. Go to **Extensions > Addocu > Troubleshooting > Verify Accounts**
 2. Follow the step-by-step account verification process
 3. Sign out and back in with the same account if needed
@@ -78,7 +83,8 @@
 ### Issue: "Error loading configuration: PERMISSION_DENIED"  
 
 **Root Cause:** Different accounts in Chrome vs Google Sheets  
-**Fix:** 
+**Fix:**
+
 1. **Extensions > Addocu > Troubleshooting > Verify Accounts (IMPORTANT)**
 2. Follow the manual verification steps shown
 3. Ensure same account is used in Chrome AND Google Sheets
@@ -86,7 +92,8 @@
 ### Issue: "You do not have permission to call UrlFetchApp.fetch"
 
 **Root Cause:** OAuth2 scope not properly authorized  
-**Fix:** 
+**Fix:**
+
 1. **Extensions > Addocu > Troubleshooting > Force All Permissions**
 2. Click through and authorize ALL permissions when prompted
 3. Wait for authorization to complete
@@ -96,14 +103,32 @@
 
 **Root Cause:** Partial authorization or missing scopes  
 **Fix:**
+
 1. **Extensions > Addocu > Troubleshooting > Force All Permissions**
 2. Authorize everything when prompted (don't skip any scopes)
 3. If still failing, try in Incognito mode
 
-### Issue: "Google Ads Developer Token is missing" (v3.0+)
+### Issue: GA4 Change History tab is empty
+
+**Root Cause:** Either no configuration changes occurred in the last 30 days, or the user lacks sufficient permissions to read change history.  
+**Fix:**
+
+1. Verify if any changes were actually made in the GA4 property settings recently.
+2. Ensure you have **Viewer** or higher access at the **Account level** (some change history events require account-level read access).
+
+### Issue: GTM Variable "Usage Status" shows "Unused" but I use it in Custom JS
+
+**Root Cause:** The dependency analyzer currently scans for `{{VariableName}}` patterns. Hardcoded string references in complex Custom JS might be missed.  
+**Fix:**
+
+- Manually verify variables flagged as "Unused" if they are part of highly dynamic Custom JS code.
+- Ensure the variable name hasn't been changed without updating the reference.
+
+### Issue: "Google Ads Developer Token is missing" (v3.1+)
 
 **Root Cause:** Google Ads sync requires a Developer Token  
 **Fix:**
+
 1. Get your Developer Token from [ads.google.com](https://ads.google.com)
 2. Go to **Extensions > Addocu > Configure**
 3. Paste your Developer Token in the "Google Ads Developer Token" field
@@ -114,6 +139,7 @@
 
 **Root Cause:** This is expected behavior! Sheets are created even when APIs fail or return no data  
 **Fix:**
+
 - **Empty sheets with no message**: You don't have access to assets in that platform
 - **Sheets with error text**: Check the error message and follow its guidance
 - Use **Extensions > Addocu > Troubleshooting > Simplified Diagnostics** to identify which APIs are accessible
@@ -126,6 +152,7 @@
 
 **Problem:** Chrome shows multiple account bubbles
 **Solution:**
+
 1. Go to Chrome Settings > People
 2. Remove all profiles except one
 3. Or use Incognito mode with only one account
@@ -134,6 +161,7 @@
 
 **Problem:** Cached authentication state
 **Solution:**
+
 1. Clear Chrome cache and cookies for Google domains
 2. Try in Incognito/Private mode
 3. Try different browser
@@ -142,6 +170,7 @@
 
 **Problem:** Company firewall blocking Google APIs
 **Solution:**
+
 1. Try on personal network
 2. Contact IT to whitelist required Google API endpoints
 3. Use mobile hotspot for testing
@@ -190,10 +219,12 @@ Before reporting issues, verify:
 3. ✅ Try the clean slate approach
 
 **For complex issues:**
+
 - 🐛 GitHub Issues: [Report technical bugs](https://github.com/Addocu/addocu/issues)
-- 📧 Email: hello@addocu.com (include account verification status)
+- 📧 Email: <hello@addocu.com> (include account verification status)
 
 **Include in your report:**
+
 - Chrome version and OS
 - Google account type (personal/workspace)
 - Screenshots of account mismatches

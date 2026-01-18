@@ -5,6 +5,7 @@ Thank you for your interest in contributing to Addocu! This document provides gu
 ## 🌟 Ways to Contribute
 
 ### 🐛 Bug Reports
+
 - **Search existing issues** first to avoid duplicates
 - **Use the issue template** when creating new bug reports
 - **Include detailed steps to reproduce** the issue
@@ -12,12 +13,14 @@ Thank you for your interest in contributing to Addocu! This document provides gu
 - **Attach screenshots** if applicable
 
 ### 💡 Feature Requests
+
 - **Check existing discussions** to see if someone has proposed similar ideas
 - **Clearly explain the use case** and how it benefits the community
-- **Consider the scope** - should this be in Community Edition or Addocu Pro?
+- **Consider the scope** - how does this fit into the Open Core roadmap?
 - **Be willing to contribute** to the implementation if possible
 
 ### 🔧 Code Contributions
+
 - **Fork the repository** and create a feature branch
 - **Follow coding standards** outlined below
 - **Write clear commit messages**
@@ -25,6 +28,7 @@ Thank you for your interest in contributing to Addocu! This document provides gu
 - **Update documentation** as needed
 
 ### 📖 Documentation
+
 - **Fix typos and unclear instructions**
 - **Add examples and use cases**
 - **Improve installation and setup guides**
@@ -33,13 +37,16 @@ Thank you for your interest in contributing to Addocu! This document provides gu
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - **Google Apps Script** knowledge
 - **Google Cloud APIs** familiarity
 - **Google Workspace** environment for testing
 - **Git** for version control
 
 ### Development Setup
+
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/addocu.git
    cd addocu
@@ -58,6 +65,7 @@ Thank you for your interest in contributing to Addocu! This document provides gu
 ## 📋 Coding Standards
 
 ### JavaScript/Google Apps Script
+
 ```javascript
 // Use descriptive function names
 function sincronizarPropiedadesGA4() {
@@ -82,6 +90,7 @@ const configuracion = {
 ```
 
 ### HTML/CSS
+
 ```html
 <!-- Use semantic HTML structure -->
 <div class="configuracion-sidebar">
@@ -93,6 +102,7 @@ const configuracion = {
 ```
 
 ### Documentation
+
 - **Use clear, concise language**
 - **Include code examples** for technical explanations
 - **Add screenshots** for UI-related documentation
@@ -101,12 +111,14 @@ const configuracion = {
 ## 🔄 Pull Request Process
 
 ### Before Submitting
+
 1. **Ensure your code follows** the coding standards
 2. **Test thoroughly** with multiple Google accounts if possible
 3. **Update documentation** for any new features
 4. **Check that all files** follow the project structure
 
 ### Pull Request Template
+
 ```markdown
 ## Description
 Brief description of changes
@@ -131,6 +143,7 @@ Add screenshots of UI changes
 ```
 
 ### Review Process
+
 1. **Automated checks** will run on your PR
 2. **Maintainer review** - expect feedback and iteration
 3. **Testing** with different configurations
@@ -139,18 +152,21 @@ Add screenshots of UI changes
 ## 🎯 Project Philosophy
 
 ### Community First
+
 - **Every decision** should benefit the community
 - **Transparency** in development and decision-making
 - **Inclusive** environment for all contributors
 - **Educational value** - help others learn
 
 ### Technical Excellence
+
 - **Security by design** - user data protection is paramount
 - **Performance** - efficient API usage and fast execution
 - **Reliability** - comprehensive error handling
 - **Maintainability** - clear, documented code
 
 ### Open Source Values
+
 - **Collaboration** over competition
 - **Sharing knowledge** and best practices
 - **Building together** rather than alone
@@ -159,6 +175,7 @@ Add screenshots of UI changes
 ## 📊 Project Structure
 
 ### Core Modules
+
 ```
 src/
 ├── coordinador.js         # Main orchestration logic
@@ -173,6 +190,7 @@ src/
 ```
 
 ### Testing Guidelines
+
 - **Test with multiple Google accounts**
 - **Verify API quota usage** doesn't exceed limits
 - **Check error handling** with invalid configurations
@@ -181,16 +199,19 @@ src/
 ## 🚨 Security Considerations
 
 ### API Key Handling
+
 - **Never log or expose** API keys
 - **Use PropertiesService.getUserProperties()** for storage
 - **Validate permissions** before API calls
 
 ### Data Privacy
+
 - **No external data transmission** - everything stays in user's Google account
 - **Minimal data retention** - only what's necessary for functionality
 - **Clear data usage** - transparent about what data is accessed
 
 ### Error Handling
+
 - **No sensitive information** in error messages
 - **Graceful degradation** when APIs are unavailable
 - **User-friendly error messages**
@@ -198,11 +219,13 @@ src/
 ## 📞 Getting Help
 
 ### Development Questions
+
 - **GitHub Discussions** for general questions
 - **Issues** for bug reports and feature requests
-- **Email** hello@addocu.com for other inquiries
+- **Email** <hello@addocu.com> for other inquiries
 
 ### Community Resources
+
 - **Documentation** in the `/docs` folder
 - **Examples** in the `/examples` folder
 - **Troubleshooting guide** for common issues
@@ -210,12 +233,14 @@ src/
 ## 📜 Code of Conduct
 
 ### Our Standards
+
 - **Be respectful** and inclusive
 - **Constructive feedback** in reviews and discussions
 - **Focus on the work** not the person
 - **Help others learn** and grow
 
 ### Unacceptable Behavior
+
 - **Harassment** or discrimination
 - **Spam** or off-topic discussions
 - **Sharing sensitive information** without permission
@@ -224,13 +249,16 @@ src/
 ## 🎉 Recognition
 
 ### Contributors
+
 All contributors will be:
+
 - **Listed in CONTRIBUTORS.md**
 - **Mentioned in release notes**
 - **Credited in documentation** where appropriate
 - **Invited to community events** and discussions
 
 ### Types of Contributions
+
 - 💻 **Code** contributions
 - 📖 **Documentation** improvements
 - 🐛 **Bug reports** and testing
