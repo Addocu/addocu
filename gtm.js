@@ -16,7 +16,9 @@ const GTM_TAGS_HEADERS = [
 
 const GTM_VARIABLES_HEADERS = [
   'Container Name', 'Container ID', 'Workspace', 'Variable Name', 'Variable ID', 'Variable Type',
-  'Key Parameters', 'Format Value', 'Disabling Triggers', 'Enabling Triggers', 'Last Modified', 'Notes', 'Observations'
+  'Key Parameters', 'Format Value', 'Disabling Triggers', 'Enabling Triggers',
+  'Usage Status', 'Used By',
+  'Last Modified', 'Notes', 'Observations'
 ];
 
 const GTM_TRIGGERS_HEADERS = [
@@ -364,9 +366,17 @@ function getWorkspaceResources(workspace, container) {
     const triggersResponse = fetchWithRetry(triggersUrl, options, 'GTM-Triggers');
     Utilities.sleep(300);
 
+    // Analyze variable usage
+    logEvent('GTM', '🔍 Analyzing variable usage...');
+    const usageMap = analyzeVariableUsage(
+      tagsResponse.tag || [],
+      triggersResponse.trigger || [],
+      variablesResponse.variable || []
+    );
+
     return {
       tags: (tagsResponse.tag || []).map(t => processGTMTag(t, container, workspace)),
-      variables: (variablesResponse.variable || []).map(v => processGTMVariable(v, container, workspace)),
+      variables: (variablesResponse.variable || []).map(v => processGTMVariable(v, container, workspace, usageMap[v.name])),
       triggers: (triggersResponse.trigger || []).map(tr => processGTMTrigger(tr, container, workspace))
     };
 
@@ -374,6 +384,83 @@ function getWorkspaceResources(workspace, container) {
     logError('GTM', `Error getting workspace resources ${workspace.name}: ${error.message}`);
     throw error;
   }
+}
+
+/**
+ * Analyzes variable usage across tags, triggers, and other variables.
+ * @param {Array} tags - All tags in the workspace
+ * @param {Array} triggers - All triggers in the workspace
+ * @param {Array} variables - All variables in the workspace
+ * @returns {Object} Map of variableName -> { usedBy: [...], isUsed: boolean }
+ */
+function analyzeVariableUsage(tags, triggers, variables) {
+  const usageMap = {};
+
+  // Initialize all variables as unused
+  variables.forEach(v => {
+    usageMap[v.name] = { usedBy: [], isUsed: false };
+  });
+
+  // Helper to find variable references in a string
+  const findVariableReferences = (str, sourceType, sourceName) => {
+    if (!str || typeof str !== 'string') return;
+    const regex = /\{\{([^}]+)\}\}/g;
+    let match;
+    while ((match = regex.exec(str)) !== null) {
+      const varName = match[1];
+      if (usageMap[varName]) {
+        usageMap[varName].usedBy.push(`${sourceType}: ${sourceName}`);
+        usageMap[varName].isUsed = true;
+      }
+    }
+  };
+
+  // Check tags for variable usage
+  tags.forEach(tag => {
+    if (tag.parameter) {
+      tag.parameter.forEach(param => {
+        findVariableReferences(param.value, 'Tag', tag.name);
+      });
+    }
+    // Also check tag configurations properties if they exist
+    if (tag.monitoringMetadata) { // Example of deep check
+      findVariableReferences(JSON.stringify(tag.monitoringMetadata), 'Tag Metadata', tag.name);
+    }
+  });
+
+  // Check triggers for variable usage
+  triggers.forEach(trigger => {
+    if (trigger.filter) {
+      trigger.filter.forEach(f => {
+        if (f.parameter) {
+          f.parameter.forEach(param => {
+            findVariableReferences(param.value, 'Trigger', trigger.name);
+          });
+        }
+      });
+    }
+    // Also check custom event names
+    if (trigger.eventName) {
+      findVariableReferences(trigger.eventName, 'Trigger', trigger.name);
+    }
+    // Check custom parameters in triggers
+    if (trigger.parameter) {
+      trigger.parameter.forEach(param => {
+        findVariableReferences(param.value, 'Trigger', trigger.name);
+      });
+    }
+  });
+
+  // Check variables for nested references
+  variables.forEach(variable => {
+    if (variable.parameter) {
+      variable.parameter.forEach(param => {
+        findVariableReferences(param.value, 'Variable', variable.name);
+      });
+    }
+  });
+
+  return usageMap;
 }
 
 // =================================================================
@@ -461,7 +548,7 @@ function processGTMTag(tag, container, workspace) {
 /**
  * Processes a GTM variable and extracts detailed information
  */
-function processGTMVariable(variable, container, workspace) {
+function processGTMVariable(variable, container, workspace, usageInfo = null) {
   try {
     const variableData = {
       'Container Name': container.name || 'N/A',
@@ -498,6 +585,19 @@ function processGTMVariable(variable, container, workspace) {
       variableData['Disabling Triggers'] = 'N/A';
     }
 
+    // Usage status
+    if (usageInfo) {
+      variableData['Usage Status'] = usageInfo.isUsed ? 'Used' : 'UNUSED';
+      // Limit description length to avoid cell overflow
+      const usedByStr = usageInfo.usedBy.join('; ');
+      variableData['Used By'] = usedByStr.length > 2000
+        ? usedByStr.substring(0, 1997) + '...'
+        : (usedByStr || 'Not referenced');
+    } else {
+      variableData['Usage Status'] = 'Unknown';
+      variableData['Used By'] = 'Analysis not performed';
+    }
+
     // Automatic observations
     const observations = [];
     if (variable.enablingTriggerId && variable.enablingTriggerId.length > 0) {
@@ -505,6 +605,7 @@ function processGTMVariable(variable, container, workspace) {
     }
     if (variable.type === 'jsm') observations.push('Custom JavaScript');
     if (variable.type === 'c') observations.push('Constant');
+    if (usageInfo && !usageInfo.isUsed) observations.push('UNUSED - Consider removing');
 
     variableData['Observations'] = observations.join('; ') || 'N/A';
 
