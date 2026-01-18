@@ -1037,6 +1037,151 @@
         </button>
       </div>
 
+      <!-- PRO Features Section -->
+      <div class="section">
+        <div class="section-title">
+          PRO Intelligence
+          <span style="display: inline-block; margin-left: 8px; padding: 2px 6px; background: linear-gradient(135deg, #8B5CF6, #A78BFA); color: white; font-size: 10px; font-weight: 600; border-radius: 4px; letter-spacing: 0.5px;">ENTERPRISE</span>
+        </div>
+        <div class="section-description">
+          Advanced analytics and governance features for enterprise teams.
+        </div>
+
+        <!-- Smart Discovery Panel -->
+        <div class="pro-feature-panel" style="margin-bottom: 12px; border: 1px solid var(--addocu-border-light); border-radius: 8px; overflow: hidden;">
+          <div class="pro-feature-header" onclick="toggleProFeature('smartDiscovery')" style="padding: 16px; background: var(--addocu-white); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--addocu-border-light);">
+            <div>
+              <div style="font-weight: 600; color: var(--addocu-text-primary);">Smart Discovery</div>
+              <div style="font-size: 12px; color: var(--addocu-text-secondary); margin-top: 4px;">Auto-generates alert rules from BigQuery data</div>
+            </div>
+            <span id="arrow-smartDiscovery" style="font-size: 16px; transition: transform 0.2s;">›</span>
+          </div>
+          <div id="content-smartDiscovery" style="display: none; padding: 16px; background: #fafafa; border-top: 1px solid var(--addocu-border-light);">
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--addocu-text-secondary);">Confidence Threshold</label>
+              <input type="range" min="0" max="100" value="75" style="width: 100%;" id="smartDiscovery-threshold">
+              <span id="smartDiscovery-threshold-value" style="font-size: 12px; color: var(--addocu-text-secondary);">75%</span>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="runSmartDiscoveryFromUI()" style="margin-top: 8px;">Run Smart Discovery</button>
+            <div style="margin-top: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid var(--addocu-blue-light); font-size: 11px; color: var(--addocu-text-secondary);">
+              <strong>Status:</strong> <span id="status-smartDiscovery">Not run</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Heartbeat Alert Panel -->
+        <div class="pro-feature-panel" style="margin-bottom: 12px; border: 1px solid var(--addocu-border-light); border-radius: 8px; overflow: hidden;">
+          <div class="pro-feature-header" onclick="toggleProFeature('heartbeatAlert')" style="padding: 16px; background: var(--addocu-white); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--addocu-border-light);">
+            <div>
+              <div style="font-weight: 600; color: var(--addocu-text-primary);">Heartbeat Alert</div>
+              <div style="font-size: 12px; color: var(--addocu-text-secondary); margin-top: 4px;">Multi-dimension anomaly detection across BigQuery</div>
+            </div>
+            <span id="arrow-heartbeatAlert" style="font-size: 16px; transition: transform 0.2s;">›</span>
+          </div>
+          <div id="content-heartbeatAlert" style="display: none; padding: 16px; background: #fafafa; border-top: 1px solid var(--addocu-border-light);">
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--addocu-text-secondary);">Sensitivity Level</label>
+              <select style="width: 100%; padding: 8px; border: 1px solid var(--addocu-border); border-radius: 4px; font-size: 12px;">
+                <option>Low (fewer alerts)</option>
+                <option selected>Medium (balanced)</option>
+                <option>High (more alerts)</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="runHeartbeatFromUI()" style="margin-top: 8px;">Run Heartbeat Check</button>
+            <div style="margin-top: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid var(--addocu-blue-light); font-size: 11px; color: var(--addocu-text-secondary);">
+              <strong>Status:</strong> <span id="status-heartbeatAlert">Not run</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dimensional Health Check Panel -->
+        <div class="pro-feature-panel" style="margin-bottom: 12px; border: 1px solid var(--addocu-border-light); border-radius: 8px; overflow: hidden;">
+          <div class="pro-feature-header" onclick="toggleProFeature('dimensionalHealth')" style="padding: 16px; background: var(--addocu-white); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--addocu-border-light);">
+            <div>
+              <div style="font-weight: 600; color: var(--addocu-text-primary);">Dimensional Health</div>
+              <div style="font-size: 12px; color: var(--addocu-text-secondary); margin-top: 4px;">Parameter fill rate and data quality validation</div>
+            </div>
+            <span id="arrow-dimensionalHealth" style="font-size: 16px; transition: transform 0.2s;">›</span>
+          </div>
+          <div id="content-dimensionalHealth" style="display: none; padding: 16px; background: #fafafa; border-top: 1px solid var(--addocu-border-light);">
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--addocu-text-secondary);">Minimum Fill Rate</label>
+              <input type="range" min="0" max="100" value="80" style="width: 100%;" id="dimensionalHealth-minFillRate">
+              <span id="dimensionalHealth-minFillRate-value" style="font-size: 12px; color: var(--addocu-text-secondary);">80%</span>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="runDimensionalHealthFromUI()" style="margin-top: 8px;">Run Health Check</button>
+            <div style="margin-top: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid var(--addocu-blue-light); font-size: 11px; color: var(--addocu-text-secondary);">
+              <strong>Status:</strong> <span id="status-dimensionalHealth">Not run</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Inventory Panel -->
+        <div class="pro-feature-panel" style="margin-bottom: 12px; border: 1px solid var(--addocu-border-light); border-radius: 8px; overflow: hidden;">
+          <div class="pro-feature-header" onclick="toggleProFeature('dataInventory')" style="padding: 16px; background: var(--addocu-white); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--addocu-border-light);">
+            <div>
+              <div style="font-weight: 600; color: var(--addocu-text-primary);">Data Inventory</div>
+              <div style="font-size: 12px; color: var(--addocu-text-secondary); margin-top: 4px;">Automated parameter discovery and tracking</div>
+            </div>
+            <span id="arrow-dataInventory" style="font-size: 16px; transition: transform 0.2s;">›</span>
+          </div>
+          <div id="content-dataInventory" style="display: none; padding: 16px; background: #fafafa; border-top: 1px solid var(--addocu-border-light);">
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--addocu-text-secondary);">
+                <input type="checkbox" id="dataInventory-trackCustom" checked> Track Custom Parameters
+              </label>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="runDataInventoryFromUI()" style="margin-top: 8px;">Run Inventory Scan</button>
+            <div style="margin-top: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid var(--addocu-blue-light); font-size: 11px; color: var(--addocu-text-secondary);">
+              <strong>Status:</strong> <span id="status-dataInventory">Not run</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Access Audit Panel -->
+        <div class="pro-feature-panel" style="margin-bottom: 12px; border: 1px solid var(--addocu-border-light); border-radius: 8px; overflow: hidden;">
+          <div class="pro-feature-header" onclick="toggleProFeature('userAccessAudit')" style="padding: 16px; background: var(--addocu-white); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--addocu-border-light);">
+            <div>
+              <div style="font-weight: 600; color: var(--addocu-text-primary);">User Access Audit</div>
+              <div style="font-size: 12px; color: var(--addocu-text-secondary); margin-top: 4px;">GA4 permissions governance and compliance</div>
+            </div>
+            <span id="arrow-userAccessAudit" style="font-size: 16px; transition: transform 0.2s;">›</span>
+          </div>
+          <div id="content-userAccessAudit" style="display: none; padding: 16px; background: #fafafa; border-top: 1px solid var(--addocu-border-light);">
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--addocu-text-secondary);">
+                <input type="checkbox" id="userAccessAudit-flagExternal" checked> Flag External Admin Accounts
+              </label>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="runUserAccessAuditFromUI()" style="margin-top: 8px;">Run Access Audit</button>
+            <div style="margin-top: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid var(--addocu-blue-light); font-size: 11px; color: var(--addocu-text-secondary);">
+              <strong>Status:</strong> <span id="status-userAccessAudit">Not run</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zombie Hunter Panel -->
+        <div class="pro-feature-panel" style="margin-bottom: 12px; border: 1px solid var(--addocu-border-light); border-radius: 8px; overflow: hidden;">
+          <div class="pro-feature-header" onclick="toggleProFeature('zombieHunter')" style="padding: 16px; background: var(--addocu-white); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--addocu-border-light);">
+            <div>
+              <div style="font-weight: 600; color: var(--addocu-text-primary);">Zombie Hunter</div>
+              <div style="font-size: 12px; color: var(--addocu-text-secondary); margin-top: 4px;">Identify unused and zombie dimensions in GA4</div>
+            </div>
+            <span id="arrow-zombieHunter" style="font-size: 16px; transition: transform 0.2s;">›</span>
+          </div>
+          <div id="content-zombieHunter" style="display: none; padding: 16px; background: #fafafa; border-top: 1px solid var(--addocu-border-light);">
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--addocu-text-secondary);">Days Inactive Threshold</label>
+              <input type="number" min="7" max="365" value="30" style="width: 100%; padding: 8px; border: 1px solid var(--addocu-border); border-radius: 4px; font-size: 12px;" id="zombieHunter-days">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="runZombieHunterFromUI()" style="margin-top: 8px;">Hunt Zombies</button>
+            <div style="margin-top: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid var(--addocu-blue-light); font-size: 11px; color: var(--addocu-text-secondary);">
+              <strong>Status:</strong> <span id="status-zombieHunter">Not run</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Services -->
       <div class="section">
         <div class="section-title">Services to Audit</div>
@@ -1994,6 +2139,165 @@
       if (event.target === modal) {
         closeSuccessModal();
       }
+    });
+
+    // ========================================
+    // PRO FEATURES FUNCTIONS
+    // ========================================
+
+    function toggleProFeature(featureId) {
+      const content = document.getElementById(`content-${featureId}`);
+      const arrow = document.getElementById(`arrow-${featureId}`);
+
+      const isHidden = content.style.display === 'none';
+      content.style.display = isHidden ? 'block' : 'none';
+      arrow.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+    }
+
+    function runSmartDiscoveryFromUI() {
+      const threshold = document.getElementById('smartDiscovery-threshold').value;
+      showButtonLoading('runSmartDiscoveryBtn', 'Running...');
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          hideButtonLoading('runSmartDiscoveryBtn', 'Run Smart Discovery');
+          if (result.success) {
+            document.getElementById('status-smartDiscovery').textContent = 'Completed: ' + result.rulesGenerated + ' rules generated';
+            showStatus('Smart Discovery completed successfully', 'success');
+          } else {
+            document.getElementById('status-smartDiscovery').textContent = 'Error: ' + (result.error || 'Unknown error');
+            showStatus('Smart Discovery failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          hideButtonLoading('runSmartDiscoveryBtn', 'Run Smart Discovery');
+          document.getElementById('status-smartDiscovery').textContent = 'Error';
+          showStatus('Smart Discovery failed: ' + error, 'error');
+        })
+        .runSmartDiscovery(parseInt(threshold));
+    }
+
+    function runHeartbeatFromUI() {
+      showButtonLoading('runHeartbeatBtn', 'Running...');
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          hideButtonLoading('runHeartbeatBtn', 'Run Heartbeat Check');
+          if (result.success) {
+            document.getElementById('status-heartbeatAlert').textContent = 'Completed: ' + result.anomaliesDetected + ' anomalies detected';
+            showStatus('Heartbeat Alert completed successfully', 'success');
+          } else {
+            document.getElementById('status-heartbeatAlert').textContent = 'Error: ' + (result.error || 'Unknown error');
+            showStatus('Heartbeat Alert failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          hideButtonLoading('runHeartbeatBtn', 'Run Heartbeat Check');
+          document.getElementById('status-heartbeatAlert').textContent = 'Error';
+          showStatus('Heartbeat Alert failed: ' + error, 'error');
+        })
+        .runHeartbeatAlert();
+    }
+
+    function runDimensionalHealthFromUI() {
+      const minFillRate = document.getElementById('dimensionalHealth-minFillRate').value;
+      showButtonLoading('runDimensionalHealthBtn', 'Running...');
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          hideButtonLoading('runDimensionalHealthBtn', 'Run Health Check');
+          if (result.success) {
+            document.getElementById('status-dimensionalHealth').textContent = 'Completed: ' + result.rulesChecked + ' rules checked';
+            showStatus('Dimensional Health Check completed successfully', 'success');
+          } else {
+            document.getElementById('status-dimensionalHealth').textContent = 'Error: ' + (result.error || 'Unknown error');
+            showStatus('Dimensional Health Check failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          hideButtonLoading('runDimensionalHealthBtn', 'Run Health Check');
+          document.getElementById('status-dimensionalHealth').textContent = 'Error';
+          showStatus('Dimensional Health Check failed: ' + error, 'error');
+        })
+        .runDimensionalHealthCheck(parseInt(minFillRate));
+    }
+
+    function runDataInventoryFromUI() {
+      const trackCustom = document.getElementById('dataInventory-trackCustom').checked;
+      showButtonLoading('runDataInventoryBtn', 'Running...');
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          hideButtonLoading('runDataInventoryBtn', 'Run Inventory Scan');
+          if (result.success) {
+            document.getElementById('status-dataInventory').textContent = 'Completed: ' + result.totalParameters + ' parameters found';
+            showStatus('Data Inventory completed successfully', 'success');
+          } else {
+            document.getElementById('status-dataInventory').textContent = 'Error: ' + (result.error || 'Unknown error');
+            showStatus('Data Inventory failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          hideButtonLoading('runDataInventoryBtn', 'Run Inventory Scan');
+          document.getElementById('status-dataInventory').textContent = 'Error';
+          showStatus('Data Inventory failed: ' + error, 'error');
+        })
+        .runDataInventory(trackCustom);
+    }
+
+    function runUserAccessAuditFromUI() {
+      const flagExternal = document.getElementById('userAccessAudit-flagExternal').checked;
+      showButtonLoading('runUserAccessAuditBtn', 'Running...');
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          hideButtonLoading('runUserAccessAuditBtn', 'Run Access Audit');
+          if (result.success) {
+            document.getElementById('status-userAccessAudit').textContent = 'Completed: ' + result.totalUsers + ' users audited';
+            showStatus('User Access Audit completed successfully', 'success');
+          } else {
+            document.getElementById('status-userAccessAudit').textContent = 'Error: ' + (result.error || 'Unknown error');
+            showStatus('User Access Audit failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          hideButtonLoading('runUserAccessAuditBtn', 'Run Access Audit');
+          document.getElementById('status-userAccessAudit').textContent = 'Error';
+          showStatus('User Access Audit failed: ' + error, 'error');
+        })
+        .runUserAccessAudit(flagExternal);
+    }
+
+    function runZombieHunterFromUI() {
+      const days = document.getElementById('zombieHunter-days').value;
+      showButtonLoading('runZombieHunterBtn', 'Running...');
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          hideButtonLoading('runZombieHunterBtn', 'Hunt Zombies');
+          if (result.success) {
+            document.getElementById('status-zombieHunter').textContent = 'Completed: ' + result.zombies + ' zombies found';
+            showStatus('Zombie Hunter completed successfully', 'success');
+          } else {
+            document.getElementById('status-zombieHunter').textContent = 'Error: ' + (result.error || 'Unknown error');
+            showStatus('Zombie Hunter failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          hideButtonLoading('runZombieHunterBtn', 'Hunt Zombies');
+          document.getElementById('status-zombieHunter').textContent = 'Error';
+          showStatus('Zombie Hunter failed: ' + error, 'error');
+        })
+        .runZombieHunter(parseInt(days));
+    }
+
+    // Update threshold display value
+    document.getElementById('smartDiscovery-threshold').addEventListener('input', function() {
+      document.getElementById('smartDiscovery-threshold-value').textContent = this.value + '%';
+    });
+
+    document.getElementById('dimensionalHealth-minFillRate').addEventListener('input', function() {
+      document.getElementById('dimensionalHealth-minFillRate-value').textContent = this.value + '%';
     });
   </script>
 </body>

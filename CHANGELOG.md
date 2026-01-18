@@ -18,6 +18,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Identifies "Who, What, When" for audit trails across all properties.
   - Formats nested JSON changes into human-readable action summaries.
 - **🛡️ Audit Performance**: Optimized GTM resource fetching to prevent API timeouts during dependency analysis.
+- **✨ PRO Features UI Integration**: Enterprise features now fully exposed in configuration sidebar and dashboard.
+  - **Configuration Sidebar** (`configuration.html`):
+    - New "PRO Intelligence" section with 6 collapsible feature panels
+    - Smart Discovery - Auto-generates alert rules from BigQuery with confidence threshold control
+    - Heartbeat Alert - Multi-dimension anomaly detection with sensitivity level adjustment
+    - Dimensional Health Check - Parameter fill rate validation with configurable thresholds
+    - Data Inventory - Automated parameter discovery with custom parameter tracking
+    - User Access Audit - GA4 permissions governance with external admin flagging
+    - Zombie Hunter - Identifies unused dimensions with configurable inactivity threshold
+    - Each feature has dedicated "Run Now" buttons, configuration controls, and status display
+  - **Interactive Dashboard** (`interactive_dashboard.html`):
+    - New "PRO Intelligence" tab with 7 feature cards and overview grid
+    - Heartbeat Alerts - Shows anomaly metrics (critical/warning counts) with quick access to details
+    - Dimensional Health Check - Overall health score with progress bar and issue breakdown
+    - User Access Audit - Total users, external admin count, and property tracking
+    - Data Inventory & Zombie Hunter - Discovery metrics and cleanup status
+    - Smart Discovery - Auto-generated alert rules with quick action buttons
+    - Status overview grid showing all 6 features with enabled/disabled indicators
+    - All features have quick action buttons to run analyses and view detailed sheets
+  - **Backend Enhancements** (`dashboard_functions.js`):
+    - Extended `getHtmlDashboardData()` with new `proFeatures` object
+    - 7 new metric extraction functions:
+      - `getSmartDiscoveryMetrics()` - Reads CONFIG_AUDIT sheet
+      - `getHeartbeatMetrics()` - Reads BQ_ANOMALIES sheet with severity breakdown
+      - `getDimensionalHealthMetrics()` - Reads BQ_PARAM_HEALTH sheet with health percentage
+      - `getDataInventoryMetrics()` - Reads BQ_DATA_INVENTORY sheet with custom/new parameter counts
+      - `getUserAccessMetrics()` - Reads GA4_USER_ACCESS sheet with admin tracking
+      - `getZombieHunterMetrics()` - Reads BQ_ZOMBIE_HUNTER sheet with status breakdown
+      - `getProFeatureLastRun()` - Extracts last execution timestamp from LOGS sheet
+    - All metrics gracefully handle missing sheets with sensible defaults
 
 ### Changed
 

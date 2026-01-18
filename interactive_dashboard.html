@@ -1036,6 +1036,16 @@
     </div>
   </div>
 
+  <!-- TAB NAVIGATION -->
+  <div style="display: none;" id="tab-navigation" class="tab-navigation" style="border-bottom: 1px solid var(--border-light); padding: 0 24px; background: var(--surface);">
+    <div style="display: flex; gap: 24px; max-width: 1400px; margin: 0 auto;">
+      <button class="tab-btn active" onclick="switchTab('overview')" id="tab-btn-overview" style="padding: 12px 0; border-bottom: 2px solid var(--chart-primary); color: var(--chart-primary); font-weight: 600; background: none; border: none; cursor: pointer; font-size: 14px;">Overview</button>
+      <button class="tab-btn" onclick="switchTab('pro-intelligence')" id="tab-btn-pro-intelligence" style="padding: 12px 0; border-bottom: 2px solid transparent; color: var(--text-secondary); font-weight: 600; background: none; border: none; cursor: pointer; font-size: 14px;">
+        PRO Intelligence <span style="display: inline-block; margin-left: 6px; padding: 2px 6px; background: linear-gradient(135deg, #8B5CF6, #A78BFA); color: white; font-size: 9px; font-weight: 700; border-radius: 3px;">ENTERPRISE</span>
+      </button>
+    </div>
+  </div>
+
   <!-- DASHBOARD -->
   <div id="dashboard-wrapper">
     <!-- MAIN METRICS -->
@@ -1462,6 +1472,219 @@
         </div>
       </div>
     </section>
+
+    <!-- PRO INTELLIGENCE TAB -->
+    <div id="pro-intelligence-tab" style="display: none;">
+      <!-- PRO Status Overview -->
+      <section>
+        <h2 class="section-title">
+          <span class="section-icon"></span>
+          PRO Features Overview
+        </h2>
+        <div class="dashboard-grid grid-3" id="pro-status-grid" style="min-height: 100px;">
+          <!-- Populated by JavaScript -->
+        </div>
+      </section>
+
+      <!-- Heartbeat Alert -->
+      <section>
+        <h2 class="section-title">
+          <span class="section-icon"></span>
+          Heartbeat Alerts
+        </h2>
+        <div class="dashboard-grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Anomalies Detected</h3>
+            </div>
+            <div style="padding: 16px;">
+              <div style="font-size: 28px; font-weight: 700; color: var(--chart-primary); margin-bottom: 8px;" id="pro-anomalies-count">0</div>
+              <div style="display: flex; gap: 12px; font-size: 12px;">
+                <div><span style="font-weight: 600; color: var(--error);" id="pro-critical-count">0</span> Critical</div>
+                <div><span style="font-weight: 600; color: var(--warning);" id="pro-warning-count">0</span> Warnings</div>
+              </div>
+            </div>
+            <div style="padding: 12px 16px; background: #f5f5f5; border-top: 1px solid var(--border-light); border-radius: 0 0 8px 8px;">
+              <button class="btn btn-primary" onclick="openSheet('BQ_ANOMALIES')" style="width: 100%; font-size: 12px;">View Details</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Last Run</h3>
+            </div>
+            <div style="padding: 16px;">
+              <div style="font-size: 14px; color: var(--text-secondary);" id="pro-heartbeat-lastrun">Not configured</div>
+              <div style="margin-top: 16px;">
+                <button class="btn btn-primary btn-full" onclick="runHeartbeatFromDashboard()" style="font-size: 12px;">Run Now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dimensional Health -->
+      <section>
+        <h2 class="section-title">
+          <span class="section-icon"></span>
+          Dimensional Health Check
+        </h2>
+        <div class="dashboard-grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Overall Health Score</h3>
+            </div>
+            <div style="padding: 16px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="flex: 1;">
+                  <div style="font-size: 24px; font-weight: 700; color: var(--chart-primary); margin-bottom: 8px;" id="pro-health-percentage">0%</div>
+                  <div style="width: 100%; height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden;">
+                    <div id="pro-health-bar" style="height: 100%; background: linear-gradient(90deg, var(--success), var(--chart-primary)); width: 0%; transition: width 0.3s ease;"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top: 12px; font-size: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div><span style="font-weight: 600; color: var(--error);" id="pro-health-critical">0</span> Critical Issues</div>
+                <div><span style="font-weight: 600; color: var(--warning);" id="pro-health-warning">0</span> Warnings</div>
+              </div>
+            </div>
+            <div style="padding: 12px 16px; background: #f5f5f5; border-top: 1px solid var(--border-light); border-radius: 0 0 8px 8px;">
+              <button class="btn btn-primary" onclick="openSheet('BQ_PARAM_HEALTH')" style="width: 100%; font-size: 12px;">View Details</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Parameters Checked</h3>
+            </div>
+            <div style="padding: 16px;">
+              <div style="font-size: 28px; font-weight: 700; color: var(--chart-primary); margin-bottom: 8px;" id="pro-rules-checked">0</div>
+              <div style="margin-top: 16px;">
+                <button class="btn btn-primary btn-full" onclick="runDimensionalHealthFromDashboard()" style="font-size: 12px;">Run Check</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- User Access Audit -->
+      <section>
+        <h2 class="section-title">
+          <span class="section-icon"></span>
+          User Access Audit
+        </h2>
+        <div class="dashboard-grid grid-3">
+          <div class="card">
+            <div class="card-header">
+              <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Total Users</h3>
+            </div>
+            <div style="padding: 16px;">
+              <div style="font-size: 28px; font-weight: 700; color: var(--chart-primary);" id="pro-total-users">0</div>
+            </div>
+            <div style="padding: 12px 16px; background: #f5f5f5; border-top: 1px solid var(--border-light); border-radius: 0 0 8px 8px;">
+              <button class="btn btn-primary" onclick="openSheet('GA4_USER_ACCESS')" style="width: 100%; font-size: 12px;">View</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 style="margin: 0; font-size: 14px; font-weight: 600;">External Admins</h3>
+            </div>
+            <div style="padding: 16px;">
+              <div style="font-size: 28px; font-weight: 700; color: var(--warning);" id="pro-external-admins">0</div>
+            </div>
+            <div style="padding: 12px 16px; background: #f5f5f5; border-top: 1px solid var(--border-light); border-radius: 0 0 8px 8px;">
+              <button class="btn btn-primary" onclick="openSheet('GA4_USER_ACCESS')" style="width: 100%; font-size: 12px;">Review</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Properties</h3>
+            </div>
+            <div style="padding: 16px;">
+              <div style="font-size: 28px; font-weight: 700; color: var(--chart-primary);" id="pro-total-properties-audit">0</div>
+            </div>
+            <div style="padding: 12px 16px; background: #f5f5f5; border-top: 1px solid var(--border-light); border-radius: 0 0 8px 8px;">
+              <button class="btn btn-primary btn-full" onclick="runUserAccessAuditFromDashboard()" style="font-size: 12px;">Audit</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Data Inventory & Zombie Hunter -->
+      <section>
+        <h2 class="section-title">
+          <span class="section-icon"></span>
+          Discovery & Cleanup
+        </h2>
+        <div class="dashboard-grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Data Inventory</h3>
+            </div>
+            <div style="padding: 16px;">
+              <div style="font-size: 14px; margin-bottom: 12px;">
+                <div style="margin-bottom: 8px;">
+                  <span style="font-weight: 600;">Total Parameters:</span> <span style="font-size: 18px; color: var(--chart-primary); font-weight: 700;" id="pro-total-params">0</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                  <span style="font-weight: 600;">Custom:</span> <span style="font-size: 16px; color: var(--chart-secondary); font-weight: 700;" id="pro-custom-params">0</span>
+                </div>
+                <div>
+                  <span style="font-weight: 600;">New (7 days):</span> <span style="font-size: 16px; color: var(--info); font-weight: 700;" id="pro-new-params">0</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding: 12px 16px; background: #f5f5f5; border-top: 1px solid var(--border-light); border-radius: 0 0 8px 8px;">
+              <button class="btn btn-primary btn-full" onclick="runDataInventoryFromDashboard()" style="font-size: 12px;">Run Scan</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Zombie Hunter</h3>
+            </div>
+            <div style="padding: 16px;">
+              <div style="font-size: 14px; margin-bottom: 12px;">
+                <div style="margin-bottom: 8px;">
+                  <span style="font-weight: 600;">Zombie Dimensions:</span> <span style="font-size: 18px; color: var(--error); font-weight: 700;" id="pro-zombie-count">0</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                  <span style="font-weight: 600;">Ghost Dimensions:</span> <span style="font-size: 16px; color: var(--warning); font-weight: 700;" id="pro-ghost-count">0</span>
+                </div>
+                <div>
+                  <span style="font-weight: 600;">Verified Active:</span> <span style="font-size: 16px; color: var(--success); font-weight: 700;" id="pro-verified-count">0</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding: 12px 16px; background: #f5f5f5; border-top: 1px solid var(--border-light); border-radius: 0 0 8px 8px;">
+              <button class="btn btn-primary btn-full" onclick="runZombieHunterFromDashboard()" style="font-size: 12px;">Hunt</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Smart Discovery -->
+      <section>
+        <h2 class="section-title">
+          <span class="section-icon"></span>
+          Smart Discovery
+        </h2>
+        <div class="card">
+          <div class="card-header">
+            <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Auto-Generated Alert Rules</h3>
+          </div>
+          <div style="padding: 16px;">
+            <div style="font-size: 28px; font-weight: 700; color: var(--chart-primary); margin-bottom: 8px;" id="pro-rules-generated">0</div>
+            <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <button class="btn btn-primary" onclick="openSheet('CONFIG_AUDIT')" style="font-size: 12px;">View Rules</button>
+              <button class="btn btn-primary" onclick="runSmartDiscoveryFromDashboard()" style="font-size: 12px;">Generate Rules</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 
   <!-- NOTIFICATION CONTAINER -->
@@ -2417,6 +2640,214 @@
       return new Date().toISOString().split('T')[0];
     }
 
+    // ========================================
+    // PRO FEATURES FUNCTIONS
+    // ========================================
+
+    function switchTab(tabName) {
+      // Hide all tabs
+      const overviewTab = document.getElementById('dashboard-wrapper').querySelector('section');
+      const proTab = document.getElementById('pro-intelligence-tab');
+
+      // Show/hide based on tab name
+      if (tabName === 'overview') {
+        // Show overview sections (they're inside dashboard-wrapper)
+        document.getElementById('dashboard-wrapper').style.display = 'block';
+        proTab.style.display = 'none';
+      } else if (tabName === 'pro-intelligence') {
+        // Show PRO tab
+        proTab.style.display = 'block';
+        // Hide all sections in dashboard-wrapper except pro tab
+        const sections = document.getElementById('dashboard-wrapper').querySelectorAll('section');
+        sections.forEach(section => section.style.display = 'none');
+        loadProFeaturesData();
+      }
+
+      // Update tab buttons
+      document.getElementById('tab-btn-overview').style.borderBottomColor = tabName === 'overview' ? 'var(--chart-primary)' : 'transparent';
+      document.getElementById('tab-btn-overview').style.color = tabName === 'overview' ? 'var(--chart-primary)' : 'var(--text-secondary)';
+
+      document.getElementById('tab-btn-pro-intelligence').style.borderBottomColor = tabName === 'pro-intelligence' ? 'var(--chart-primary)' : 'transparent';
+      document.getElementById('tab-btn-pro-intelligence').style.color = tabName === 'pro-intelligence' ? 'var(--chart-primary)' : 'var(--text-secondary)';
+    }
+
+    function loadProFeaturesData() {
+      if (!dashboardData || !dashboardData.proFeatures) {
+        console.log('No PRO features data available');
+        return;
+      }
+
+      const pro = dashboardData.proFeatures;
+
+      // Smart Discovery
+      document.getElementById('pro-rules-generated').textContent = pro.smartDiscovery.rulesGenerated;
+
+      // Heartbeat Alert
+      document.getElementById('pro-anomalies-count').textContent = pro.heartbeatAlert.anomaliesDetected;
+      document.getElementById('pro-critical-count').textContent = pro.heartbeatAlert.criticalCount;
+      document.getElementById('pro-warning-count').textContent = pro.heartbeatAlert.warningCount;
+      document.getElementById('pro-heartbeat-lastrun').textContent = pro.heartbeatAlert.lastRun ? new Date(pro.heartbeatAlert.lastRun).toLocaleString() : 'Not run';
+
+      // Dimensional Health
+      document.getElementById('pro-health-percentage').textContent = pro.dimensionalHealth.healthPercentage + '%';
+      document.getElementById('pro-health-bar').style.width = pro.dimensionalHealth.healthPercentage + '%';
+      document.getElementById('pro-health-critical').textContent = pro.dimensionalHealth.criticalIssues;
+      document.getElementById('pro-health-warning').textContent = pro.dimensionalHealth.warningIssues;
+      document.getElementById('pro-rules-checked').textContent = pro.dimensionalHealth.rulesChecked;
+
+      // User Access Audit
+      document.getElementById('pro-total-users').textContent = pro.userAccessAudit.totalUsers;
+      document.getElementById('pro-external-admins').textContent = pro.userAccessAudit.externalAdmins;
+      document.getElementById('pro-total-properties-audit').textContent = pro.userAccessAudit.totalProperties;
+
+      // Data Inventory
+      document.getElementById('pro-total-params').textContent = pro.dataInventory.totalParameters;
+      document.getElementById('pro-custom-params').textContent = pro.dataInventory.customParameters;
+      document.getElementById('pro-new-params').textContent = pro.dataInventory.newParameters;
+
+      // Zombie Hunter
+      document.getElementById('pro-zombie-count').textContent = pro.zombieHunter.zombies;
+      document.getElementById('pro-ghost-count').textContent = pro.zombieHunter.ghosts;
+      document.getElementById('pro-verified-count').textContent = pro.zombieHunter.verified;
+
+      // Populate PRO status grid
+      populateProStatusGrid(pro);
+    }
+
+    function populateProStatusGrid(pro) {
+      const grid = document.getElementById('pro-status-grid');
+      grid.innerHTML = '';
+
+      const features = [
+        { name: 'Smart Discovery', status: pro.smartDiscovery.status, enabled: pro.smartDiscovery.enabled, icon: '🎯' },
+        { name: 'Heartbeat Alert', status: pro.heartbeatAlert.status, enabled: pro.heartbeatAlert.enabled, icon: '💓' },
+        { name: 'Dimensional Health', status: pro.dimensionalHealth.status, enabled: pro.dimensionalHealth.enabled, icon: '📊' },
+        { name: 'Data Inventory', status: pro.dataInventory.status, enabled: pro.dataInventory.enabled, icon: '📦' },
+        { name: 'User Access Audit', status: pro.userAccessAudit.status, enabled: pro.userAccessAudit.enabled, icon: '👥' },
+        { name: 'Zombie Hunter', status: pro.zombieHunter.status, enabled: pro.zombieHunter.enabled, icon: '👻' }
+      ];
+
+      features.forEach(feature => {
+        const statusColor = feature.enabled ? 'var(--success)' : 'var(--text-tertiary)';
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div style="padding: 16px; text-align: center;">
+            <div style="font-size: 24px; margin-bottom: 8px;">${feature.icon}</div>
+            <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${feature.name}</div>
+            <div style="font-size: 12px; color: ${statusColor}; margin-top: 6px;">${feature.status}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function openSheet(sheetName) {
+      google.script.run.openSheetByName(sheetName);
+    }
+
+    function runSmartDiscoveryFromDashboard() {
+      showNotification('Running Smart Discovery...', 'info');
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showNotification('Smart Discovery completed', 'success');
+            setTimeout(() => forceRefresh(), 1000);
+          } else {
+            showNotification('Smart Discovery failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          showNotification('Error: ' + error, 'error');
+        })
+        .runSmartDiscovery(75);
+    }
+
+    function runHeartbeatFromDashboard() {
+      showNotification('Running Heartbeat Alert...', 'info');
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showNotification('Heartbeat Alert completed', 'success');
+            setTimeout(() => forceRefresh(), 1000);
+          } else {
+            showNotification('Heartbeat Alert failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          showNotification('Error: ' + error, 'error');
+        })
+        .runHeartbeatAlert();
+    }
+
+    function runDimensionalHealthFromDashboard() {
+      showNotification('Running Dimensional Health Check...', 'info');
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showNotification('Dimensional Health Check completed', 'success');
+            setTimeout(() => forceRefresh(), 1000);
+          } else {
+            showNotification('Dimensional Health Check failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          showNotification('Error: ' + error, 'error');
+        })
+        .runDimensionalHealthCheck(80);
+    }
+
+    function runDataInventoryFromDashboard() {
+      showNotification('Running Data Inventory scan...', 'info');
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showNotification('Data Inventory completed', 'success');
+            setTimeout(() => forceRefresh(), 1000);
+          } else {
+            showNotification('Data Inventory failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          showNotification('Error: ' + error, 'error');
+        })
+        .runDataInventory(true);
+    }
+
+    function runUserAccessAuditFromDashboard() {
+      showNotification('Running User Access Audit...', 'info');
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showNotification('User Access Audit completed', 'success');
+            setTimeout(() => forceRefresh(), 1000);
+          } else {
+            showNotification('User Access Audit failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          showNotification('Error: ' + error, 'error');
+        })
+        .runUserAccessAudit(true);
+    }
+
+    function runZombieHunterFromDashboard() {
+      showNotification('Running Zombie Hunter...', 'info');
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showNotification('Zombie Hunter completed', 'success');
+            setTimeout(() => forceRefresh(), 1000);
+          } else {
+            showNotification('Zombie Hunter failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          showNotification('Error: ' + error, 'error');
+        })
+        .runZombieHunter(30);
+    }
+
     // Global functions
     window.toggleTheme = toggleTheme;
     window.forceRefresh = forceRefresh;
@@ -2427,6 +2858,8 @@
     window.exportTagStatusData = exportTagStatusData;
     window.exportTimelineData = exportTimelineData;
     window.exportHeatmapData = exportHeatmapData;
+    window.switchTab = switchTab;
+    window.openSheet = openSheet;
 
     // Cleanup
     window.addEventListener('beforeunload', function () {

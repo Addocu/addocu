@@ -341,11 +341,22 @@ function getHtmlDashboardData() {
     // Get historical data for timeline and heatmap
     const historicalData = getHistoricalActivityData(30);
 
+    // Collect PRO Features metrics
+    const proFeatures = {
+      smartDiscovery: getSmartDiscoveryMetrics(),
+      heartbeatAlert: getHeartbeatMetrics(),
+      dimensionalHealth: getDimensionalHealthMetrics(),
+      dataInventory: getDataInventoryMetrics(),
+      userAccessAudit: getUserAccessMetrics(),
+      zombieHunter: getZombieHunterMetrics()
+    };
+
     const result = {
       kpis: kpis,
       quality: quality,
       charts: charts,
       historicalData: historicalData, // Include historical data for advanced charts
+      proFeatures: proFeatures,
       timestamp: new Date().toISOString(),
       user: Session.getActiveUser().getEmail(),
       hasRealData: kpis.totalAssets > 0
@@ -784,6 +795,505 @@ function getHistoricalActivityData(days = 30) {
 
   } catch (error) {
     logWarning('DASHBOARD_HTML', `Error retrieving historical data: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Gets Smart Discovery metrics from CONFIG_AUDIT sheet
+ * @returns {Object} Smart Discovery feature metrics
+ */
+function getSmartDiscoveryMetrics() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const configAuditSheet = ss.getSheetByName('CONFIG_AUDIT');
+
+    if (!configAuditSheet) {
+      return {
+        enabled: false,
+        lastRun: null,
+        rulesGenerated: 0,
+        status: 'Not configured'
+      };
+    }
+
+    const data = configAuditSheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return {
+        enabled: false,
+        lastRun: null,
+        rulesGenerated: 0,
+        status: 'No data'
+      };
+    }
+
+    // Count generated rules (data rows)
+    const rulesGenerated = data.length - 1;
+
+    // Try to find last update time from logs
+    const lastRun = getProFeatureLastRun('SmartDiscovery');
+
+    return {
+      enabled: rulesGenerated > 0,
+      lastRun: lastRun,
+      rulesGenerated: rulesGenerated,
+      status: rulesGenerated > 0 ? 'Configured' : 'Inactive'
+    };
+  } catch (error) {
+    logWarning('DASHBOARD_HTML', `Error getting Smart Discovery metrics: ${error.message}`);
+    return {
+      enabled: false,
+      lastRun: null,
+      rulesGenerated: 0,
+      status: 'Error'
+    };
+  }
+}
+
+/**
+ * Gets Heartbeat Alert metrics from BQ_ANOMALIES sheet
+ * @returns {Object} Heartbeat Alert feature metrics
+ */
+function getHeartbeatMetrics() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const anomaliesSheet = ss.getSheetByName('BQ_ANOMALIES');
+
+    if (!anomaliesSheet) {
+      return {
+        enabled: false,
+        lastRun: null,
+        anomaliesDetected: 0,
+        criticalCount: 0,
+        warningCount: 0,
+        status: 'Not configured'
+      };
+    }
+
+    const data = anomaliesSheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return {
+        enabled: false,
+        lastRun: null,
+        anomaliesDetected: 0,
+        criticalCount: 0,
+        warningCount: 0,
+        status: 'No data'
+      };
+    }
+
+    const headers = data[0];
+    const severityIndex = headers.indexOf('Severity');
+
+    let criticalCount = 0;
+    let warningCount = 0;
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i].some(cell => cell && cell.toString().trim() !== '')) {
+        const severity = data[i][severityIndex];
+        if (severity) {
+          const severityStr = severity.toString().toLowerCase();
+          if (severityStr.includes('critical')) criticalCount++;
+          else if (severityStr.includes('warning')) warningCount++;
+        }
+      }
+    }
+
+    const lastRun = getProFeatureLastRun('HeartbeatAlert');
+    const anomaliesDetected = data.length - 1;
+
+    return {
+      enabled: anomaliesDetected > 0,
+      lastRun: lastRun,
+      anomaliesDetected: anomaliesDetected,
+      criticalCount: criticalCount,
+      warningCount: warningCount,
+      status: anomaliesDetected > 0 ? 'Active' : 'Inactive'
+    };
+  } catch (error) {
+    logWarning('DASHBOARD_HTML', `Error getting Heartbeat metrics: ${error.message}`);
+    return {
+      enabled: false,
+      lastRun: null,
+      anomaliesDetected: 0,
+      criticalCount: 0,
+      warningCount: 0,
+      status: 'Error'
+    };
+  }
+}
+
+/**
+ * Gets Dimensional Health Check metrics from BQ_PARAM_HEALTH sheet
+ * @returns {Object} Dimensional Health feature metrics
+ */
+function getDimensionalHealthMetrics() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const healthSheet = ss.getSheetByName('BQ_PARAM_HEALTH');
+
+    if (!healthSheet) {
+      return {
+        enabled: false,
+        lastRun: null,
+        rulesChecked: 0,
+        criticalIssues: 0,
+        warningIssues: 0,
+        healthPercentage: 0,
+        status: 'Not configured'
+      };
+    }
+
+    const data = healthSheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return {
+        enabled: false,
+        lastRun: null,
+        rulesChecked: 0,
+        criticalIssues: 0,
+        warningIssues: 0,
+        healthPercentage: 0,
+        status: 'No data'
+      };
+    }
+
+    const headers = data[0];
+    const statusIndex = headers.indexOf('Status');
+    const healthScoreIndex = headers.indexOf('Health Score') || headers.indexOf('Fill Rate');
+
+    let criticalIssues = 0;
+    let warningIssues = 0;
+    let totalHealth = 0;
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i].some(cell => cell && cell.toString().trim() !== '')) {
+        if (statusIndex !== -1) {
+          const status = data[i][statusIndex];
+          if (status) {
+            const statusStr = status.toString().toLowerCase();
+            if (statusStr.includes('critical')) criticalIssues++;
+            else if (statusStr.includes('warning')) warningIssues++;
+          }
+        }
+
+        if (healthScoreIndex !== -1) {
+          const score = data[i][healthScoreIndex];
+          if (score && !isNaN(score)) {
+            totalHealth += parseFloat(score);
+          }
+        }
+      }
+    }
+
+    const rulesChecked = data.length - 1;
+    const healthPercentage = rulesChecked > 0 ? Math.round(totalHealth / rulesChecked) : 0;
+    const lastRun = getProFeatureLastRun('DimensionalHealth');
+
+    return {
+      enabled: rulesChecked > 0,
+      lastRun: lastRun,
+      rulesChecked: rulesChecked,
+      criticalIssues: criticalIssues,
+      warningIssues: warningIssues,
+      healthPercentage: healthPercentage,
+      status: rulesChecked > 0 ? 'Active' : 'Inactive'
+    };
+  } catch (error) {
+    logWarning('DASHBOARD_HTML', `Error getting Dimensional Health metrics: ${error.message}`);
+    return {
+      enabled: false,
+      lastRun: null,
+      rulesChecked: 0,
+      criticalIssues: 0,
+      warningIssues: 0,
+      healthPercentage: 0,
+      status: 'Error'
+    };
+  }
+}
+
+/**
+ * Gets Data Inventory metrics from BQ_DATA_INVENTORY sheet
+ * @returns {Object} Data Inventory feature metrics
+ */
+function getDataInventoryMetrics() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const inventorySheet = ss.getSheetByName('BQ_DATA_INVENTORY');
+
+    if (!inventorySheet) {
+      return {
+        enabled: false,
+        lastRun: null,
+        totalParameters: 0,
+        customParameters: 0,
+        newParameters: 0,
+        status: 'Not configured'
+      };
+    }
+
+    const data = inventorySheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return {
+        enabled: false,
+        lastRun: null,
+        totalParameters: 0,
+        customParameters: 0,
+        newParameters: 0,
+        status: 'No data'
+      };
+    }
+
+    const headers = data[0];
+    const typeIndex = headers.indexOf('Type');
+    const dateAddedIndex = headers.indexOf('Date Added');
+
+    let customCount = 0;
+    let newCount = 0;
+    const today = new Date();
+    today.setDate(today.getDate() - 7); // Last 7 days
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i].some(cell => cell && cell.toString().trim() !== '')) {
+        if (typeIndex !== -1) {
+          const type = data[i][typeIndex];
+          if (type && type.toString().toLowerCase().includes('custom')) {
+            customCount++;
+          }
+        }
+
+        if (dateAddedIndex !== -1) {
+          const dateAdded = data[i][dateAddedIndex];
+          if (dateAdded && new Date(dateAdded) > today) {
+            newCount++;
+          }
+        }
+      }
+    }
+
+    const totalParameters = data.length - 1;
+    const lastRun = getProFeatureLastRun('DataInventory');
+
+    return {
+      enabled: totalParameters > 0,
+      lastRun: lastRun,
+      totalParameters: totalParameters,
+      customParameters: customCount,
+      newParameters: newCount,
+      status: totalParameters > 0 ? 'Active' : 'Inactive'
+    };
+  } catch (error) {
+    logWarning('DASHBOARD_HTML', `Error getting Data Inventory metrics: ${error.message}`);
+    return {
+      enabled: false,
+      lastRun: null,
+      totalParameters: 0,
+      customParameters: 0,
+      newParameters: 0,
+      status: 'Error'
+    };
+  }
+}
+
+/**
+ * Gets User Access Audit metrics from GA4_USER_ACCESS sheet
+ * @returns {Object} User Access Audit feature metrics
+ */
+function getUserAccessMetrics() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const userAccessSheet = ss.getSheetByName('GA4_USER_ACCESS');
+
+    if (!userAccessSheet) {
+      return {
+        enabled: false,
+        lastRun: null,
+        totalUsers: 0,
+        externalAdmins: 0,
+        totalProperties: 0,
+        status: 'Not configured'
+      };
+    }
+
+    const data = userAccessSheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return {
+        enabled: false,
+        lastRun: null,
+        totalUsers: 0,
+        externalAdmins: 0,
+        totalProperties: 0,
+        status: 'No data'
+      };
+    }
+
+    const headers = data[0];
+    const roleIndex = headers.indexOf('Role');
+    const emailIndex = headers.indexOf('Email');
+
+    let externalAdmins = 0;
+    const properties = new Set();
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i].some(cell => cell && cell.toString().trim() !== '')) {
+        if (roleIndex !== -1) {
+          const role = data[i][roleIndex];
+          if (role && role.toString().toLowerCase().includes('admin')) {
+            if (emailIndex !== -1) {
+              const email = data[i][emailIndex];
+              // Count external (non-domain) admins
+              if (email && !email.toString().includes('@yourcompany')) {
+                externalAdmins++;
+              }
+            }
+          }
+        }
+
+        // Count unique properties (assuming first column is Property ID)
+        if (data[i][0]) {
+          properties.add(data[i][0].toString());
+        }
+      }
+    }
+
+    const totalUsers = data.length - 1;
+    const lastRun = getProFeatureLastRun('UserAccessAudit');
+
+    return {
+      enabled: totalUsers > 0,
+      lastRun: lastRun,
+      totalUsers: totalUsers,
+      externalAdmins: externalAdmins,
+      totalProperties: properties.size,
+      status: totalUsers > 0 ? 'Active' : 'Inactive'
+    };
+  } catch (error) {
+    logWarning('DASHBOARD_HTML', `Error getting User Access metrics: ${error.message}`);
+    return {
+      enabled: false,
+      lastRun: null,
+      totalUsers: 0,
+      externalAdmins: 0,
+      totalProperties: 0,
+      status: 'Error'
+    };
+  }
+}
+
+/**
+ * Gets Zombie Hunter metrics from BQ_ZOMBIE_HUNTER sheet
+ * @returns {Object} Zombie Hunter feature metrics
+ */
+function getZombieHunterMetrics() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const zombieSheet = ss.getSheetByName('BQ_ZOMBIE_HUNTER');
+
+    if (!zombieSheet) {
+      return {
+        enabled: false,
+        lastRun: null,
+        zombies: 0,
+        ghosts: 0,
+        verified: 0,
+        status: 'Not configured'
+      };
+    }
+
+    const data = zombieSheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return {
+        enabled: false,
+        lastRun: null,
+        zombies: 0,
+        ghosts: 0,
+        verified: 0,
+        status: 'No data'
+      };
+    }
+
+    const headers = data[0];
+    const statusIndex = headers.indexOf('Status');
+
+    let zombies = 0;
+    let ghosts = 0;
+    let verified = 0;
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i].some(cell => cell && cell.toString().trim() !== '')) {
+        if (statusIndex !== -1) {
+          const status = data[i][statusIndex];
+          if (status) {
+            const statusStr = status.toString().toLowerCase();
+            if (statusStr.includes('zombie')) zombies++;
+            else if (statusStr.includes('ghost')) ghosts++;
+            else if (statusStr.includes('active') || statusStr.includes('verified')) verified++;
+          }
+        }
+      }
+    }
+
+    const lastRun = getProFeatureLastRun('ZombieHunter');
+
+    return {
+      enabled: (zombies + ghosts + verified) > 0,
+      lastRun: lastRun,
+      zombies: zombies,
+      ghosts: ghosts,
+      verified: verified,
+      status: (zombies + ghosts) > 0 ? 'Issues found' : 'Clean'
+    };
+  } catch (error) {
+    logWarning('DASHBOARD_HTML', `Error getting Zombie Hunter metrics: ${error.message}`);
+    return {
+      enabled: false,
+      lastRun: null,
+      zombies: 0,
+      ghosts: 0,
+      verified: 0,
+      status: 'Error'
+    };
+  }
+}
+
+/**
+ * Gets last run timestamp for a PRO feature from LOGS sheet
+ * @param {string} featureName - Name of the feature to search for
+ * @returns {string|null} ISO timestamp or null if not found
+ */
+function getProFeatureLastRun(featureName) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const logsSheet = ss.getSheetByName('LOGS');
+
+    if (!logsSheet) {
+      return null;
+    }
+
+    const data = logsSheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return null;
+    }
+
+    const headers = data[0];
+    const messageIndex = headers.indexOf('Message');
+    const timestampIndex = headers.indexOf('Timestamp');
+
+    // Search from bottom (most recent) to top
+    for (let i = data.length - 1; i > 0; i--) {
+      if (messageIndex !== -1 && data[i][messageIndex]) {
+        const message = data[i][messageIndex].toString();
+        if (message.includes(featureName)) {
+          if (timestampIndex !== -1) {
+            return data[i][timestampIndex];
+          }
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    logWarning('DASHBOARD_HTML', `Error getting feature last run: ${error.message}`);
     return null;
   }
 }
