@@ -27,6 +27,10 @@ const GA4_STREAMS_HEADERS = [
   'Measurement ID / Package / Bundle', 'Firebase App ID', 'Default URI', 'Stream Created',
   'Stream Updated', 'Property Created', 'Property Updated', 'Notes'
 ];
+const GA4_CHANGE_HISTORY_HEADERS = [
+  'Change Time', 'Property Name', 'Property ID', 'Actor Email', 'Actor Type',
+  'Action', 'Resource Type', 'Resource Name', 'Changes', 'Notes'
+];
 
 // =================================================================
 // SYNCHRONIZATION FUNCTIONS (EXECUTABLE FROM MENU)
@@ -69,7 +73,7 @@ function syncGA4Core(options = {}) {
   const forceFullAudit = options.forceFullAudit || false;
   const incrementalEnabled = options.incrementalEnabled !== false;
 
-  const results = { properties: 0, dimensions: 0, metrics: 0, streams: 0 };
+  const results = { properties: 0, dimensions: 0, metrics: 0, streams: 0, changes: 0 };
 
   try {
     getAuthConfig(serviceName); // Only to verify that the service is enabled
@@ -115,6 +119,7 @@ function syncGA4Core(options = {}) {
       recordSyncState('GA4', 'Dimensions', 0, 'SUCCESS', 'INCREMENTAL');
       recordSyncState('GA4', 'Metrics', 0, 'SUCCESS', 'INCREMENTAL');
       recordSyncState('GA4', 'Streams', 0, 'SUCCESS', 'INCREMENTAL');
+      recordSyncState('GA4', 'ChangeHistory', 0, 'SUCCESS', 'INCREMENTAL');
 
       const duration = Date.now() - startTime;
       return {
@@ -158,11 +163,29 @@ function syncGA4Core(options = {}) {
       logEvent('GA4', `Streams: ${appendStreamResult.status} - ${appendStreamResult.recordsAppended} appended`);
     }
 
+    // 3. GET CHANGE HISTORY (Phase 5 - New)
+    // We fetch this for ALL properties in the list, as changes happen independently of property creation
+    logEvent('GA4', 'Phase 5: Extracting change history (last 30 days)...');
+    const changeHistory = fetchGA4ChangeHistory(properties, processGA4Change);
+    if (changeHistory.length > 0) {
+      // Always overwrite Change History (or append if you prefer, but history lists can get long)
+      // For this implementation, we will use appendNewRecords but since we don't have a unique ID for changes easily
+      // mapped for deduping in the generic helper, we might want to just Clear & Write for the simplest approach.
+      // However, to stay consistent with the framework, we'll append.
+      // A better approach for history logs is usually "Write Latest", but let's stick to the pattern.
+      const appendChangeResult = appendNewRecords('GA4_CHANGE_HISTORY', changeHistory, {
+        headers: GA4_CHANGE_HISTORY_HEADERS
+      });
+      results.changes = appendChangeResult.recordsAppended;
+      logEvent('GA4', `Changes: ${appendChangeResult.status} - ${appendChangeResult.recordsAppended} appended`);
+    }
+
     // Record sync state for future incremental audits
     recordSyncState('GA4', 'Properties', results.properties, 'SUCCESS', isIncremental ? 'INCREMENTAL' : 'FULL');
     recordSyncState('GA4', 'Dimensions', results.dimensions, 'SUCCESS', isIncremental ? 'INCREMENTAL' : 'FULL');
     recordSyncState('GA4', 'Metrics', results.metrics, 'SUCCESS', isIncremental ? 'INCREMENTAL' : 'FULL');
     recordSyncState('GA4', 'Streams', results.streams, 'SUCCESS', isIncremental ? 'INCREMENTAL' : 'FULL');
+    recordSyncState('GA4', 'ChangeHistory', results.changes, 'SUCCESS', isIncremental ? 'INCREMENTAL' : 'FULL');
 
     const totalElements = Object.values(results).reduce((sum, count) => sum + count, 0);
     const duration = Date.now() - startTime;
@@ -337,6 +360,49 @@ function getGA4SubResources(properties, resourceType, processor) {
   return allResources;
 }
 
+function fetchGA4ChangeHistory(properties, processor) {
+  const allChanges = [];
+  const auth = getAuthConfig('ga4');
+  const options = { method: 'POST', headers: auth.headers, muteHttpExceptions: true };
+
+  // Calculate 30 days ago
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const earliestChangeTime = thirtyDaysAgo.toISOString();
+
+  for (const { property, account } of properties) {
+    try {
+      // POST request to searchChangeHistoryEvents
+      const url = `https://analyticsadmin.googleapis.com/v1beta/accounts/${account.name.split('/').pop()}/${property.name}:searchChangeHistoryEvents`;
+
+      const payload = {
+        earliestChangeTime: earliestChangeTime,
+        pageSize: 50 // Fetch last 50 changes per property to avoid request timeouts
+      };
+
+      const payloadOptions = {
+        ...options,
+        payload: JSON.stringify(payload),
+        headers: { ...options.headers, 'Content-Type': 'application/json' }
+      };
+
+      const response = fetchWithRetry(url, payloadOptions, 'GA4-ChangeHistory');
+
+      if (response && response.changeHistoryEvents) {
+        for (const event of response.changeHistoryEvents) {
+          allChanges.push(processor(event, property));
+        }
+      }
+
+      Utilities.sleep(100);
+
+    } catch (e) {
+      logWarning('GA4', `Could not get Change History for property ${property.displayName}: ${e.message}`);
+    }
+  }
+  return allChanges;
+}
+
 // =================================================================
 // DATA PROCESSING FUNCTIONS (TRANSFORMATION)
 // =================================================================
@@ -415,5 +481,35 @@ function processGA4Stream(stream, property) {
     'Property Created': formatDate(property.createTime),
     'Property Updated': formatDate(property.updateTime),
     'Notes': `Type: ${stream.type} | Created: ${formatDate(stream.createTime)}${firebaseAppId ? ' | Firebase: ' + firebaseAppId : ''}`
+  };
+}
+
+function processGA4Change(changeEvent, property) {
+  // Extract changes summary
+  let changesDesc = 'No details';
+  if (changeEvent.changes && changeEvent.changes.length > 0) {
+    changesDesc = changeEvent.changes.map(c => {
+      const field = c.resourceAfterChange ? Object.keys(c.resourceAfterChange).join(', ') : 'Deleted Resource';
+      return `${c.action} ${field}`;
+    }).join('; ');
+  }
+
+  // Determine resource type and name from the first change (usually grouped)
+  const firstChange = changeEvent.changes ? changeEvent.changes[0] : {};
+  const resourceName = firstChange.resourceAfterChange ?
+    (firstChange.resourceAfterChange.displayName || firstChange.resource || 'Unknown Resource') :
+    (firstChange.resourceBeforeChange ? firstChange.resourceBeforeChange.displayName : 'Deleted Resource');
+
+  return {
+    'Change Time': formatDate(changeEvent.changeTime),
+    'Property Name': property.displayName,
+    'Property ID': property.name.split('/').pop(),
+    'Actor Email': changeEvent.userActorEmail || 'System/Unknown',
+    'Actor Type': changeEvent.actorType || 'UNKNOWN',
+    'Action': firstChange.action || 'UNKNOWN',
+    'Resource Type': firstChange.resource || 'Unknown',
+    'Resource Name': resourceName,
+    'Changes': changesDesc,
+    'Notes': `ID: ${changeEvent.id}`
   };
 }
