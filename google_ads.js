@@ -90,7 +90,8 @@ function syncGoogleAdsCore() {
     const authError = handleAuthError('Google Ads', error);
     if (authError.status === 'AUTH_FAILED') {
       logError('GOOGLE_ADS', `Authentication error: ${authError.userMessage}`);
-      writeDataToSheet('GOOGLE_ADS_CAMPAIGNS', GOOGLE_ADS_CAMPAIGNS_HEADERS, null, 'Google Ads', authError.userMessage);
+      const ADS_ERROR_HEADERS = ['Customer ID', 'Campaign ID', 'Campaign Name', 'Status', 'Advertising Channel', 'Budget Type', 'Budget Amount (Micros)', 'Budget ID', 'Start Date', 'End Date', 'Target CPA (Micros)', 'Target ROAS', 'Strategy Type', 'Sync Date'];
+      writeDataToSheet('GOOGLE_ADS_CAMPAIGNS', ADS_ERROR_HEADERS, null, 'Google Ads', authError.userMessage);
       return {
         success: false,
         status: 'AUTH_FAILED',
@@ -101,7 +102,8 @@ function syncGoogleAdsCore() {
     }
 
     logError('GOOGLE_ADS', `Fatal error in Google Ads audit: ${error.message}`);
-    writeDataToSheet('GOOGLE_ADS_CAMPAIGNS', GOOGLE_ADS_CAMPAIGNS_HEADERS, null, 'Google Ads', error.message);
+    const ADS_ERROR_HEADERS = ['Customer ID', 'Campaign ID', 'Campaign Name', 'Status', 'Advertising Channel', 'Budget Type', 'Budget Amount (Micros)', 'Budget ID', 'Start Date', 'End Date', 'Target CPA (Micros)', 'Target ROAS', 'Strategy Type', 'Sync Date'];
+    writeDataToSheet('GOOGLE_ADS_CAMPAIGNS', ADS_ERROR_HEADERS, null, 'Google Ads', error.message);
 
     return {
       success: false,

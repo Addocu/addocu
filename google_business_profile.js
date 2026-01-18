@@ -92,8 +92,9 @@ function syncGBPCore() {
     }
     logError('GBP_CORE', 'Error in syncGBPCore: ' + errorMsg);
 
-    // Report error in the primary sheet
-    writeDataToSheet('GBP_ACCOUNTS', GBP_ACCOUNTS_HEADERS, null, 'Business Profile', errorMsg);
+    // Report error in the primary sheet - use inline headers since we're in catch block
+    const GBP_ERROR_HEADERS = ['Account ID', 'Account Name', 'Type', 'Verification State', 'Sync Date'];
+    writeDataToSheet('GBP_ACCOUNTS', GBP_ERROR_HEADERS, null, 'Business Profile', errorMsg);
 
     return {
       success: false,

@@ -372,10 +372,13 @@ function fetchGA4ChangeHistory(properties, processor) {
 
   for (const { property, account } of properties) {
     try {
-      // POST request to searchChangeHistoryEvents
-      const url = `https://analyticsadmin.googleapis.com/v1beta/accounts/${account.name.split('/').pop()}/${property.name}:searchChangeHistoryEvents`;
+      // POST request to searchChangeHistoryEvents - using v1alpha for consistency
+      // Note: The endpoint is on the account resource, not property. We filter by property in the payload.
+      const accountId = account.name.split('/').pop();
+      const url = `https://analyticsadmin.googleapis.com/v1alpha/accounts/${accountId}:searchChangeHistoryEvents`;
 
       const payload = {
+        property: property.name, // Filter by specific property
         earliestChangeTime: earliestChangeTime,
         pageSize: 50 // Fetch last 50 changes per property to avoid request timeouts
       };
