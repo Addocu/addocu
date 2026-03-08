@@ -78,6 +78,10 @@ We follow responsible disclosure practices:
 5. **Release** → We deploy the fix and notify affected users
 6. **Disclosure** → We publicly disclose the issue after users have had time to update
 
+## 🔍 Automated Secret Scanning
+
+All pushes to `main` and pull requests are automatically scanned for sensitive data using [TruffleHog](https://github.com/trufflesecurity/trufflehog). This ensures that secrets such as API keys, tokens, passwords, and private keys are never committed to the repository.
+
 ## 📋 Security Checklist for Contributors
 
 If you're contributing to Addocu, please ensure:
